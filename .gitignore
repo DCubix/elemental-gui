@@ -1,0 +1,9 @@
+[Bb]uild/
+[Dd]ebug/
+[Rr]elease/
+*.exe
+*.a
+*.lib
+*.user
+*.png
+*.json
