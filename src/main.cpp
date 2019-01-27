@@ -37,7 +37,7 @@ rendering capabilities of Cairo.)");
 
 		Edit *edt = app->create<Edit>();
 		edt->localBounds(Rect(0, 0, 120, 60));
-		edt->text("Hello Wrld!\nMultiline!");
+		edt->text("Hello World!\nMultiline String.");
 		edt->multiLine(true);
 		edt->format(6, 6, FontStyle::Bold, 1, 0, 0);
 		mainPanel->add(edt, Layout::Bottom);

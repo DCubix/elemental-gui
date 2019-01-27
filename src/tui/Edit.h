@@ -17,9 +17,11 @@ namespace tui {
 		void text(const std::string& txt);
 
 		bool multiLine() const { return m_multiLine; }
-		void multiLine(bool m) { m_multiLine = true; invalidate(); }
+		void multiLine(bool m) { m_multiLine = m; invalidate(); }
 
 		void format(int from, int len, FontStyle style, float r, float g, float b);
+		void format(FontStyle style, float r, float g, float b);
+		void select(int from, int len = -1);
 
 	private:
 		enum EditState {
@@ -50,6 +52,9 @@ namespace tui {
 
 		void insertChar(char c);
 		CharRect& findCharFromIndex(int index);
+
+		std::vector<Point> buildOrthoHull(const std::vector<CharRect>& crs);
+		std::vector<Rect> buildLinesAABB(const std::vector<CharRect>& crs);
 	};
 }
 

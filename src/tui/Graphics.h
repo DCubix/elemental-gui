@@ -13,6 +13,10 @@
 using Json = nlohmann::json;
 
 namespace tui {
+	struct Point {
+		int x{}, y{};
+	};
+
 	struct Size {
 		int w, h;
 	};
@@ -75,6 +79,7 @@ namespace tui {
 
 		void image(Image* img, int x, int y, int w, int h);
 
+		void styledPaint(Json style);
 		void styledRect(int x, int y, int w, int h, Json style);
 		void styledTextBegin(Json style);
 		void styledTextEnd(const std::string& text, int x, int y, float rot = 0.0f);
@@ -85,6 +90,11 @@ namespace tui {
 
 		void clipPush(int x, int y, int w, int h);
 		void clipPop();
+
+		void beginPath();
+		void addPathRect(int x, int y, int w, int h);
+		void addPathPoint(int x, int y);
+		void endPath(bool close = false);
 
 		void save();
 		void restore();
@@ -98,6 +108,7 @@ namespace tui {
 		int m_width, m_height;
 
 		std::stack<Rect> m_clipRects;
+		std::vector<Point> m_pathPoints;
 
 		void draw(DrawFunction func);
 	};

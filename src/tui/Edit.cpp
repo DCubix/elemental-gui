@@ -83,11 +83,18 @@ namespace tui {
 				cr.index = index;
 				cr.rect = Rect{ ptx, ty - lineH, 0, lineH };
 				tx = g.drawChar(c.c, tx, ty);
-				cr.rect.w = tx - ptx;
+				cr.rect.w = (tx - ptx) + 1;
 				m_charRects.push_back(cr);
 			}
 
 			index++;
+		}
+
+		if (!m_multiLine) {
+			CharRect cr;
+			cr.index = index;
+			cr.rect = Rect{ tx, ty - lineH, (b.w - 8) - (tx - sx), lineH };
+			m_charRects.push_back(cr);
 		}
 
 		if (m_text.empty()) {
@@ -115,16 +122,40 @@ namespace tui {
 		}
 
 		// Draw selection
-//		if (m_selectionStart != -1 && m_selectionEnd != -1) {
-//			int a = m_selectionStart,
-//				b = m_selectionEnd;
-//			if (a > b) std::swap(a, b);
+		if (m_selectionStart != -1 && m_selectionEnd != -1 &&
+			m_selectionStart != m_selectionEnd)
+		{
+			int a = m_selectionStart,
+				b = m_selectionEnd;
+			if (a > b) std::swap(a, b);
 
-//			for (int i = a; i <= b; i++) {
-//				Rect cr = m_charRects[i].rect;
-//				g.styledRect(cr.x, cr.y, cr.w, cr.h, app()->style()["Selection"]);
-//			}
+			int len = b-a;
+			g.beginPath();
+
+			std::vector<CharRect> rects;
+			rects.reserve(len);
+			for (int i = a; i < b; i++) {
+				CharRect r = m_charRects[i];
+				rects.push_back(r);
+			}
+
+			std::vector<Point> pts = buildOrthoHull(rects);
+			for (Point& p : pts) {
+				g.addPathPoint(p.x, p.y);
+			}
+
+			g.endPath(true);
+			g.styledPaint(app()->style()["Selection"]);
+		}
+
+//		for (int i = 0; i < m_charRects.size(); i++) {
+//			CharRect cre = m_charRects[i];
+//			Rect cr = cre.rect;
+//			if (i < m_charRects.size() - 1)
+//				cr.x -= cr.w/2;
+//			g.styledRect(cr.x, cr.y, cr.w, cr.h, app()->style()["Selection"]);
 //		}
+
 		g.clipPop();
 	}
 
@@ -135,10 +166,11 @@ namespace tui {
 			MouseEvent* e = dynamic_cast<MouseEvent*>(event);
 			switch (m_state) {
 				case ESNormal: {
-					if (e->pressed && e->button == 1) {
+					if (focused() && e->pressed && e->button == 1) {
 						for (CharRect cr : m_charRects) {
 							Rect crr = cr.rect;
-							crr.x -= crr.w/2;
+							if (cr.index < m_text.size() - 1)
+								crr.x -= crr.w/2;
 							if (crr.hasPoint(e->x, e->y)) {
 								m_caretIndex = cr.index;
 								invalidate();
@@ -153,7 +185,6 @@ namespace tui {
 				} break;
 				case ESSelecting: {
 					if (!e->pressed && e->button == 1) {
-						std::cout << "S: " << m_selectionStart << ", E: " << m_selectionEnd << std::endl;
 						m_state = ESNormal;
 						invalidate();
 					}
@@ -166,24 +197,27 @@ namespace tui {
 				case ESSelecting: {
 					for (CharRect cr : m_charRects) {
 						Rect crr = cr.rect;
-						crr.x -= crr.w/2;
+						if (cr.index < m_text.size() - 1)
+							crr.x -= crr.w/2;
 						if (crr.hasPoint(e->x, e->y)) {
 							m_selectionEnd = cr.index;
 							m_caretIndex = cr.index;
 							break;
-						}
+						} else { continue; }
 					}
 					invalidate();
 				} break;
 			}
 		} else if (event->type() == TextInputEventType) {
 			TextInput *e = dynamic_cast<TextInput*>(event);
-			insertChar(e->inputChar);
-			invalidate();
-			status = EventStatus::Consumed;
+			if (focused()) {
+				insertChar(e->inputChar);
+				invalidate();
+				status = EventStatus::Consumed;
+			}
 		} else if (event->type() == KeyEventType) {
 			KeyEvent *e = dynamic_cast<KeyEvent*>(event);
-			if (e->pressed) {
+			if (e->pressed && focused()) {
 				// Map out the lines start offset and length.
 				// Since the text is just a linear
 				// array, we just check for line breaks (\n)
@@ -310,6 +344,21 @@ namespace tui {
 		invalidate();
 	}
 
+	void Edit::format(FontStyle style, float r, float g, float b) {
+		if (m_selectionStart == -1 || m_selectionEnd == -1 || m_selectionStart == m_selectionEnd)
+			return;
+		int from = m_selectionStart;
+		int len = m_selectionEnd - from;
+		format(from, len, style, r, g, b);
+	}
+
+	void Edit::select(int from, int len) {
+		if (len < 0) len = m_text.size();
+		m_selectionStart = from;
+		m_selectionEnd = from + len;
+		invalidate();
+	}
+
 	void Edit::insertChar(char c) {
 		if (m_textRaw.empty()) m_textRaw.push_back(c);
 		else m_textRaw.insert(m_caretIndex, 1, c);
@@ -342,6 +391,72 @@ namespace tui {
 			return *it;
 		}
 		return *m_charRects.begin();
+	}
+
+	std::vector<Point> Edit::buildOrthoHull(const std::vector<CharRect>& crs) {
+		std::vector<Rect> lines = buildLinesAABB(crs);
+		std::vector<Point> out;
+
+		if (lines.empty()) return out;
+
+		// 1. Add the first 3 points from the first line
+		out.push_back({ lines[0].x, lines[0].y }); // 1st
+		out.push_back({ lines[0].x + lines[0].w, lines[0].y }); // 2nd
+		out.push_back({ lines[0].x + lines[0].w, lines[0].y + lines[0].h }); // 3rd
+
+		// 2. While theres any other lines, add the
+		//    second and the third points, and push the lines
+		//    to a stack, so we add the first and fourth points
+		//    later
+
+		if (lines.size() > 1) {
+			std::stack<Point> points;
+			for (int i = 1; i < lines.size(); i++) {
+				Rect lr = lines[i];
+				out.push_back({ lr.x + lr.w, lr.y }); // 2nd
+				out.push_back({ lr.x + lr.w, lr.y + lr.h }); // 3rd
+
+				// Push the points to be added later
+				points.push({ lr.x, lr.y }); // 1st
+				points.push({ lr.x, lr.y + lr.h }); // 4th
+			}
+
+			// Push the rest of the points
+			while (!points.empty()) {
+				Point pt = points.top();
+				points.pop();
+				out.push_back(pt);
+			}
+		}
+
+		// 3. Add the 4th point of the first line
+		out.push_back({ lines[0].x, lines[0].y + lines[0].h }); // 4th
+
+		return out;
+	}
+
+	std::vector<Rect> Edit::buildLinesAABB(const std::vector<CharRect>& crs) {
+		std::vector<Rect> out;
+		Rect rect{};
+
+		bool newRect = true;
+		for (CharRect cr : crs) {
+			if (m_text[cr.index].c == '\n') {
+				out.push_back(rect);
+				newRect = true;
+			} else {
+				if (newRect) {
+					rect = Rect(cr.rect.x, cr.rect.y+1, 0, 0);
+					newRect = false;
+				}
+				rect.w = std::max(rect.w, (cr.rect.x + cr.rect.w) - rect.x);
+				rect.h = std::max(rect.h, cr.rect.h);
+			}
+		}
+		if (rect.w > 0 && rect.h > 0)
+			out.push_back(rect);
+
+		return out;
 	}
 
 }

@@ -83,6 +83,40 @@ namespace tui {
 		cairo_restore(m_context);
 	}
 
+	void Graphics::styledPaint(Json style) {
+		if (style["background"].is_object()) {
+			cairo_pattern_t *pat = nullptr;
+			Json bg = style["background"];
+			if (bg["color"].is_array()) {
+				Json col = bg["color"];
+				cairo_set_source_rgba(
+						m_context,
+						col[0].get<double>(),
+						col[1].get<double>(),
+						col[2].get<double>(),
+						col[3].get<double>()
+				);
+			}
+
+			fill(true);
+			if (pat) cairo_pattern_destroy(pat);
+		}
+		if (style["border"].is_object()) {
+			Json border = style["border"];
+			Json color = border.value("color", Json::array({ 0.0, 0.0, 0.0, 1.0 }));
+			double width = border.value("width", 1.0);
+			cairo_set_source_rgba(
+						m_context,
+						color[0].get<double>(),
+						color[1].get<double>(),
+						color[2].get<double>(),
+						color[3].get<double>()
+			);
+			cairo_set_line_width(m_context, width);
+			stroke(false);
+		}
+	}
+
 	void Graphics::styledRect(int x, int y, int w, int h, Json style) {
 		cairo_save(m_context);
 		double borderRadius = 0.0;
@@ -267,6 +301,31 @@ namespace tui {
 			cairo_reset_clip(m_context);
 		}
 		cairo_restore(m_context);
+	}
+
+	void Graphics::beginPath() {
+		m_pathPoints.clear();
+	}
+
+	void Graphics::addPathRect(int x, int y, int w, int h) {
+		m_pathPoints.push_back({ x, y });
+		m_pathPoints.push_back({ x + w, y });
+		m_pathPoints.push_back({ x + w, y + h });
+		m_pathPoints.push_back({ x, y + h });
+	}
+
+	void Graphics::addPathPoint(int x, int y) {
+		m_pathPoints.push_back({ x, y });
+	}
+
+	void Graphics::endPath(bool close) {
+		if (m_pathPoints.empty()) return;
+		cairo_new_path(m_context);
+		cairo_move_to(m_context, m_pathPoints[0].x, m_pathPoints[0].y);
+		for (int i = 1; i < m_pathPoints.size(); i++) {
+			cairo_line_to(m_context, m_pathPoints[i].x, m_pathPoints[i].y);
+		}
+		if (close) cairo_close_path(m_context);
 	}
 
 	void Graphics::save() {
