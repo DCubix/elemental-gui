@@ -157,6 +157,18 @@ namespace tui {
 		SDL_StopTextInput();
 	}
 
+	void Application::clipboardSet(const std::string& str) {
+		SDL_SetClipboardText(str.c_str());
+	}
+
+	std::string Application::clipboardGet() {
+		return std::string(SDL_GetClipboardText());
+	}
+
+	uint Application::getMod() {
+		return SDL_GetModState();
+	}
+
 	void Application::redraw() {
 		m_layout.perform(0, 0, m_width, m_height);
 

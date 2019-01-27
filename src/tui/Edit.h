@@ -21,7 +21,10 @@ namespace tui {
 
 		void format(int from, int len, FontStyle style, float r, float g, float b);
 		void format(FontStyle style, float r, float g, float b);
+
 		void select(int from, int len = -1);
+		void deselect();
+		bool isSelected();
 
 	private:
 		enum EditState {
@@ -51,6 +54,8 @@ namespace tui {
 		Json m_style;
 
 		void insertChar(char c);
+		void removeChar(int i);
+		void deleteSelected();
 		CharRect& findCharFromIndex(int index);
 
 		std::vector<Point> buildOrthoHull(const std::vector<CharRect>& crs);

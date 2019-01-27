@@ -122,9 +122,7 @@ namespace tui {
 		}
 
 		// Draw selection
-		if (m_selectionStart != -1 && m_selectionEnd != -1 &&
-			m_selectionStart != m_selectionEnd)
-		{
+		if (isSelected()) {
 			int a = m_selectionStart,
 				b = m_selectionEnd;
 			if (a > b) std::swap(a, b);
@@ -247,21 +245,27 @@ namespace tui {
 					int lsz = std::get<1>(lines[currLine]);
 					m_caretIndex = loff + lsz-1;
 				} else if (e->key == SDLK_BACKSPACE) {
-					if (m_caretIndex-- > 0 && !m_text.empty()) {
-						m_textRaw.erase(m_caretIndex, 1);
-						m_text.erase(m_text.begin() + m_caretIndex);
+					if (isSelected()) {
+						deleteSelected();
 					} else {
-						m_caretIndex = 0;
+						if (m_caretIndex-- > 0 && !m_text.empty()) {
+							removeChar(m_caretIndex);
+						} else {
+							m_caretIndex = 0;
+						}
 					}
 				} else if (e->key == SDLK_DELETE) {
-					if (!m_text.empty()) {
-						m_textRaw.erase(m_caretIndex, 1);
-						m_text.erase(m_text.begin() + m_caretIndex);
-						if (m_caretIndex >= m_textRaw.size()) {
-							m_caretIndex = m_textRaw.size()-1;
-						}
+					if (isSelected()) {
+						deleteSelected();
 					} else {
-						m_caretIndex = 0;
+						if (!m_text.empty()) {
+							removeChar(m_caretIndex);
+							if (m_caretIndex >= m_textRaw.size()) {
+								m_caretIndex = m_textRaw.size()-1;
+							}
+						} else {
+							m_caretIndex = 0;
+						}
 					}
 				} else if (e->key == SDLK_LEFT) {
 					m_caretIndex--;
@@ -295,6 +299,27 @@ namespace tui {
 						off = loff + lsz-1;
 					}
 					m_caretIndex = off;
+				} else if (e->key == SDLK_c && app()->getMod() & KMOD_CTRL && isSelected()) {
+					int a = m_selectionStart,
+						b = m_selectionEnd;
+					if (a > b) std::swap(a, b);
+					std::string selTxt = m_textRaw.substr(a, b - a);
+					app()->clipboardSet(selTxt);
+				} else if (e->key == SDLK_x && app()->getMod() & KMOD_CTRL && isSelected()) {
+					int a = m_selectionStart,
+						b = m_selectionEnd;
+					if (a > b) std::swap(a, b);
+					std::string selTxt = m_textRaw.substr(a, b - a);
+					app()->clipboardSet(selTxt);
+					deleteSelected();
+				} else if (e->key == SDLK_v && app()->getMod() & KMOD_CTRL) {
+					if (isSelected()) {
+						deleteSelected();
+					}
+					std::string ntxt = app()->clipboardGet();
+					for (char c : ntxt) {
+						insertChar(c);
+					}
 				}
 				invalidate();
 				status = EventStatus::Consumed;
@@ -345,7 +370,7 @@ namespace tui {
 	}
 
 	void Edit::format(FontStyle style, float r, float g, float b) {
-		if (m_selectionStart == -1 || m_selectionEnd == -1 || m_selectionStart == m_selectionEnd)
+		if (!isSelected())
 			return;
 		int from = m_selectionStart;
 		int len = m_selectionEnd - from;
@@ -357,6 +382,17 @@ namespace tui {
 		m_selectionStart = from;
 		m_selectionEnd = from + len;
 		invalidate();
+	}
+
+	void Edit::deselect() {
+		m_selectionStart = -1;
+		m_selectionEnd = -1;
+		invalidate();
+	}
+
+	bool Edit::isSelected() {
+		return (m_selectionStart != -1 && m_selectionEnd != -1 &&
+			m_selectionStart != m_selectionEnd);
 	}
 
 	void Edit::insertChar(char c) {
@@ -377,6 +413,22 @@ namespace tui {
 		else m_text.insert(m_text.begin() + m_caretIndex, chr);
 
 		m_caretIndex++;
+	}
+
+	void Edit::removeChar(int i) {
+		m_textRaw.erase(i, 1);
+		m_text.erase(m_text.begin() + i);
+	}
+
+	void Edit::deleteSelected() {
+		int a = m_selectionStart,
+			b = m_selectionEnd;
+		if (a > b) std::swap(a, b);
+		for (int i = a; i < b; i++) {
+			removeChar(a);
+		}
+		m_caretIndex = a;
+		deselect();
 	}
 
 	Edit::CharRect& Edit::findCharFromIndex(int index) {

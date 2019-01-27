@@ -133,11 +133,6 @@ R"({
 	}
 },
 "Selection": {
-	"border": {
-		"radius": 0.0,
-		"color": [0.0, 0.25, 0.45, 0.5],
-		"width": 1.0
-	},
 	"background": {
 		"color": [0.0, 0.45, 0.95, 0.45]
 	}

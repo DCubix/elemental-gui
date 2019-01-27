@@ -60,6 +60,11 @@ namespace tui {
 		void startInput();
 		void stopInput();
 
+		void clipboardSet(const std::string& str);
+		std::string clipboardGet();
+
+		uint getMod();
+
 		static Json DefaultStyle;
 	private:
 		SDL_Window *m_window;
