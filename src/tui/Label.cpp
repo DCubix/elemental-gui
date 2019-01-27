@@ -26,7 +26,7 @@ namespace tui {
 		g.styledTextBegin(m_style);
 
 		g.clipPush(c.x, c.y, c.w, c.h);
-		int offx = 4;
+		int offx = 0;
 		int maxW = 0, maxH = 0;
 
 		auto&& lines = utils::splitString(m_text, "\n");
@@ -89,7 +89,6 @@ namespace tui {
 			}
 			g.image(m_icon, ix, iy + ty, m_icon->width(), m_icon->height());
 		}
-
 
 		int offy = 0;
 		switch (m_alignment) {

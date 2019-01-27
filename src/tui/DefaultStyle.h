@@ -25,7 +25,20 @@ R"({
 		"width": 1.0
 	},
 	"background": {
-		"color": [0.75, 0.72, 0.7, 1.0]
+		"gradient": {
+			"startPos": [0.0, 0.0],
+			"endPos": [1.0, 1.0],
+			"colors": [
+				{
+					"color": [0.85, 0.82, 0.8, 1.0],
+					"offset": 0.0
+				},
+				{
+					"color":  [0.65, 0.62, 0.6, 1.0],
+					"offset": 1.0
+				}
+			]
+		}
 	}
 },
 "Button": {

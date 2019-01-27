@@ -4,7 +4,7 @@
 #include "Label.h"
 
 namespace tui {
-	using Callback = std::function<void()>;
+	using ClickCallback = std::function<void()>;
 
 	class Button : public Label {
 	public:
@@ -13,7 +13,7 @@ namespace tui {
 		void onDraw(Graphics& g) override;
 		EventStatus onEvent(Event *event) override;
 
-		void onClick(Callback cb) { m_onClick = cb; }
+		void onClick(ClickCallback cb) { m_onClick = cb; }
 
 	private:
 		enum ButtonState {
@@ -22,7 +22,7 @@ namespace tui {
 			BSClick
 		};
 
-		Callback m_onClick;
+		ClickCallback m_onClick;
 		ButtonState m_state;
 	};
 }

@@ -20,7 +20,8 @@ namespace tui {
 
 	void Slider::onDraw(Graphics& g) {
 		Rect b = bounds();
-		int sz = (m_orientation == Horizontal ? b.w : b.h) - SliderButtonSize;
+		int btn = getButtonSize();
+		int sz = (m_orientation == Horizontal ? b.w : b.h) - btn;
 		m_buttonPos = int(m_range.normalized(m_value) * float(sz));
 
 		g.styledRect(b.x, b.y, b.w, b.h, app()->style()["Slider"]);
@@ -32,27 +33,26 @@ namespace tui {
 			case BSClick: state = "click"; break;
 		}
 
-		const std::string txt = std::to_string(m_value);
-
-		g.styledTextBegin(app()->style()["DefaultText"]);
-		auto&& ex = g.measureText(txt);
+//		const std::string txt = std::to_string(m_value);
+//		g.styledTextBegin(app()->style()["DefaultText"]);
+//		auto&& ex = g.measureText(txt);
 
 		if (m_orientation == Horizontal) {
-			g.styledRect(b.x + m_buttonPos, b.y, SliderButtonSize, b.h, app()->style()["Button"][state]);
-			g.styledTextEnd(txt, b.x + (b.w / 2 - int(ex.width) / 2), b.y + b.h / 2 + int(ex.height) / 2);
+			g.styledRect(b.x + m_buttonPos, b.y, btn, b.h, app()->style()["Button"][state]);
+//			g.styledTextEnd(txt, b.x + (b.w / 2 - int(ex.width) / 2), b.y + b.h / 2 + int(ex.height) / 2);
 		} else {
-			g.styledRect(b.x, b.y + (sz - m_buttonPos), b.w, SliderButtonSize, app()->style()["Button"][state]);
-			g.styledTextEnd(
-						txt,
-						b.x + b.w / 2 - ex.height / 2,
-						b.y + b.h / 2 - ex.width / 2,
-						PI / 2
-			);
+			g.styledRect(b.x, b.y + m_buttonPos, b.w, btn, app()->style()["Button"][state]);
+//			g.styledTextEnd(
+//						txt,
+//						b.x + b.w / 2 - ex.height / 2,
+//						b.y + b.h / 2 - ex.width / 2,
+//						PI / 2
+//			);
 		}
 	}
 
 	EventStatus Slider::onEvent(Event* event) {
-		Element::onEvent(event);
+		EventStatus status = Element::onEvent(event);
 		if (event->type() == MouseEventType) {
 			Rect b = intersectedBounds();
 			Rect c = bounds();
@@ -62,16 +62,19 @@ namespace tui {
 				case BSHover: {
 					if (e->pressed && e->button == 1) {
 						m_state = BSClick;
+						status = EventStatus::Consumed;
 						invalidate();
 					}
 				} break;
 				case BSClick: {
 					if (!b.hasPoint(e->x, e->y)) {
 						m_state = BSNormal;
+						status = EventStatus::Consumed;
 						invalidate();
 					}
 					if (!e->pressed && e->button == 1) {
 						m_state = BSHover;
+						status = EventStatus::Consumed;
 						invalidate();
 					} else {
 						updateValue(p);
@@ -88,6 +91,7 @@ namespace tui {
 				case BSNormal: {
 					if (b.hasPoint(e->x, e->y)) {
 						m_state = BSHover;
+						status = EventStatus::Consumed;
 						invalidate();
 					}
 				} break;
@@ -95,33 +99,53 @@ namespace tui {
 					if (!b.hasPoint(e->x, e->y)) {
 						m_state = BSNormal;
 						invalidate();
+					} else {
+						status = EventStatus::Consumed;
 					}
 				} break;
 				case BSClick: {
 					updateValue(p);
+					status = EventStatus::Consumed;
 				} break;
 			}
 		}
-		return EventStatus::Consumed;
+		return status;
 	}
 
 	void Slider::range(float min, float max) {
 		m_range.minimum = min;
 		m_range.maximum = max;
+		value(m_range.constrain(m_value));
 		invalidate();
 	}
 
+	void Slider::value(float v) {
+		m_value = v; invalidate();
+		if (m_onValueChange) m_onValueChange();
+	}
+
 	void Slider::updateValue(int p) {
+		int btn = getButtonSize();
 		Rect b = bounds();
-		int sz = (m_orientation == Horizontal ? b.w : b.h) - SliderButtonSize;
-		if (m_orientation == Vertical) {
-			p = (sz + SliderButtonSize) - p;
-		}
+		p -= btn/2;
+		int sz = (m_orientation == Horizontal ? b.w : b.h) - btn;
+//		if (m_orientation == Vertical) {
+//			p = (sz + SliderButtonSize) - p;
+//		}
 
 		Range vp{ 0, float(sz) };
 		m_value = m_range.constrain(m_range.remap(vp, p));
-		m_value = std::floor(m_value / m_step) * m_step;
+		value(std::floor(m_value / m_step) * m_step);
 		invalidate();
+	}
+
+	int Slider::getButtonSize() {
+		Rect b = bounds();
+		int vpSize = (m_orientation == Horizontal ? b.w : b.h);
+		float contentSize = (m_range.maximum - m_range.minimum) + vpSize;
+		float viewRatio = vpSize / contentSize;
+		int btnSize = int(vpSize * viewRatio);
+		return btnSize < SliderButtonSize ? SliderButtonSize : btnSize;
 	}
 
 }

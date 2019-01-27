@@ -12,7 +12,8 @@ namespace tui {
 	Element::Element()
 		: m_parent(nullptr), m_bounds(0, 0, 50, 50),
 		  m_dirty(true), m_visible(true),
-		  m_focused(false), m_application(nullptr)
+		  m_focused(false), m_autoSize(false),
+		  m_application(nullptr)
 	{}
 
 	void Element::onDraw(Graphics& g) {}
@@ -26,6 +27,10 @@ namespace tui {
 			}
 		}
 		return EventStatus::Active;
+	}
+
+	Size Element::preferredSize() {
+		return { m_bounds.w, m_bounds.h };
 	}
 
 	void Element::invalidate() { m_dirty = true; if (app()) app()->requestRedraw(); }
@@ -48,12 +53,9 @@ namespace tui {
 
 	Rect Element::intersectedBounds() {
 		if (m_parent != nullptr) {
-			auto&& inter = m_parent->intersectedBounds().getIntersected(m_bounds);
-			if (inter.has_value()) {
-				return inter.value();
-			}
+			return m_parent->intersectedBounds().getIntersected(bounds()).value_or(bounds());
 		}
-		return m_bounds;
+		return bounds();
 	}
 
 	bool Rect::hasPoint(int x, int y) {

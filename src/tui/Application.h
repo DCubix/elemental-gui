@@ -30,7 +30,7 @@ namespace tui {
 		Application() = default;
 		~Application() = default;
 
-		Application(const std::string& title, uint width, uint height);
+		Application(const std::string& title, uint width, uint height, bool resizable = true);
 		int start(ApplicationAdapter *adapter);
 
 		template <typename E>
@@ -63,6 +63,9 @@ namespace tui {
 		void clipboardSet(const std::string& str);
 		std::string clipboardGet();
 
+		uint windowWidth() const { return m_width; }
+		uint windowHeight() const { return m_height; }
+
 		uint getMod();
 
 		static Json DefaultStyle;
@@ -80,7 +83,7 @@ namespace tui {
 
 		std::string m_title;
 		uint m_width, m_height;
-		bool m_shouldRedraw;
+		bool m_shouldRedraw, m_resizable;
 
 		void redraw();
 		void requestRedrawAll();

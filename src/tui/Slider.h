@@ -4,8 +4,9 @@
 #include "Element.h"
 
 namespace tui {
+	using ValueCallback = std::function<void()>;
 
-	constexpr int SliderButtonSize = 20;
+	constexpr int SliderButtonSize = 16;
 	class Slider : public Element {
 	public:
 		enum Orientation {
@@ -22,13 +23,15 @@ namespace tui {
 		void range(float min, float max);
 
 		float value() const { return m_value; }
-		void value(float v) { m_value = v; invalidate(); }
+		void value(float v);
 
 		float step() const { return m_step; }
 		void step(float s) { m_step = s; }
 
 		Orientation orientation() const { return m_orientation; }
 		void orientation(Orientation ori) { m_orientation = ori; invalidate(); }
+
+		void onValueChange(ValueCallback cb) { m_onValueChange = cb; }
 
 	private:
 		enum ButtonState {
@@ -46,7 +49,10 @@ namespace tui {
 
 		ButtonState m_state;
 
+		ValueCallback m_onValueChange;
+
 		void updateValue(int p);
+		int getButtonSize();
 	};
 }
 

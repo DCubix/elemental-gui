@@ -106,12 +106,14 @@ namespace tui {
 	class Element : public Subscriber {
 		friend class Application;
 		friend class Panel;
+		friend class ScrollView;
 	public:
 		Element();
 		~Element() = default;
 
 		virtual void onDraw(Graphics& g);
 		virtual EventStatus onEvent(Event *event) override;
+		virtual Size preferredSize();
 
 		Rect bounds() const;
 		Rect intersectedBounds();
@@ -129,13 +131,16 @@ namespace tui {
 		bool focused() const { return m_focused; }
 		void requestFocus();
 
+		bool autoSize() const { return m_autoSize; }
+		void autoSize(bool as) { m_autoSize = as; invalidate(); }
+
 		Application* app() { return m_application; }
 
 	private:
 		Application *m_application;
 		Element *m_parent;
 		Rect m_bounds;
-		bool m_dirty, m_visible, m_focused;
+		bool m_dirty, m_visible, m_focused, m_autoSize;
 
 		virtual bool dirty() { return m_dirty; }
 	};

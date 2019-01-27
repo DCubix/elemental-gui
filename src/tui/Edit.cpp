@@ -10,10 +10,11 @@ namespace tui {
 
 	Edit::Edit()
 		: Element(),
-		  m_multiLine(false),
+		  m_multiLine(false), m_masked(false), m_editable(true),
 		  m_caretX(0), m_caretY(0),
 		  m_caretIndex(0),
 		  m_selectionStart(-1), m_selectionEnd(0),
+		  m_offsetX(0),
 		  m_state(ESNormal)
 	{ text("Edit"); localBounds().h = 22; }
 
@@ -30,10 +31,13 @@ namespace tui {
 
 		g.drawCharBegin(FontStyle::Normal, font, fontSize);
 
+		std::string text = m_textRaw;
+
 		const int lineHeight = g.measureText("E[ ").height;
+		const int spaceSize = g.measureText(" ").width;
 		int maxW = 0, maxH = 0, lineH = 0;
 		if (m_multiLine) {
-			auto&& lines = utils::splitString(m_textRaw, "\n");
+			auto&& lines = utils::splitString(text, "\n");
 			for (auto&& text : lines) {
 				auto&& ex = g.measureText(text);
 				maxH += ex.height;
@@ -41,7 +45,7 @@ namespace tui {
 				maxW = std::max(maxW, int(ex.width));
 			}
 		} else {
-			auto&& ex = g.measureText(m_textRaw);
+			auto&& ex = g.measureText(text);
 			maxW = ex.width;
 			maxH = ex.height;
 			lineH = maxH;
@@ -49,8 +53,11 @@ namespace tui {
 
 		lineH = std::max(lineH, lineHeight);
 
+		m_textWidth = maxW + 25;
+		m_textHeight = maxH + 100;
+
 		int sx = b.x + 4;
-		int tx = sx;
+		int tx = sx + m_offsetX;
 		int ty = b.y + 4 + lineH;
 		if (!m_multiLine) {
 			ty = b.y + b.h / 2 + lineH / 2;
@@ -60,19 +67,23 @@ namespace tui {
 
 		m_charRects.clear();
 
-		g.clipPush(c.x, c.y, c.w, c.h);
+		g.clipPush(c.x+4, c.y+4, c.w-8, c.h-8);
 		int index = 0;
 		for (Char c : m_text) {
-			if (c.c == '\n' && m_multiLine) {
-				int ptx = tx;
-				int pty = ty;
-				ty += lineH;
-				tx = b.x + 4;
+			if (c.c == '\n') {
+				if (m_multiLine) {
+					int ptx = tx;
+					int pty = ty;
+					ty += lineH;
+					tx = b.x + 4 + m_offsetX;
 
-				CharRect cr;
-				cr.index = index;
-				cr.rect = Rect{ ptx, pty - lineH, (b.w - 8) - (ptx - sx), lineH };
-				m_charRects.push_back(cr);
+					CharRect cr;
+					cr.index = index;
+					cr.rect = Rect{ ptx, pty - lineH, (b.w - 8) - (ptx - sx), lineH };
+					m_charRects.push_back(cr);
+				} else { continue; }
+			} else if (c.c == '\r') {
+				continue;
 			} else {
 				g.color(c.r, c.g, c.b);
 				g.drawCharBegin(c.style, font, fontSize);
@@ -82,7 +93,16 @@ namespace tui {
 				CharRect cr;
 				cr.index = index;
 				cr.rect = Rect{ ptx, ty - lineH, 0, lineH };
-				tx = g.drawChar(c.c, tx, ty);
+
+				char chr = c.c;
+				if (chr == '\t') {
+					tx = g.drawChar(' ', tx, ty);
+					tx = g.drawChar(' ', tx, ty);
+					tx = g.drawChar(' ', tx, ty);
+					tx = g.drawChar(' ', tx, ty);
+				} else {
+					tx = g.drawChar(m_masked ? '*' : chr, tx, ty);
+				}
 				cr.rect.w = (tx - ptx) + 1;
 				m_charRects.push_back(cr);
 			}
@@ -90,33 +110,40 @@ namespace tui {
 			index++;
 		}
 
-		if (!m_multiLine) {
-			CharRect cr;
-			cr.index = index;
-			cr.rect = Rect{ tx, ty - lineH, (b.w - 8) - (tx - sx), lineH };
-			m_charRects.push_back(cr);
-		}
+		CharRect cr;
+		cr.index = index;
+		cr.rect = Rect{ tx, ty - lineH, (b.w - 8) - (tx - sx), lineH };
+		m_charRects.push_back(cr);
 
-		if (m_text.empty()) {
-			tx = sx;
-			ty = b.y + 4;
-			if (!m_multiLine) {
-				ty = b.y + (b.h / 2 - lineH / 2);
-			}
-			g.color(0, 0, 0);
-			g.lineWidth(1.0f);
-			g.line(tx, ty, tx, ty + lineH + 1);
-			g.stroke();
-		} else {
-			for (CharRect cr : m_charRects) {
-				if (focused() && m_caretIndex == cr.index) {
+		if (m_editable) {
+			if (m_text.empty()) {
+				tx = sx;
+				ty = b.y + 4;
+				if (!m_multiLine) {
+					ty = b.y + (b.h / 2 - lineH / 2);
+				}
+				g.color(0, 0, 0);
+				g.lineWidth(1.0f);
+				g.line(tx, ty, tx, ty + lineH + 1);
+				g.stroke();
+
+				m_caretX = tx;
+				m_caretY = ty;
+				if (!autoSize())
+					updateOffset();
+				else m_offsetX = 0;
+			} else {
+				if (focused()) {
+					CharRect cr = m_charRects[m_caretIndex];
 					m_caretX = cr.rect.x;
 					m_caretY = cr.rect.y;
+					if (!autoSize())
+						updateOffset();
+					else m_offsetX = 0;
 					g.color(0, 0, 0);
 					g.lineWidth(1.0f);
 					g.line(m_caretX, m_caretY, m_caretX, m_caretY + lineH + 1);
 					g.stroke();
-					break;
 				}
 			}
 		}
@@ -164,7 +191,11 @@ namespace tui {
 			MouseEvent* e = dynamic_cast<MouseEvent*>(event);
 			switch (m_state) {
 				case ESNormal: {
-					if (focused() && e->pressed && e->button == 1) {
+					if (focused() &&
+						e->pressed && e->button == 1 &&
+						m_editable &&
+						b.hasPoint(e->x, e->y))
+					{
 						for (CharRect cr : m_charRects) {
 							Rect crr = cr.rect;
 							if (cr.index < m_text.size() - 1)
@@ -208,14 +239,14 @@ namespace tui {
 			}
 		} else if (event->type() == TextInputEventType) {
 			TextInput *e = dynamic_cast<TextInput*>(event);
-			if (focused()) {
+			if (focused() && m_editable) {
 				insertChar(e->inputChar);
 				invalidate();
 				status = EventStatus::Consumed;
 			}
 		} else if (event->type() == KeyEventType) {
 			KeyEvent *e = dynamic_cast<KeyEvent*>(event);
-			if (e->pressed && focused()) {
+			if (e->pressed && focused() && m_editable) {
 				// Map out the lines start offset and length.
 				// Since the text is just a linear
 				// array, we just check for line breaks (\n)
@@ -272,7 +303,7 @@ namespace tui {
 					if (m_caretIndex <= 0) m_caretIndex = 0;
 				} else if (e->key == SDLK_RIGHT) {
 					m_caretIndex++;
-					if (m_caretIndex >= m_text.size()) m_caretIndex = int(m_text.size()) - 1;
+					if (m_caretIndex >= m_text.size()) m_caretIndex = int(m_text.size());
 				} else if (e->key == SDLK_UP && m_multiLine) {
 					int loff = std::get<0>(lines[currLine]);
 					int dist = m_caretIndex - loff;
@@ -320,9 +351,13 @@ namespace tui {
 					for (char c : ntxt) {
 						insertChar(c);
 					}
+				} else if (e->key == SDLK_a && app()->getMod() & KMOD_CTRL) {
+					select(0);
 				}
 				invalidate();
 				status = EventStatus::Consumed;
+			} else if (!e->pressed && focused()) {
+				invalidate();
 			}
 		} else if (event->type() == FocusEventType) {
 			FocusEvent *e = dynamic_cast<FocusEvent*>(event);
@@ -340,18 +375,18 @@ namespace tui {
 		return status;
 	}
 
+	Size Edit::preferredSize() {
+		return { m_textWidth, m_textHeight };
+	}
+
 	void Edit::text(const std::string& txt) {
 		std::string _txt = txt;
-		if (_txt.back() != '\n') {
-			_txt.push_back('\n');
-		}
+		m_caretIndex = 0;
 		m_text.clear();
+		m_textRaw.clear();
 		for (char c : _txt) {
-			Char chr{};
-			chr.c = c;
-			m_text.push_back(chr);
+			insertChar(c);
 		}
-		m_textRaw = _txt;
 		invalidate();
 	}
 
@@ -396,6 +431,11 @@ namespace tui {
 	}
 
 	void Edit::insertChar(char c) {
+		if (c == '\r') return;
+
+		if (m_caretIndex > m_textRaw.size()) m_caretIndex = m_textRaw.size();
+		else if (m_caretIndex < 0) m_caretIndex = 0;
+
 		if (m_textRaw.empty()) m_textRaw.push_back(c);
 		else m_textRaw.insert(m_caretIndex, 1, c);
 
@@ -413,11 +453,13 @@ namespace tui {
 		else m_text.insert(m_text.begin() + m_caretIndex, chr);
 
 		m_caretIndex++;
+		if (m_onChange) m_onChange();
 	}
 
 	void Edit::removeChar(int i) {
 		m_textRaw.erase(i, 1);
 		m_text.erase(m_text.begin() + i);
+		if (m_onChange) m_onChange();
 	}
 
 	void Edit::deleteSelected() {
@@ -431,18 +473,18 @@ namespace tui {
 		deselect();
 	}
 
-	Edit::CharRect& Edit::findCharFromIndex(int index) {
-		auto it = std::find_if(
-					m_charRects.begin(),
-					m_charRects.end(),
-					[=](const CharRect& cr) {
-						return cr.index == index;
-					}
-		);
-		if (it != m_charRects.end()) {
-			return *it;
+	void Edit::updateOffset() {
+		Rect b = bounds();
+		int cx = m_caretX - (b.x + 4);
+		int max = b.w - 10;
+		if (cx > max-1) {
+			int off = cx - max;
+			m_offsetX -= off;
+			if (m_offsetX > 0) m_offsetX = 0;
+		} else if (cx < 0) {
+			m_offsetX += -cx;
+			if (m_offsetX > 0) m_offsetX = 0;
 		}
-		return *m_charRects.begin();
 	}
 
 	std::vector<Point> Edit::buildOrthoHull(const std::vector<CharRect>& crs) {

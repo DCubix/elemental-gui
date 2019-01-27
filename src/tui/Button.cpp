@@ -36,18 +36,21 @@ namespace tui {
 				case BSHover: {
 					if (e->pressed && e->button == 1) {
 						m_state = BSClick;
+						status = EventStatus::Consumed;
 						invalidate();
 					}
 				} break;
 				case BSClick: {
 					if (!b.hasPoint(e->x, e->y)) {
 						m_state = BSNormal;
+						status = EventStatus::Consumed;
 						invalidate();
 					}
 					if (!e->pressed && e->button == 1) {
 						if (m_onClick)
 							m_onClick();
 						m_state = BSHover;
+						status = EventStatus::Consumed;
 						invalidate();
 					}
 				} break;
