@@ -27,6 +27,42 @@ namespace tui {
 				return EventStatus::Consumed;
 		}
 
+		if (event->Type() == EventType::ScrollEventType) {
+			ScrollEvent* e = dynamic_cast<ScrollEvent*>(event);
+			Rectangle full = GetIntersectedBounds();
+			if (full.HasPoint(e->mouseX, e->mouseY)) {
+				const float scrollSpeed = 30.0f;
+				bool shift = (SDL_GetModState() & SDL_KMOD_SHIFT) != 0;
+
+				if (shift) {
+					if (m_horizontalSlider != nullptr && m_horizontalSlider->IsEnabled()) {
+						float newVal = m_horizontalSlider->GetValue() - e->scrollY * scrollSpeed;
+						newVal = std::max((float)m_horizontalSlider->GetRange().minimum,
+								 std::min(newVal, (float)m_horizontalSlider->GetRange().maximum));
+						m_horizontalSlider->SetValue(newVal);
+						return EventStatus::Consumed;
+					}
+				} else {
+					if (m_verticalSlider != nullptr && m_verticalSlider->IsEnabled()) {
+						float newVal = m_verticalSlider->GetValue() - e->scrollY * scrollSpeed;
+						newVal = std::max((float)m_verticalSlider->GetRange().minimum,
+								 std::min(newVal, (float)m_verticalSlider->GetRange().maximum));
+						m_verticalSlider->SetValue(newVal);
+						return EventStatus::Consumed;
+					}
+				}
+
+				// Also handle native horizontal scroll (e.g. trackpad)
+				if (e->scrollX != 0.0f && m_horizontalSlider != nullptr && m_horizontalSlider->IsEnabled()) {
+					float newVal = m_horizontalSlider->GetValue() - e->scrollX * scrollSpeed;
+					newVal = std::max((float)m_horizontalSlider->GetRange().minimum,
+							 std::min(newVal, (float)m_horizontalSlider->GetRange().maximum));
+					m_horizontalSlider->SetValue(newVal);
+					return EventStatus::Consumed;
+				}
+			}
+		}
+
 		if (event->Type() == EventType::MouseEventType) {
 			MouseEvent* e = dynamic_cast<MouseEvent*>(event);
 			if (b.HasPoint(e->x, e->y) && m_element != nullptr) {

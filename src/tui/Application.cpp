@@ -24,6 +24,7 @@ namespace tui {
 
 		if (!SDL_Init(SDL_INIT_VIDEO)) {
 			SDL_Log("%s", SDL_GetError());
+			delete adapter;
 			return 1;
 		}
 
@@ -39,12 +40,17 @@ namespace tui {
 
 		if (m_window == nullptr) {
 			SDL_Log("%s", SDL_GetError());
+			delete adapter;
+			SDL_Quit();
 			return 1;
 		}
 
 		m_renderer = SDL_CreateRenderer(m_window, NULL);
 		if (m_renderer == nullptr) {
 			SDL_Log("%s", SDL_GetError());
+			delete adapter;
+			SDL_DestroyWindow(m_window);
+			SDL_Quit();
 			return 1;
 		}
 
@@ -110,6 +116,14 @@ namespace tui {
 									evt.key.key,
 									evt.key.mod,
 									false
+						);
+					} break;
+					case SDL_EVENT_MOUSE_WHEEL: {
+						m_eventSystem.Broadcast<ScrollEvent>(
+									evt.wheel.x,
+									evt.wheel.y,
+									(int)evt.wheel.mouse_x,
+									(int)evt.wheel.mouse_y
 						);
 					} break;
 				}

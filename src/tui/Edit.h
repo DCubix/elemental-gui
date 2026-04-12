@@ -47,7 +47,7 @@ namespace tui {
 		struct Char {
 			char c = '\0';
 			float r = 0.0f, g = 0.0f, b = 0.0f;
-			FontStyle style = Normal;
+			FontStyle style = FontStyle::Normal;
 		};
 		struct CharRect {
 			Rectangle rect;

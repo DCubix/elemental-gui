@@ -15,7 +15,8 @@ namespace tui {
 		KeyEventType,
 		TextInputEventType,
 		FocusEventType,
-		BlurEventType
+		BlurEventType,
+		ScrollEventType
 	};
 
 	struct Event {
@@ -85,6 +86,18 @@ namespace tui {
 
 		int key, mod;
 		bool pressed;
+	};
+
+	struct ScrollEvent : public Event {
+		EventType Type() { return EventType::ScrollEventType; }
+
+		ScrollEvent() = default;
+		ScrollEvent(float scrollX, float scrollY, int mouseX, int mouseY)
+			: scrollX(scrollX), scrollY(scrollY), mouseX(mouseX), mouseY(mouseY)
+		{}
+
+		float scrollX, scrollY;
+		int mouseX, mouseY;
 	};
 
 	//

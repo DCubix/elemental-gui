@@ -49,6 +49,7 @@ namespace tui {
 			m_eventSystem.Subscribe(m_elements.back().get(), EventType::FocusEventType);
 			m_eventSystem.Subscribe(m_elements.back().get(), EventType::BlurEventType);
 			m_eventSystem.Subscribe(m_elements.back().get(), EventType::KeyEventType);
+			m_eventSystem.Subscribe(m_elements.back().get(), EventType::ScrollEventType);
 
 			return *dynamic_cast<E*>(m_elements.back().get());
 		}

@@ -261,10 +261,10 @@ namespace tui {
 		cairo_font_slant_t slant = CAIRO_FONT_SLANT_NORMAL;
 		cairo_font_weight_t weight = CAIRO_FONT_WEIGHT_NORMAL;
 		switch (style) {
-			case Normal: break;
-			case Bold: weight = CAIRO_FONT_WEIGHT_BOLD; break;
-			case Italic: slant = CAIRO_FONT_SLANT_ITALIC; break;
-			case BoldItalic:
+			case FontStyle::Normal: break;
+			case FontStyle::Bold: weight = CAIRO_FONT_WEIGHT_BOLD; break;
+			case FontStyle::Italic: slant = CAIRO_FONT_SLANT_ITALIC; break;
+			case FontStyle::BoldItalic:
 				weight = CAIRO_FONT_WEIGHT_BOLD;
 				slant = CAIRO_FONT_SLANT_ITALIC;
 				break;

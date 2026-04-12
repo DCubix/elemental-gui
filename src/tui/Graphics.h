@@ -50,7 +50,7 @@ namespace tui {
 		cairo_surface_t *m_surface;
 	};
 
-	enum FontStyle {
+	enum class FontStyle {
 		Normal = 0,
 		Bold,
 		Italic,

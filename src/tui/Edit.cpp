@@ -198,7 +198,7 @@ namespace tui {
 					{
 						for (CharRect cr : m_charRects) {
 							Rectangle crr = cr.rect;
-							if (cr.index < m_text.size() - 1)
+							if (m_text.size() > 1 && cr.index < m_text.size() - 1)
 								crr.x -= crr.w/2;
 							if (crr.HasPoint(e->x, e->y)) {
 								m_caretIndex = cr.index;
@@ -226,7 +226,7 @@ namespace tui {
 				case EditState::Selecting: {
 					for (CharRect cr : m_charRects) {
 						Rectangle crr = cr.rect;
-						if (cr.index < m_text.size() - 1)
+						if (m_text.size() > 1 && cr.index < m_text.size() - 1)
 							crr.x -= crr.w/2;
 						if (crr.HasPoint(e->x, e->y)) {
 							m_selectionEnd = cr.index;
@@ -393,7 +393,8 @@ namespace tui {
 	void Edit::Format(int from, int len, FontStyle style, float r, float g, float b) {
 		if (len < 0) len = m_text.size();
 		from = std::max(from, 0);
-		len = std::min(len, int(m_text.size()));
+		len = std::min(len, int(m_text.size()) - from);
+		if (len <= 0) return;
 
 		for (int i = from; i < from+len; i++) {
 			m_text[i].style = style;
