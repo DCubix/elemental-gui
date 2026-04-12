@@ -30,6 +30,20 @@ CPMAddPackage(
 		"SDL_X11_XSCRNSAVER OFF"
 )
 
+# nlohmann/json
+CPMAddPackage(
+  NAME nlohmann_json
+  VERSION 3.7.3
+  # the git repo is incredibly large, so we download the archived include directory
+  URL https://github.com/nlohmann/json/releases/download/v3.7.3/include.zip
+  URL_HASH SHA256=87b5884741427220d3a33df1363ae0e8b898099fbc59f1c451113f6732891014
+)
+
+if (nlohmann_json_ADDED)
+  add_library(nlohmann_json INTERFACE IMPORTED)
+  target_include_directories(nlohmann_json INTERFACE ${nlohmann_json_SOURCE_DIR}/include)
+endif()
+
 # Cairo (uses meson upstream, so CPM falls back to system find_package)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 CPMFindPackage(NAME Cairo)
@@ -44,7 +58,7 @@ file(GLOB_RECURSE TUI_SRC
 
 add_library(${PROJECT_NAME} ${TUI_SRC})
 target_include_directories(${PROJECT_NAME} PUBLIC ${CAIRO_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} PUBLIC SDL3::SDL3 ${CAIRO_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PUBLIC SDL3::SDL3 ${CAIRO_LIBRARIES} nlohmann_json)
 
 add_executable(tui_test "src/main.cpp")
 target_link_libraries(tui_test PRIVATE ${PROJECT_NAME})

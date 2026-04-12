@@ -27,8 +27,6 @@ namespace tui {
 		bool IsEditable() const { return m_editable; }
 		void SetEditable(bool m) { m_editable = m; Invalidate(); }
 
-		void SetStyle(Json style) { m_style = style; Invalidate(); }
-
 		void Format(int from, int len, FontStyle style, float r, float g, float b);
 		void Format(FontStyle style, float r, float g, float b);
 
@@ -65,8 +63,6 @@ namespace tui {
 		EditState m_state;
 
 		ChangeCallback m_onChange;
-
-		Json m_style;
 
 		void InsertChar(char c);
 		void RemoveChar(int i);

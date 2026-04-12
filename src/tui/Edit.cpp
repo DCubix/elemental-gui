@@ -19,15 +19,13 @@ namespace tui {
 	{ SetText("Edit"); GetLocalBounds().h = 22; }
 
 	void Edit::OnDraw(Graphics& g) {
-		if (m_style.is_null()) {
-			m_style = GetApp()->GetStyle()["DefaultText"];
-		}
+		const auto textStyle = GetStyle()["DefaultText"];
 
 		Rectangle b = GetBounds();
 		Rectangle c = GetIntersectedBounds();
 
-		const std::string font = m_style.value("font", "Sans");
-		const double fontSize = m_style.value("fontSize", 14.0);
+		const std::string font = textStyle.value("font", "Sans");
+		const double fontSize = textStyle.value("fontSize", 14.0);
 
 		g.DrawCharBegin(FontStyle::Normal, font, fontSize);
 
@@ -63,7 +61,15 @@ namespace tui {
 			ty = b.y + b.h / 2 + lineH / 2;
 		}
 
-		g.StyledRect(b.x, b.y, b.w, b.h, GetApp()->GetStyle()["Edit"]);
+		auto editStyle = GetStyle()["Edit"];
+		g.StyledRect(b.x, b.y, b.w, b.h, editStyle);
+
+		float textR = 0.88f, textG = 0.88f, textB = 0.88f;
+		if (textStyle.contains("color") && textStyle["color"].is_array() && textStyle["color"].size() >= 3) {
+			textR = textStyle["color"][0].get<float>();
+			textG = textStyle["color"][1].get<float>();
+			textB = textStyle["color"][2].get<float>();
+		}
 
 		m_charRects.clear();
 
@@ -122,7 +128,7 @@ namespace tui {
 				if (!m_multiLine) {
 					ty = b.y + (b.h / 2 - lineH / 2);
 				}
-				g.Color(0, 0, 0);
+				g.Color(textR, textG, textB);
 				g.LineWidth(1.0f);
 				g.Line(tx, ty, tx, ty + lineH + 1);
 				g.Stroke();
@@ -140,7 +146,7 @@ namespace tui {
 					if (!IsAutoSize())
 						UpdateOffset();
 					else m_offsetX = 0;
-					g.Color(0, 0, 0);
+					g.Color(textR, textG, textB);
 					g.LineWidth(1.0f);
 					g.Line(m_caretX, m_caretY, m_caretX, m_caretY + lineH + 1);
 					g.Stroke();
@@ -170,7 +176,7 @@ namespace tui {
 			}
 
 			g.EndPath(true);
-			g.StyledPaint(GetApp()->GetStyle()["Selection"]);
+			g.StyledPaint(GetStyle()["Selection"]);
 		}
 
 //		for (int i = 0; i < m_charRects.size(); i++) {
@@ -448,6 +454,13 @@ namespace tui {
 			chr.g = prev.g;
 			chr.b = prev.b;
 			chr.style = prev.style;
+		} else {
+			auto style = GetStyle()["DefaultText"];
+			if (style.contains("color") && style["color"].is_array() && style["color"].size() >= 3) {
+				chr.r = style["color"][0].get<float>();
+				chr.g = style["color"][1].get<float>();
+				chr.b = style["color"][2].get<float>();
+			}
 		}
 
 		if (m_text.empty()) m_text.push_back(chr);

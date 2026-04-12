@@ -7,8 +7,8 @@ namespace tui {
 	ScrollView::ScrollView()
 		: Element(),
 		  m_element(nullptr),
-		  m_verticalSlider(nullptr),
-		  m_horizontalSlider(nullptr)
+		  m_verticalScrollbar(nullptr),
+		  m_horizontalScrollbar(nullptr)
 	{}
 
 	EventStatus ScrollView::OnEvent(Event* event) {
@@ -17,13 +17,13 @@ namespace tui {
 		b.w -= barsize;
 		b.h -= barsize;
 
-		if (m_verticalSlider != nullptr) {
-			if (m_verticalSlider->OnEvent(event) == EventStatus::Consumed)
+		if (m_verticalScrollbar != nullptr) {
+			if (m_verticalScrollbar->OnEvent(event) == EventStatus::Consumed)
 				return EventStatus::Consumed;
 		}
 
-		if (m_horizontalSlider != nullptr) {
-			if (m_horizontalSlider->OnEvent(event) == EventStatus::Consumed)
+		if (m_horizontalScrollbar != nullptr) {
+			if (m_horizontalScrollbar->OnEvent(event) == EventStatus::Consumed)
 				return EventStatus::Consumed;
 		}
 
@@ -35,29 +35,29 @@ namespace tui {
 				bool shift = (SDL_GetModState() & SDL_KMOD_SHIFT) != 0;
 
 				if (shift) {
-					if (m_horizontalSlider != nullptr && m_horizontalSlider->IsEnabled()) {
-						float newVal = m_horizontalSlider->GetValue() - e->scrollY * scrollSpeed;
-						newVal = std::max((float)m_horizontalSlider->GetRange().minimum,
-								 std::min(newVal, (float)m_horizontalSlider->GetRange().maximum));
-						m_horizontalSlider->SetValue(newVal);
+					if (m_horizontalScrollbar != nullptr && m_horizontalScrollbar->IsEnabled()) {
+						float newVal = m_horizontalScrollbar->GetValue() - e->scrollY * scrollSpeed;
+						newVal = std::max((float)m_horizontalScrollbar->GetRange().minimum,
+								 std::min(newVal, (float)m_horizontalScrollbar->GetRange().maximum));
+						m_horizontalScrollbar->SetValue(newVal);
 						return EventStatus::Consumed;
 					}
 				} else {
-					if (m_verticalSlider != nullptr && m_verticalSlider->IsEnabled()) {
-						float newVal = m_verticalSlider->GetValue() - e->scrollY * scrollSpeed;
-						newVal = std::max((float)m_verticalSlider->GetRange().minimum,
-								 std::min(newVal, (float)m_verticalSlider->GetRange().maximum));
-						m_verticalSlider->SetValue(newVal);
+					if (m_verticalScrollbar != nullptr && m_verticalScrollbar->IsEnabled()) {
+						float newVal = m_verticalScrollbar->GetValue() - e->scrollY * scrollSpeed;
+						newVal = std::max((float)m_verticalScrollbar->GetRange().minimum,
+								 std::min(newVal, (float)m_verticalScrollbar->GetRange().maximum));
+						m_verticalScrollbar->SetValue(newVal);
 						return EventStatus::Consumed;
 					}
 				}
 
 				// Also handle native horizontal scroll (e.g. trackpad)
-				if (e->scrollX != 0.0f && m_horizontalSlider != nullptr && m_horizontalSlider->IsEnabled()) {
-					float newVal = m_horizontalSlider->GetValue() - e->scrollX * scrollSpeed;
-					newVal = std::max((float)m_horizontalSlider->GetRange().minimum,
-							 std::min(newVal, (float)m_horizontalSlider->GetRange().maximum));
-					m_horizontalSlider->SetValue(newVal);
+				if (e->scrollX != 0.0f && m_horizontalScrollbar != nullptr && m_horizontalScrollbar->IsEnabled()) {
+					float newVal = m_horizontalScrollbar->GetValue() - e->scrollX * scrollSpeed;
+					newVal = std::max((float)m_horizontalScrollbar->GetRange().minimum,
+							 std::min(newVal, (float)m_horizontalScrollbar->GetRange().maximum));
+					m_horizontalScrollbar->SetValue(newVal);
 					return EventStatus::Consumed;
 				}
 			}
@@ -74,26 +74,26 @@ namespace tui {
 	}
 
 	void ScrollView::OnDraw(Graphics& g) {
-		if (m_verticalSlider == nullptr) {
-			m_verticalSlider = &GetApp()->Create<Slider>();
-			m_horizontalSlider = &GetApp()->Create<Slider>();
+		if (m_verticalScrollbar == nullptr) {
+			m_verticalScrollbar = &GetApp()->Create<Scrollbar>();
+			m_horizontalScrollbar = &GetApp()->Create<Scrollbar>();
 
-			m_verticalSlider->m_parent = this;
-			m_horizontalSlider->m_parent = this;
+			m_verticalScrollbar->m_parent = this;
+			m_horizontalScrollbar->m_parent = this;
 
-			m_verticalSlider->SetOrientation(Slider::Vertical);
-			m_horizontalSlider->SetOrientation(Slider::Horizontal);
-			m_verticalSlider->SetStep(1);
-			m_horizontalSlider->SetStep(1);
+			m_verticalScrollbar->SetOrientation(Scrollbar::Vertical);
+			m_horizontalScrollbar->SetOrientation(Scrollbar::Horizontal);
+			m_verticalScrollbar->SetStep(1);
+			m_horizontalScrollbar->SetStep(1);
 		}
 
-		m_verticalSlider->SetEnabled(false);
-		m_horizontalSlider->SetEnabled(false);
-		m_verticalSlider->SetVisible(false);
-		m_horizontalSlider->SetVisible(false);
+		m_verticalScrollbar->SetEnabled(false);
+		m_horizontalScrollbar->SetEnabled(false);
+		m_verticalScrollbar->SetVisible(false);
+		m_horizontalScrollbar->SetVisible(false);
 
 		Rectangle b = GetBounds();
-		g.StyledRect(b.x, b.y, b.w, b.h, GetApp()->GetStyle()["Panel"]);
+		g.StyledRect(b.x, b.y, b.w, b.h, GetStyle()["Panel"]);
 
 		const int barsize = 16;
 
@@ -102,8 +102,8 @@ namespace tui {
 		if (m_element != nullptr) {
 			m_element->SetAutoSize(true);
 
-			m_element->GetLocalBounds().x = -m_horizontalSlider->GetValue();
-			m_element->GetLocalBounds().y = -m_verticalSlider->GetValue();
+			m_element->GetLocalBounds().x = -m_horizontalScrollbar->GetValue();
+			m_element->GetLocalBounds().y = -m_verticalScrollbar->GetValue();
 
 			Size ps = m_element->GetPreferredSize();
 
@@ -114,16 +114,16 @@ namespace tui {
 			int maxregiony = b.h - barsize;
 
 			if (maxx > maxregionx) {
-				m_horizontalSlider->SetEnabled(true);
-				m_horizontalSlider->SetVisible(true);
-				m_horizontalSlider->SetRange(0, maxx - maxregionx);
-				m_horizontalSlider->SetLocalBounds(Rectangle(0, b.h - barsize, maxregionx, barsize));
+				m_horizontalScrollbar->SetEnabled(true);
+				m_horizontalScrollbar->SetVisible(true);
+				m_horizontalScrollbar->SetRange(0, maxx - maxregionx);
+				m_horizontalScrollbar->SetLocalBounds(Rectangle(0, b.h - barsize, maxregionx, barsize));
 			}
 			if (maxy > maxregiony) {
-				m_verticalSlider->SetEnabled(true);
-				m_verticalSlider->SetVisible(true);
-				m_verticalSlider->SetRange(0, maxy - maxregiony);
-				m_verticalSlider->SetLocalBounds(Rectangle(b.w - barsize, 0, barsize, maxregiony));
+				m_verticalScrollbar->SetEnabled(true);
+				m_verticalScrollbar->SetVisible(true);
+				m_verticalScrollbar->SetRange(0, maxy - maxregiony);
+				m_verticalScrollbar->SetLocalBounds(Rectangle(b.w - barsize, 0, barsize, maxregiony));
 			}
 
 			m_element->GetLocalBounds().w = std::max(ps.w, maxregionx);
@@ -135,9 +135,9 @@ namespace tui {
 			g.ClipPop();
 		}
 
-		if (m_horizontalSlider != nullptr) {
-			if (m_horizontalSlider->IsVisible()) m_horizontalSlider->OnDraw(g);
-			if (m_verticalSlider->IsVisible()) m_verticalSlider->OnDraw(g);
+		if (m_horizontalScrollbar != nullptr) {
+			if (m_horizontalScrollbar->IsVisible()) m_horizontalScrollbar->OnDraw(g);
+			if (m_verticalScrollbar->IsVisible()) m_verticalScrollbar->OnDraw(g);
 		}
 	}
 
@@ -152,11 +152,11 @@ namespace tui {
 		if (m_element != nullptr) {
 			d = d || m_element->IsDirty();
 		}
-		if (m_horizontalSlider != nullptr) {
-			d = d || m_horizontalSlider->IsDirty();
+		if (m_horizontalScrollbar != nullptr) {
+			d = d || m_horizontalScrollbar->IsDirty();
 		}
-		if (m_verticalSlider != nullptr) {
-			d = d || m_verticalSlider->IsDirty();
+		if (m_verticalScrollbar != nullptr) {
+			d = d || m_verticalScrollbar->IsDirty();
 		}
 		return d;
 	}

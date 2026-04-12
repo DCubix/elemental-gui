@@ -24,7 +24,7 @@ namespace tui {
 	class Application;
 	class ApplicationAdapter {
 		public:
-		virtual void OnCreate(Application *app) = 0;
+		virtual void OnCreate(Application& app) = 0;
 		virtual void OnDestroy() = 0;
 	};
 	
@@ -59,9 +59,6 @@ namespace tui {
 		void RequestRedraw();
 		void Focus(Element *e);
 
-		Json GetStyle() const { return m_style; }
-		void SetStyle(Json style) { m_style = style; }
-
 		void StartInput();
 		void StopInput();
 
@@ -80,8 +77,6 @@ namespace tui {
 
 		Graphics m_graphics;
 		EventSystem m_eventSystem;
-
-		Json m_style;
 
 		std::vector<ElementPtr> m_elements;
 		Element *m_focused;

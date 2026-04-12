@@ -1,44 +1,32 @@
-#include "Slider.h"
+#include "Scrollbar.h"
 
 #include "Application.h"
 
-#include <cmath>
+#include <iostream>
 
 namespace tui {
 
-	Slider::Slider()
+	Scrollbar::Scrollbar()
 		: Element(),
 		  m_orientation(Horizontal),
 		  m_range(Range(0, 100)),
 		  m_value(0),
 		  m_step(1),
 		  m_state(BSNormal),
-		  m_thumbPos(0),
 		  m_dragOffset(0)
 	{
 		GetLocalBounds().w = 120;
 		GetLocalBounds().h = 22;
 	}
 
-	void Slider::OnDraw(Graphics& g) {
+	void Scrollbar::OnDraw(Graphics& g) {
 		Rectangle b = GetBounds();
-		int thumb = SliderThumbSize;
-		int trackLen = (m_orientation == Horizontal ? b.w : b.h) - thumb;
-		m_thumbPos = int(m_range.Normalized(m_value) * float(trackLen));
+		int btn = GetButtonSize();
+		int sz = (m_orientation == Horizontal ? b.w : b.h) - btn;
+		m_buttonPos = int(m_range.Normalized(m_value) * float(sz));
 
-		// Draw thin track centered in the element
-		Json trackStyle = GetStyle()["Slider"]["track"];
-		if (m_orientation == Horizontal) {
-			int trackH = std::max(4, b.h / 3);
-			int trackY = b.y + (b.h - trackH) / 2;
-			g.StyledRect(b.x, trackY, b.w, trackH, trackStyle);
-		} else {
-			int trackW = std::max(4, b.w / 3);
-			int trackX = b.x + (b.w - trackW) / 2;
-			g.StyledRect(trackX, b.y, trackW, b.h, trackStyle);
-		}
+		g.StyledRect(b.x, b.y, b.w, b.h, GetStyle()["Scrollbar"]["track"]);
 
-		// Draw fixed-size thumb
 		std::string state = "normal";
 		switch (m_state) {
 			case BSNormal: state = "normal"; break;
@@ -46,28 +34,29 @@ namespace tui {
 			case BSClick: state = "click"; break;
 		}
 
-		Json thumbStyle = GetStyle()["Slider"]["thumb"][state];
+		Json thumbStyle = GetStyle()["Scrollbar"]["thumb"][state];
 		if (m_orientation == Horizontal) {
-			g.StyledRect(b.x + m_thumbPos, b.y, thumb, b.h, thumbStyle);
+			g.StyledRect(b.x + m_buttonPos, b.y, btn, b.h, thumbStyle);
 		} else {
-			g.StyledRect(b.x, b.y + m_thumbPos, b.w, thumb, thumbStyle);
+			g.StyledRect(b.x, b.y + m_buttonPos, b.w, btn, thumbStyle);
 		}
 	}
 
-	EventStatus Slider::OnEvent(Event* event) {
+	EventStatus Scrollbar::OnEvent(Event* event) {
 		EventStatus status = Element::OnEvent(event);
 		if (event->Type() == EventType::MouseEventType) {
 			Rectangle b = GetIntersectedBounds();
 			Rectangle c = GetBounds();
 			MouseEvent* e = dynamic_cast<MouseEvent*>(event);
 			int p = (m_orientation == Horizontal ? e->x - c.x : e->y - c.y);
-			int thumb = SliderThumbSize;
+			int btn = GetButtonSize();
 			switch (m_state) {
 				case BSHover: {
 					if (e->pressed && e->button == 1) {
 						m_state = BSClick;
-						if (p >= m_thumbPos && p < m_thumbPos + thumb) {
-							m_dragOffset = p - m_thumbPos - thumb / 2;
+						// If clicking on the thumb, track offset; otherwise center thumb on click
+						if (p >= m_buttonPos && p < m_buttonPos + btn) {
+							m_dragOffset = p - m_buttonPos - btn / 2;
 						} else {
 							m_dragOffset = 0;
 							UpdateValue(p);
@@ -126,28 +115,37 @@ namespace tui {
 		return status;
 	}
 
-	void Slider::SetRange(float min, float max) {
+	void Scrollbar::SetRange(float min, float max) {
 		m_range.minimum = min;
 		m_range.maximum = max;
 		SetValue(m_range.Constrain(m_value));
 		Invalidate();
 	}
 
-	void Slider::SetValue(float v) {
+	void Scrollbar::SetValue(float v) {
 		m_value = v; Invalidate();
 		if (m_onValueChange) m_onValueChange();
 	}
 
-	void Slider::UpdateValue(int p) {
-		int thumb = SliderThumbSize;
+	void Scrollbar::UpdateValue(int p) {
+		int btn = GetButtonSize();
 		Rectangle b = GetBounds();
-		p -= thumb / 2;
-		int sz = (m_orientation == Horizontal ? b.w : b.h) - thumb;
+		p -= btn/2;
+		int sz = (m_orientation == Horizontal ? b.w : b.h) - btn;
 
 		Range vp{ 0, float(sz) };
 		m_value = m_range.Constrain(m_range.Remap(vp, p));
 		SetValue(std::floor(m_value / m_step) * m_step);
 		Invalidate();
+	}
+
+	int Scrollbar::GetButtonSize() {
+		Rectangle b = GetBounds();
+		int vpSize = (m_orientation == Horizontal ? b.w : b.h);
+		float contentSize = (m_range.maximum - m_range.minimum) + vpSize;
+		float viewRatio = vpSize / contentSize;
+		int btnSize = int(vpSize * viewRatio);
+		return btnSize < ScrollbarButtonSize ? ScrollbarButtonSize : btnSize;
 	}
 
 }

@@ -23,7 +23,7 @@ namespace tui {
 			case ButtonState::Click: state = "click"; break;
 		}
 
-		g.StyledRect(b.x, b.y, b.w, b.h, GetApp()->GetStyle()["Button"][state]);
+		g.StyledRect(b.x, b.y, b.w, b.h, GetStyle()["Button"][state]);
 		Label::OnDraw(g);
 	}
 

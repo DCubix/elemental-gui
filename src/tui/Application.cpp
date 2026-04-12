@@ -13,9 +13,7 @@ namespace tui {
 	Application::Application(const std::string& title, uint width, uint height, bool resizable)
 		: m_title(title), m_width(width), m_height(height), m_shouldRedraw(true),
 		  m_focused(nullptr), m_resizable(resizable)
-	{
-		m_style = DefaultStyle;
-	}
+	{}
 
 	int Application::Start(ApplicationAdapter* adapter) {
 		if (adapter == nullptr) {
@@ -62,7 +60,7 @@ namespace tui {
 		m_root = &Create<Panel>();
 		m_root->GetLayout<FlexLayout>()->SetDirection(FlexDirection::Column);
 
-		adapter->OnCreate(this);
+		adapter->OnCreate(*this);
 
 		bool running = true;
 		SDL_Event evt{};

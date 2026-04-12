@@ -15,15 +15,13 @@ namespace tui {
 	{}
 
 	void Label::OnDraw(Graphics& g) {
-		if (m_style.is_null()) {
-			m_style = GetApp()->GetStyle()["DefaultText"];
-		}
+		const auto textStyle = GetStyle()["DefaultText"];
 
 		Rectangle b = GetBounds();
 		Rectangle c = GetIntersectedBounds();
 
 		g.Save();
-		g.StyledTextBegin(m_style);
+		g.StyledTextBegin(textStyle);
 
 		g.ClipPush(c.x, c.y, c.w, c.h);
 		int offx = 0;

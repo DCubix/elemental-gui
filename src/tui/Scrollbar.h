@@ -1,0 +1,60 @@
+#ifndef TUI_SCROLLBAR_H
+#define TUI_SCROLLBAR_H
+
+#include "Element.h"
+
+namespace tui {
+	using ValueCallback = std::function<void()>;
+
+	constexpr int ScrollbarButtonSize = 16;
+	class Scrollbar : public Element {
+	public:
+		enum Orientation {
+			Horizontal = 0,
+			Vertical
+		};
+
+		Scrollbar();
+
+		virtual void OnDraw(Graphics& g) override;
+		virtual EventStatus OnEvent(Event *event) override;
+
+		Range& GetRange() { Invalidate(); return m_range; }
+		void SetRange(float min, float max);
+
+		float GetValue() const { return m_value; }
+		void SetValue(float v);
+
+		float GetStep() const { return m_step; }
+		void SetStep(float s) { m_step = s; }
+
+		Scrollbar::Orientation GetOrientation() const { return m_orientation; }
+		void SetOrientation(Orientation ori) { m_orientation = ori; Invalidate(); }
+
+		void SetOnValueChange(ValueCallback cb) { m_onValueChange = cb; }
+
+	private:
+		enum ButtonState {
+			BSNormal = 0,
+			BSHover,
+			BSClick
+		};
+
+		Orientation m_orientation;
+		Range m_range;
+		float m_value;
+		float m_step;
+
+		int m_buttonPos;
+		int m_dragOffset;
+
+		ButtonState m_state;
+
+		ValueCallback m_onValueChange;
+
+		void UpdateValue(int p);
+		int GetButtonSize();
+	};
+}
+
+#endif // TUI_SCROLLBAR_H

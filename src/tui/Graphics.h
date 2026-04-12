@@ -3,7 +3,7 @@
 
 #include "SDL3/SDL.h"
 #include "cairo/cairo.h"
-#include "json.hpp"
+#include <nlohmann/json.hpp>
 
 #include <functional>
 #include <stack>

@@ -29,14 +29,10 @@ namespace tui {
 		Alignment GetAlignment() const { return m_alignment; }
 		void SetAlignment(Alignment align) { m_alignment = align; Invalidate(); }
 
-		Json GetStyle() const { return m_style; }
-		void SetStyle(Json style) { m_style = style; Invalidate(); }
-
 		Image* GetIcon() { return m_icon; }
 		void SetIcon(Image* image) { m_icon = image; Invalidate(); }
 
 	protected:
-		Json m_style;
 		std::string m_text;
 		Alignment m_alignment;
 

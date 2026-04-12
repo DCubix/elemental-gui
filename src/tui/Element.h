@@ -106,6 +106,9 @@ namespace tui {
 
 		Application* GetApp() { return m_application; }
 
+		Json GetStyle() const;
+		void SetStyle(Json style) { m_style = style; Invalidate(); }
+
 	private:
 		Application *m_application;
 		Element *m_parent;
@@ -113,6 +116,8 @@ namespace tui {
 		bool m_dirty, m_visible, m_focused, m_autoSize;
 
 		float m_flexGrow{0.0f};
+
+		Json m_style;
 
 		virtual bool IsDirty() { return m_dirty; }
 	};

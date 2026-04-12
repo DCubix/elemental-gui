@@ -124,6 +124,8 @@ namespace tui {
 		if (style["border"].is_object()) {
 			Json border = style["border"];
 			borderRadius = border.value("radius", 0.0);
+			// constrain radius to half of the smaller dimension
+			borderRadius = std::min(borderRadius, std::min(w, h) / 2.0);
 			RoundRect(x, y, w-1, h-1, borderRadius);
 		}
 

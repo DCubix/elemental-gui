@@ -31,7 +31,7 @@ namespace tui {
 	void Panel::OnDraw(Graphics& g) {
 		Rectangle b = GetBounds();
 		if (m_backgroundVisible)
-			g.StyledRect(b.x, b.y, b.w, b.h, GetApp()->GetStyle()["Panel"]);
+			g.StyledRect(b.x, b.y, b.w, b.h, GetStyle()["Panel"]);
 
 		if (m_layout)
 			m_layout->Apply(b.x, b.y, b.w, b.h);

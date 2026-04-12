@@ -12,16 +12,16 @@ using namespace tui;
 
 class App : public ApplicationAdapter {
 public:
-	void OnCreate(Application *app) {
+	void OnCreate(Application& app) {
 		// --- Title ---
-		Label& title = app->Create<Label>();
+		Label& title = app.Create<Label>();
 		title.SetText("Elemental GUI Demo");
 		title.SetAlignment(Alignment::MiddleCenter);
 		title.GetLocalBounds().h = 30;
-		app->GetRoot().Add(&title);
+		app.GetRoot().Add(&title);
 
 		// --- Main content panel ---
-		Panel& mainPanel = app->Create<Panel>();
+		Panel& mainPanel = app.Create<Panel>();
 		mainPanel.SetFlexGrow(1.0f);
 		mainPanel.SetBackgroundVisible(false);
 
@@ -29,10 +29,10 @@ public:
 		mainLayout->SetAlignItems(FlexAlign::Stretch);
 		mainLayout->SetJustifyContent(FlexJustify::Start);
 		mainLayout->SetPadding(0);
-		app->GetRoot().Add(&mainPanel);
+		app.GetRoot().Add(&mainPanel);
 
 		// --- Left controls panel (FlexLayout Column demo) ---
-		Panel& controls = app->Create<Panel>();
+		Panel& controls = app.Create<Panel>();
 		controls.GetLocalBounds().w = 200;
 		mainPanel.Add(&controls);
 
@@ -42,7 +42,7 @@ public:
 		controlsFlex->SetDirection(FlexDirection::Column);
 
 		// Click Me button
-		Button& btn1 = app->Create<Button>();
+		Button& btn1 = app.Create<Button>();
 		btn1.SetText("Click Me");
 		btn1.GetLocalBounds() = Rectangle(0, 0, 0, 30);
 		btn1.SetOnClick([&btn1]() {
@@ -51,7 +51,7 @@ public:
 		controls.Add(&btn1);
 
 		// Reset button
-		Button& btn2 = app->Create<Button>();
+		Button& btn2 = app.Create<Button>();
 		btn2.SetText("Reset");
 		btn2.GetLocalBounds() = Rectangle(0, 0, 0, 30);
 		btn2.SetOnClick([&btn1]() {
@@ -60,14 +60,14 @@ public:
 		controls.Add(&btn2);
 
 		// Slider label
-		Label& sliderLabel = app->Create<Label>();
+		Label& sliderLabel = app.Create<Label>();
 		sliderLabel.SetText("Slider: 50");
 		sliderLabel.SetAlignment(Alignment::MiddleLeft);
 		sliderLabel.GetLocalBounds() = Rectangle(0, 0, 0, 20);
 		controls.Add(&sliderLabel);
 
 		// Slider
-		Slider& slider = app->Create<Slider>();
+		Slider& slider = app.Create<Slider>();
 		slider.SetOrientation(Slider::Horizontal);
 		slider.SetRange(0, 100);
 		slider.SetValue(50);
@@ -79,14 +79,14 @@ public:
 		controls.Add(&slider);
 
 		// Edit label
-		Label& editLabel = app->Create<Label>();
+		Label& editLabel = app.Create<Label>();
 		editLabel.SetText("Text Input:");
 		editLabel.SetAlignment(Alignment::MiddleLeft);
 		editLabel.GetLocalBounds() = Rectangle(0, 0, 0, 20);
 		controls.Add(&editLabel);
 
 		// Edit (grows to fill remaining space)
-		Edit& edit = app->Create<Edit>();
+		Edit& edit = app.Create<Edit>();
 		edit.SetMultiLine(true);
 		edit.SetText("Type here...\nLine 2\nLine 3");
 		edit.GetLocalBounds() = Rectangle(0, 0, 0, 60);
@@ -94,11 +94,11 @@ public:
 		controls.Add(&edit);
 
 		// --- Right: ScrollView ---
-		ScrollView& sv = app->Create<ScrollView>();
+		ScrollView& sv = app.Create<ScrollView>();
 		sv.SetFlexGrow(1.0f);
 		mainPanel.Add(&sv);
 
-		Panel& scrollContent = app->Create<Panel>();
+		Panel& scrollContent = app.Create<Panel>();
 		scrollContent.SetLayout(nullptr);  // Absolute positioning
 		scrollContent.SetBackgroundVisible(false);
 		const int itemHeight = 24;
@@ -107,7 +107,7 @@ public:
 		scrollContent.GetLocalBounds() = Rectangle(0, 0, 400, contentHeight);
 
 		for (int i = 0; i < itemCount; i++) {
-			Label& item = app->Create<Label>();
+			Label& item = app.Create<Label>();
 			item.SetText("Scroll Item #" + std::to_string(i + 1));
 			item.SetAlignment(Alignment::MiddleLeft);
 			item.GetLocalBounds() = Rectangle(8, 8 + i * itemHeight, 384, itemHeight);
@@ -118,7 +118,7 @@ public:
 
 		
 		// --- Bottom toolbar (FlexLayout Row demo) ---
-		Panel& toolbar = app->Create<Panel>();
+		Panel& toolbar = app.Create<Panel>();
 		toolbar.GetLocalBounds().h = 40;
 		{
 			auto flex = std::make_unique<FlexLayout>(FlexDirection::Row, FlexJustify::SpaceEvenly, FlexAlign::Center);
@@ -126,19 +126,19 @@ public:
 			flex->SetGap(8);
 			toolbar.SetLayout(std::move(flex));
 		}
-		app->GetRoot().Add(&toolbar);
+		app.GetRoot().Add(&toolbar);
 
-		Button& tbBtn1 = app->Create<Button>();
+		Button& tbBtn1 = app.Create<Button>();
 		tbBtn1.SetText("Action 1");
 		tbBtn1.GetLocalBounds() = Rectangle(0, 0, 80, 28);
 		toolbar.Add(&tbBtn1);
 
-		Button& tbBtn2 = app->Create<Button>();
+		Button& tbBtn2 = app.Create<Button>();
 		tbBtn2.SetText("Action 2");
 		tbBtn2.GetLocalBounds() = Rectangle(0, 0, 80, 28);
 		toolbar.Add(&tbBtn2);
 
-		Button& tbBtn3 = app->Create<Button>();
+		Button& tbBtn3 = app.Create<Button>();
 		tbBtn3.SetText("Action 3");
 		tbBtn3.GetLocalBounds() = Rectangle(0, 0, 80, 28);
 		toolbar.Add(&tbBtn3);

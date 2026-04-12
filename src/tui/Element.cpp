@@ -42,7 +42,15 @@ namespace tui {
 		}
 	}
 
-	Rectangle Element::GetBounds() const {
+    Json Element::GetStyle() const
+    {
+		if (m_style.is_null()) {
+			return Application::DefaultStyle;
+		}
+		return m_style;
+    }
+
+    Rectangle Element::GetBounds() const {
 		Rectangle b = m_bounds;
 		if (m_parent != nullptr) {
 			b.x += m_parent->GetBounds().x;

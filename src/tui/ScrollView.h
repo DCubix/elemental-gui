@@ -1,7 +1,7 @@
 #ifndef TUI_SCROLL_VIEW_H
 #define TUI_SCROLL_VIEW_H
 
-#include "Slider.h"
+#include "Scrollbar.h"
 #include "Element.h"
 
 namespace tui {
@@ -16,7 +16,7 @@ namespace tui {
 		Element* GetElement() { return m_element; }
 
 	private:
-		Slider *m_verticalSlider, *m_horizontalSlider;
+		Scrollbar *m_verticalScrollbar, *m_horizontalScrollbar;
 		Element *m_element;
 
 		bool IsDirty() override;

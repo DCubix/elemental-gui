@@ -6,7 +6,8 @@
 namespace tui {
 	using ValueCallback = std::function<void()>;
 
-	constexpr int SliderButtonSize = 16;
+	constexpr int SliderThumbSize = 14;
+
 	class Slider : public Element {
 	public:
 		enum Orientation {
@@ -45,7 +46,7 @@ namespace tui {
 		float m_value;
 		float m_step;
 
-		int m_buttonPos;
+		int m_thumbPos;
 		int m_dragOffset;
 
 		ButtonState m_state;
@@ -53,7 +54,6 @@ namespace tui {
 		ValueCallback m_onValueChange;
 
 		void UpdateValue(int p);
-		int GetButtonSize();
 	};
 }
 
