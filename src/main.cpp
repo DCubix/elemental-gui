@@ -7,8 +7,41 @@
 #include "tui/ScrollView.h"
 #include "tui/ImageView.h"
 #include "tui/FlexLayout.h"
+#include "tui/GLView.h"
+
+#include <SDL3/SDL_opengl.h>
 
 using namespace tui;
+
+class TriangleView : public GLView {
+public:
+	TriangleView() : GLView([] {
+		GLContextConfig cfg;
+		cfg.majorVersion = 1;
+		cfg.minorVersion = 1;
+		cfg.profile = GLContextConfig::Profile::Compatibility;
+		return cfg;
+	}()) {}
+
+	void OnRender() override {
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+
+		glBegin(GL_TRIANGLES);
+			glColor3f(1.0f, 0.0f, 0.0f);
+			glVertex2f( 0.0f,  0.5f);
+			glColor3f(0.0f, 1.0f, 0.0f);
+			glVertex2f(-0.5f, -0.5f);
+			glColor3f(0.0f, 0.0f, 1.0f);
+			glVertex2f( 0.5f, -0.5f);
+		glEnd();
+	}
+};
 
 class App : public ApplicationAdapter {
 public:
@@ -103,14 +136,21 @@ public:
 		scrollContent.SetBackgroundVisible(false);
 		const int itemHeight = 24;
 		const int itemCount = 30;
-		const int contentHeight = itemCount * itemHeight + 16;
+		const int glViewSize = 200;
+		const int contentHeight = itemCount * itemHeight + 16 + glViewSize + 8;
 		scrollContent.GetLocalBounds() = Rectangle(0, 0, 400, contentHeight);
 
+		// GL triangle
+		TriangleView& triangle = app.Create<TriangleView>();
+		triangle.GetLocalBounds() = Rectangle(8, 8, glViewSize, glViewSize);
+		scrollContent.Add(&triangle);
+
+		const int labelsOffsetY = 8 + glViewSize + 8;
 		for (int i = 0; i < itemCount; i++) {
 			Label& item = app.Create<Label>();
 			item.SetText("Scroll Item #" + std::to_string(i + 1));
 			item.SetAlignment(Alignment::MiddleLeft);
-			item.GetLocalBounds() = Rectangle(8, 8 + i * itemHeight, 384, itemHeight);
+			item.GetLocalBounds() = Rectangle(8, labelsOffsetY + i * itemHeight, 384, itemHeight);
 			scrollContent.Add(&item);
 		}
 

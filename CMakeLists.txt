@@ -48,6 +48,8 @@ endif()
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 CPMFindPackage(NAME Cairo)
 
+find_package(OpenGL REQUIRED)
+
 add_definitions(-DSDL_MAIN_HANDLED)
 
 file(GLOB_RECURSE TUI_SRC
@@ -58,7 +60,7 @@ file(GLOB_RECURSE TUI_SRC
 
 add_library(${PROJECT_NAME} ${TUI_SRC})
 target_include_directories(${PROJECT_NAME} PUBLIC ${CAIRO_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} PUBLIC SDL3::SDL3 ${CAIRO_LIBRARIES} nlohmann_json)
+target_link_libraries(${PROJECT_NAME} PUBLIC SDL3::SDL3 ${CAIRO_LIBRARIES} nlohmann_json OpenGL::GL)
 
 add_executable(tui_test "src/main.cpp")
 target_link_libraries(tui_test PRIVATE ${PROJECT_NAME})

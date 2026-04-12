@@ -358,11 +358,12 @@ namespace tui {
 		func(*this);
 
 		cairo_surface_flush(m_surface);
-
-		SDL_UnlockTexture(m_buffer);
-
 		cairo_destroy(m_context);
 		cairo_surface_destroy(m_surface);
+		m_context = nullptr;
+		m_surface = nullptr;
+
+		SDL_UnlockTexture(m_buffer);
 
 		SDL_RenderTexture(m_renderer, m_buffer, nullptr, &dst);
 		SDL_RenderPresent(m_renderer);
@@ -375,13 +376,81 @@ namespace tui {
 		}
 	}
 
+	Image::Image(Image&& other) noexcept
+		: m_width(other.m_width), m_height(other.m_height), m_surface(other.m_surface)
+	{
+		other.m_surface = nullptr;
+		other.m_width = 0;
+		other.m_height = 0;
+	}
+
+	Image& Image::operator=(Image&& other) noexcept {
+		if (this != &other) {
+			if (m_surface) {
+				cairo_surface_destroy(m_surface);
+			}
+			m_surface = other.m_surface;
+			m_width = other.m_width;
+			m_height = other.m_height;
+			other.m_surface = nullptr;
+			other.m_width = 0;
+			other.m_height = 0;
+		}
+		return *this;
+	}
+
 	Image::Image(const std::string& fileName) {
 		m_surface = cairo_image_surface_create_from_png(fileName.c_str());
 		m_width = cairo_image_surface_get_width(m_surface);
 		m_height = cairo_image_surface_get_height(m_surface);
 	}
-	
-	bool Rectangle::HasPoint(int x, int y) {
+
+    Image::Image(int width, int height)
+    {
+		m_width = width;
+		m_height = height;
+		m_surface = cairo_image_surface_create(
+			CAIRO_FORMAT_ARGB32,
+			width, height
+		);
+    }
+
+    void Image::SetPixels(const unsigned char *data, int stride)
+    {
+		if (!m_surface) return;
+
+		cairo_surface_flush(m_surface);
+
+		unsigned char *surfaceData = cairo_image_surface_get_data(m_surface);
+		int surfaceStride = cairo_image_surface_get_stride(m_surface);
+
+		for (int y = 0; y < m_height; y++) {
+			std::memcpy(
+				surfaceData + y * surfaceStride,
+				data + y * stride,
+				std::min(surfaceStride, stride)
+			);
+		}
+		cairo_surface_mark_dirty(m_surface);
+    }
+
+    void Image::Resize(int w, int h)
+    {
+		if (m_surface) {
+			cairo_surface_destroy(m_surface);
+			m_surface = nullptr;
+		}
+
+		m_width = w;
+		m_height = h;
+
+		m_surface = cairo_image_surface_create(
+			CAIRO_FORMAT_ARGB32,
+			w, h
+		);
+    }
+
+    bool Rectangle::HasPoint(int x, int y) {
 		return x >= this->x &&
 			x <= this->x + w &&
 			y >= this->y &&

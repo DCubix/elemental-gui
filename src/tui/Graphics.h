@@ -39,14 +39,25 @@ namespace tui {
 	public:
 		Image() = default;
 		~Image();
+
+		Image(const Image&) = delete;
+		Image& operator=(const Image&) = delete;
+
+		Image(Image&& other) noexcept;
+		Image& operator=(Image&& other) noexcept;
+
 		Image(const std::string& fileName);
+		Image(int width, int height);
 
 		int GetWidth() const { return m_width; }
 		int GetHeight() const { return m_height; }
 
+		void SetPixels(const unsigned char* data, int stride);
+		void Resize(int w, int h);
+
 	private:
-		int m_width, m_height;
-		cairo_surface_t *m_surface;
+		int m_width{0}, m_height{0};
+		cairo_surface_t *m_surface{nullptr};
 	};
 
 	enum class FontStyle {
@@ -66,6 +77,8 @@ namespace tui {
 		Graphics(SDL_Renderer* ren);
 
 		void SetViewport(int w, int h);
+		int GetWidth() const { return m_width; }
+		int GetHeight() const { return m_height; }
 		void Clear(int r = 0, int g = 0, int b = 0);
 
 		void LineWidth(float w = 1.0f);
