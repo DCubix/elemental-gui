@@ -12,7 +12,8 @@ namespace tui {
 		  m_range(Range(0, 100)),
 		  m_value(0),
 		  m_step(1),
-		  m_state(BSNormal)
+		  m_state(BSNormal),
+		  m_dragOffset(0)
 	{
 		GetLocalBounds().w = 120;
 		GetLocalBounds().h = 22;
@@ -58,26 +59,30 @@ namespace tui {
 			Rectangle c = GetBounds();
 			MouseEvent* e = dynamic_cast<MouseEvent*>(event);
 			int p = (m_orientation == Horizontal ? e->x - c.x : e->y - c.y);
+			int btn = GetButtonSize();
 			switch (m_state) {
 				case BSHover: {
 					if (e->pressed && e->button == 1) {
 						m_state = BSClick;
+						// If clicking on the thumb, track offset; otherwise center thumb on click
+						if (p >= m_buttonPos && p < m_buttonPos + btn) {
+							m_dragOffset = p - m_buttonPos - btn / 2;
+						} else {
+							m_dragOffset = 0;
+							UpdateValue(p);
+						}
 						status = EventStatus::Consumed;
 						Invalidate();
 					}
 				} break;
 				case BSClick: {
-					if (!b.HasPoint(e->x, e->y)) {
-						m_state = BSNormal;
-						status = EventStatus::Consumed;
-						Invalidate();
-					}
 					if (!e->pressed && e->button == 1) {
-						m_state = BSHover;
+						m_state = b.HasPoint(e->x, e->y) ? BSHover : BSNormal;
 						status = EventStatus::Consumed;
 						Invalidate();
 					} else {
-						UpdateValue(p);
+						UpdateValue(p - m_dragOffset);
+						status = EventStatus::Consumed;
 					}
 				} break;
 				default: break;
@@ -104,9 +109,17 @@ namespace tui {
 					}
 				} break;
 				case BSClick: {
-					UpdateValue(p);
+					UpdateValue(p - m_dragOffset);
 					status = EventStatus::Consumed;
 				} break;
+			}
+		} else if (event->Type() == EventType::ScrollEventType) {
+			Rectangle b = GetIntersectedBounds();
+			ScrollEvent* e = dynamic_cast<ScrollEvent*>(event);
+			if (b.HasPoint(e->mouseX, e->mouseY)) {
+				float delta = (m_orientation == Horizontal ? e->scrollY : -e->scrollY);
+				SetValue(m_range.Constrain(m_value + delta * m_step));
+				status = EventStatus::Consumed;
 			}
 		}
 		return status;

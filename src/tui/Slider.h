@@ -46,6 +46,7 @@ namespace tui {
 		float m_step;
 
 		int m_buttonPos;
+		int m_dragOffset;
 
 		ButtonState m_state;
 

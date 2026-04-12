@@ -23,10 +23,12 @@ public:
 		// --- Main content panel ---
 		Panel& mainPanel = app->Create<Panel>();
 		mainPanel.SetFlexGrow(1.0f);
+		mainPanel.SetBackgroundVisible(false);
 
 		FlexLayout* mainLayout = mainPanel.GetLayout<FlexLayout>();
 		mainLayout->SetAlignItems(FlexAlign::Stretch);
 		mainLayout->SetJustifyContent(FlexJustify::Start);
+		mainLayout->SetPadding(0);
 		app->GetRoot().Add(&mainPanel);
 
 		// --- Left controls panel (FlexLayout Column demo) ---
