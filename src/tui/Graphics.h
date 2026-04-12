@@ -1,12 +1,13 @@
 #ifndef TUI_GRAPHICS_H
 #define TUI_GRAPHICS_H
 
-#include "SDL2/SDL.h"
+#include "SDL3/SDL.h"
 #include "cairo/cairo.h"
 #include "json.hpp"
 
 #include <functional>
 #include <stack>
+#include <optional>
 
 #define PI 3.141592654
 

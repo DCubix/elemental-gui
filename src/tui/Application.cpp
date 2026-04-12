@@ -22,19 +22,17 @@ namespace tui {
 			return 7;
 		}
 
-		int status = SDL_Init(SDL_INIT_EVERYTHING);
-		if (status != 0) {
+		if (!SDL_Init(SDL_INIT_VIDEO)) {
 			SDL_Log("%s", SDL_GetError());
-			return status;
+			return 1;
 		}
 
-		int flags = SDL_WINDOW_SHOWN;
+		SDL_WindowFlags flags = 0;
 		if (m_resizable) {
 			flags |= SDL_WINDOW_RESIZABLE;
 		}
 		m_window = SDL_CreateWindow(
 					m_title.c_str(),
-					SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
 					m_width, m_height,
 					flags
 		);
@@ -44,7 +42,7 @@ namespace tui {
 			return 1;
 		}
 
-		m_renderer = SDL_CreateRenderer(m_window, 0, 0);
+		m_renderer = SDL_CreateRenderer(m_window, NULL);
 		if (m_renderer == nullptr) {
 			SDL_Log("%s", SDL_GetError());
 			return 1;
@@ -61,60 +59,56 @@ namespace tui {
 		while (running) {
 			while (SDL_PollEvent(&evt)) {
 				switch (evt.type) {
-					case SDL_QUIT: running = false; break;
-					case SDL_WINDOWEVENT: {
-						if (evt.window.event == SDL_WINDOWEVENT_RESIZED ||
-							evt.window.event == SDL_WINDOWEVENT_MAXIMIZED ||
-							evt.window.event == SDL_WINDOWEVENT_RESTORED ||
-							evt.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
-						{
+					case SDL_EVENT_QUIT: running = false; break;
+					case SDL_EVENT_WINDOW_RESIZED:
+					case SDL_EVENT_WINDOW_MAXIMIZED:
+					case SDL_EVENT_WINDOW_RESTORED: {
 							int w, h;
 							SDL_GetWindowSize(m_window, &w, &h);
 							m_width = uint(w);
 							m_height = uint(h);
 							requestRedrawAll();
 							m_graphics.setViewport(m_width, m_height);
-						}
 					} break;
-					case SDL_MOUSEBUTTONDOWN: {
+					case SDL_EVENT_MOUSE_BUTTON_DOWN: {
 						m_eventSystem.broadcast<MouseEvent>(
-									evt.button.x,
-									evt.button.y,
+									(int)evt.button.x,
+									(int)evt.button.y,
 									evt.button.button,
 									true
 						);
 					} break;
-					case SDL_MOUSEBUTTONUP: {
+					case SDL_EVENT_MOUSE_BUTTON_UP: {
 						m_eventSystem.broadcast<MouseEvent>(
-									evt.button.x,
-									evt.button.y,
+									(int)evt.button.x,
+									(int)evt.button.y,
 									evt.button.button,
 									false
 						);
 					} break;
-					case SDL_MOUSEMOTION: {
+					case SDL_EVENT_MOUSE_MOTION: {
 						m_eventSystem.broadcast<MotionEvent>(
-									evt.motion.x,
-									evt.motion.y,
+									(int)evt.motion.x,
+									(int)evt.motion.y,
 									evt.button.button
 						);
 					} break;
-					case SDL_TEXTINPUT: {
+					case SDL_EVENT_TEXT_INPUT: {
 						m_eventSystem.broadcast<TextInput>(
 									evt.text.text[0]
 						);
 					} break;
-					case SDL_KEYDOWN: {
+					case SDL_EVENT_KEY_DOWN: {
 						m_eventSystem.broadcast<KeyEvent>(
-									evt.key.keysym.sym,
-									evt.key.keysym.mod,
+									evt.key.key,
+									evt.key.mod,
 									true
 						);
 					} break;
-					case SDL_KEYUP: {
+					case SDL_EVENT_KEY_UP: {
 						m_eventSystem.broadcast<KeyEvent>(
-									evt.key.keysym.sym,
-									evt.key.keysym.mod,
+									evt.key.key,
+									evt.key.mod,
 									false
 						);
 					} break;
@@ -154,11 +148,11 @@ namespace tui {
 	}
 
 	void Application::startInput() {
-		SDL_StartTextInput();
+		SDL_StartTextInput(m_window);
 	}
 
 	void Application::stopInput() {
-		SDL_StopTextInput();
+		SDL_StopTextInput(m_window);
 	}
 
 	void Application::clipboardSet(const std::string& str) {
@@ -178,12 +172,12 @@ namespace tui {
 
 		//m_graphics.clear();
 		m_graphics.draw([&](Graphics& g) {
-			for (auto&& e : m_elements) {
-				if (e->parent() != nullptr) continue;
-				if (!e->visible()) continue;
-				if (e->dirty()) {
-					e->onDraw(g);
-					e->m_dirty = false;
+			for (size_t i = 0; i < m_elements.size(); i++) {
+				if (m_elements[i]->parent() != nullptr) continue;
+				if (!m_elements[i]->visible()) continue;
+				if (m_elements[i]->dirty()) {
+					m_elements[i]->onDraw(g);
+					m_elements[i]->m_dirty = false;
 				}
 			}
 		});

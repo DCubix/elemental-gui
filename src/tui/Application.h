@@ -7,7 +7,7 @@
 #include <memory>
 #include <type_traits>
 
-#include "SDL2/SDL.h"
+#include "SDL3/SDL.h"
 
 #include "Graphics.h"
 #include "EventSystem.h"

@@ -19,6 +19,7 @@ namespace tui {
 					SDL_TEXTUREACCESS_STREAMING,
 					w, h
 		);
+		SDL_SetTextureScaleMode(m_buffer, SDL_SCALEMODE_NEAREST);
 		m_width = w;
 		m_height = h;
 	}
@@ -339,7 +340,7 @@ namespace tui {
 	void Graphics::draw(DrawFunction func) {
 		if (func == nullptr) return;
 
-		const SDL_Rect dst = { 0, 0, m_width, m_height };
+		const SDL_FRect dst = { 0, 0, (float)m_width, (float)m_height };
 
 		Uint8 *pixels;
 		int pitch;
@@ -361,7 +362,7 @@ namespace tui {
 		cairo_destroy(m_context);
 		cairo_surface_destroy(m_surface);
 
-		SDL_RenderCopy(m_renderer, m_buffer, nullptr, &dst);
+		SDL_RenderTexture(m_renderer, m_buffer, nullptr, &dst);
 		SDL_RenderPresent(m_renderer);
 	}
 

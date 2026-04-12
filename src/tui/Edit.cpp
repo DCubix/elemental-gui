@@ -330,20 +330,20 @@ namespace tui {
 						off = loff + lsz-1;
 					}
 					m_caretIndex = off;
-				} else if (e->key == SDLK_c && app()->getMod() & KMOD_CTRL && isSelected()) {
+				} else if (e->key == SDLK_C && app()->getMod() & SDL_KMOD_CTRL && isSelected()) {
 					int a = m_selectionStart,
 						b = m_selectionEnd;
 					if (a > b) std::swap(a, b);
 					std::string selTxt = m_textRaw.substr(a, b - a);
 					app()->clipboardSet(selTxt);
-				} else if (e->key == SDLK_x && app()->getMod() & KMOD_CTRL && isSelected()) {
+				} else if (e->key == SDLK_X && app()->getMod() & SDL_KMOD_CTRL && isSelected()) {
 					int a = m_selectionStart,
 						b = m_selectionEnd;
 					if (a > b) std::swap(a, b);
 					std::string selTxt = m_textRaw.substr(a, b - a);
 					app()->clipboardSet(selTxt);
 					deleteSelected();
-				} else if (e->key == SDLK_v && app()->getMod() & KMOD_CTRL) {
+				} else if (e->key == SDLK_V && app()->getMod() & SDL_KMOD_CTRL) {
 					if (isSelected()) {
 						deleteSelected();
 					}
@@ -351,7 +351,7 @@ namespace tui {
 					for (char c : ntxt) {
 						insertChar(c);
 					}
-				} else if (e->key == SDLK_a && app()->getMod() & KMOD_CTRL) {
+				} else if (e->key == SDLK_A && app()->getMod() & SDL_KMOD_CTRL) {
 					select(0);
 				}
 				invalidate();
