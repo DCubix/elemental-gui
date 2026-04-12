@@ -23,11 +23,12 @@ namespace tui {
 
 	class Application;
 	class ApplicationAdapter {
-	public:
+		public:
 		virtual void OnCreate(Application *app) = 0;
 		virtual void OnDestroy() = 0;
 	};
-
+	
+	class Panel;
 	class Application {
 	public:
 		Application() = default;
@@ -36,10 +37,9 @@ namespace tui {
 		Application(const std::string& title, uint width, uint height, bool resizable = true);
 		int Start(ApplicationAdapter *adapter);
 
-		template <DerivedFromElement E, typename... Args>
-		E& Create(Layout::LayoutDirection dir = Layout::LayoutDirection::None, Args&&... args) {
-			m_elements.push_back(std::make_unique<E>(std::forward<Args>(args)...));
-			m_layout.Set(m_elements.back().get(), dir);
+		template <DerivedFromElement E>
+		E& Create() {
+			m_elements.push_back(std::make_unique<E>());
 			m_elements.back()->m_application = this;
 
 			// Subscribe this element to the event system
@@ -53,6 +53,8 @@ namespace tui {
 
 			return *dynamic_cast<E*>(m_elements.back().get());
 		}
+
+		Panel& GetRoot() { return *m_root; }
 
 		void RequestRedraw();
 		void Focus(Element *e);
@@ -80,9 +82,10 @@ namespace tui {
 		EventSystem m_eventSystem;
 
 		Json m_style;
+
 		std::vector<ElementPtr> m_elements;
 		Element *m_focused;
-		Layout m_layout;
+		Panel *m_root;
 
 		std::string m_title;
 		uint m_width, m_height;

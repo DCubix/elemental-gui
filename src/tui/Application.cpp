@@ -1,5 +1,8 @@
 #include "Application.h"
 
+#include "Panel.h"
+#include "FlexLayout.h"
+
 namespace tui {
 
 	static const std::string DefaultStyleJson =
@@ -11,8 +14,6 @@ namespace tui {
 		: m_title(title), m_width(width), m_height(height), m_shouldRedraw(true),
 		  m_focused(nullptr), m_resizable(resizable)
 	{
-		m_layout.SetGap(2);
-		m_layout.SetPadding(0);
 		m_style = DefaultStyle;
 	}
 
@@ -57,12 +58,21 @@ namespace tui {
 		m_graphics = Graphics(m_renderer);
 		m_graphics.SetViewport(m_width, m_height);
 
+		// Create root panel
+		m_root = &Create<Panel>();
+		m_root->GetLayout<FlexLayout>()->SetDirection(FlexDirection::Column);
+
 		adapter->OnCreate(this);
 
 		bool running = true;
 		SDL_Event evt{};
 
+		SDL_SetRenderDrawColor(m_renderer, 255, 255, 255, 255);
+		SDL_RenderClear(m_renderer);
+
 		while (running) {
+			m_root->GetLocalBounds() = Rectangle(0, 0, m_width, m_height);
+
 			while (SDL_PollEvent(&evt)) {
 				switch (evt.type) {
 					case SDL_EVENT_QUIT: running = false; break;
@@ -182,8 +192,6 @@ namespace tui {
 	}
 
 	void Application::Redraw() {
-		m_layout.Apply(0, 0, m_width, m_height);
-
 		//m_graphics.clear();
 		m_graphics.Draw([&](Graphics& g) {
 			for (size_t i = 0; i < m_elements.size(); i++) {

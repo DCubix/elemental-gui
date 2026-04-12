@@ -70,39 +70,6 @@ namespace tui {
 	};
 
 	class Application;
-	class Element;
-	class Layout {
-	public:
-		Layout();
-
-		enum LayoutDirection {
-			Center = 0,
-			Top,
-			Bottom,
-			Left,
-			Right,
-			LayoutDirectionCount,
-			None
-		};
-
-		void Set(Element *element, LayoutDirection dir);
-		void Apply(int x, int y, int w, int h);
-
-		int GetPadding() const { return m_padding; }
-		void SetPadding(int p) { m_padding = p; }
-
-		int GetGap() const { return m_gap; }
-		void SetGap(int p) { m_gap = p; }
-
-		std::array<Element*, LayoutDirectionCount>& GetElements() { return m_elements; }
-
-	private:
-		std::array<Element*, LayoutDirectionCount> m_elements;
-		int m_padding{}, m_gap{};
-
-		Size CalcElementSize(Element *element);
-	};
-
 	class Element : public Subscriber {
 		friend class Application;
 		friend class Panel;
@@ -134,6 +101,9 @@ namespace tui {
 		bool IsAutoSize() const { return m_autoSize; }
 		void SetAutoSize(bool as) { m_autoSize = as; Invalidate(); }
 
+		float GetFlexGrow() const { return m_flexGrow; }
+		void SetFlexGrow(float fg) { m_flexGrow = fg; Invalidate(); }
+
 		Application* GetApp() { return m_application; }
 
 	private:
@@ -141,6 +111,8 @@ namespace tui {
 		Element *m_parent;
 		Rectangle m_bounds;
 		bool m_dirty, m_visible, m_focused, m_autoSize;
+
+		float m_flexGrow{0.0f};
 
 		virtual bool IsDirty() { return m_dirty; }
 	};

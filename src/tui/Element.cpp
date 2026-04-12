@@ -58,59 +58,6 @@ namespace tui {
 		return GetBounds();
 	}
 
-	Layout::Layout()
-	{
-		for (int i = 0; i < LayoutDirectionCount; i++) m_elements[i] = nullptr;
-	}
-
-	void Layout::Set(Element* element, Layout::LayoutDirection dir) {
-		if (dir == LayoutDirection::None) return;
-		m_elements[dir] = element;
-	}
-
-	void Layout::Apply(int x, int y, int w, int h) {
-#define EL(x) m_elements[x]
-		int top = m_padding;
-		int bottom = h - m_padding;
-		int left = m_padding;
-		int right = w - m_padding;
-
-		if (EL(Layout::Top) != nullptr) {
-			int h = EL(Layout::Top)->GetBounds().h;
-			Size s = CalcElementSize(EL(Layout::Top));
-			EL(Layout::Top)->GetLocalBounds() = Rectangle(left, top, right - left, h);
-			top += s.h + m_gap;
-		}
-		if (EL(Layout::Bottom) != nullptr) {
-			int h = EL(Layout::Bottom)->GetBounds().h;
-			Size s = CalcElementSize(EL(Layout::Bottom));
-			EL(Layout::Bottom)->GetLocalBounds() = Rectangle(left, bottom - s.h, right - left, h);
-			bottom -= s.h + m_gap;
-		}
-		if (EL(Layout::Right) != nullptr) {
-			int w = EL(Layout::Right)->GetBounds().w;
-			Size s = CalcElementSize(EL(Layout::Right));
-			EL(Layout::Right)->GetLocalBounds() = Rectangle(right - s.w, top, w, bottom - top);
-			right -= s.w + m_gap;
-		}
-		if (EL(Layout::Left) != nullptr) {
-			int w = EL(Layout::Left)->GetBounds().w;
-			Size s = CalcElementSize(EL(Layout::Left));
-			EL(Layout::Left)->GetLocalBounds() = Rectangle(left, top, w, bottom - top);
-			left += s.w + m_gap;
-		}
-		if (EL(Layout::Center) != nullptr) {
-			EL(Layout::Center)->GetLocalBounds() = Rectangle(left, top, right - left, bottom - top);
-		}
-	}
-
-	Size Layout::CalcElementSize(Element* element) {
-		if (!element->IsVisible()) {
-			return { 0, 0 };
-		}
-		return { element->GetBounds().w, element->GetBounds().h };
-	}
-
 	float Range::Normalized(float value) {
 		const float w = maximum - minimum;
 		return (value - minimum) / w;
