@@ -1,5 +1,4 @@
-#ifndef TUI_SCROLLBAR_H
-#define TUI_SCROLLBAR_H
+#pragma once
 
 #include "Element.h"
 
@@ -56,5 +55,3 @@ namespace tui {
 		int GetButtonSize();
 	};
 }
-
-#endif // TUI_SCROLLBAR_H

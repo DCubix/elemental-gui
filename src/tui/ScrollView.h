@@ -1,5 +1,4 @@
-#ifndef TUI_SCROLL_VIEW_H
-#define TUI_SCROLL_VIEW_H
+#pragma once
 
 #include "Scrollbar.h"
 #include "Element.h"
@@ -22,5 +21,3 @@ namespace tui {
 		bool IsDirty() override;
 	};
 }
-
-#endif // TUI_SCROLL_VIEW_H

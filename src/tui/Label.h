@@ -1,5 +1,4 @@
-#ifndef TUI_LABEL_H
-#define TUI_LABEL_H
+#pragma once
 
 #include "Element.h"
 
@@ -39,5 +38,3 @@ namespace tui {
 		Image* m_icon;
 	};
 }
-
-#endif // TUI_LABEL_H

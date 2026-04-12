@@ -1,5 +1,4 @@
-#ifndef TUI_ELEMENT_H
-#define TUI_ELEMENT_H
+#pragma once
 
 #include <optional>
 #include <array>
@@ -122,5 +121,3 @@ namespace tui {
 		virtual bool IsDirty() { return m_dirty; }
 	};
 }
-
-#endif // TUI_ELEMENT_H

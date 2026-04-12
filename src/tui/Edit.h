@@ -1,5 +1,4 @@
-#ifndef TUI_EDIT_H
-#define TUI_EDIT_H
+#pragma once
 
 #include "Element.h"
 
@@ -73,5 +72,3 @@ namespace tui {
 		std::vector<Rectangle> BuildLinesAABB(const std::vector<CharRect>& crs);
 	};
 }
-
-#endif // TUI_EDIT_H

@@ -1,5 +1,4 @@
-#ifndef TUI_EVENT_SYSTEM_H
-#define TUI_EVENT_SYSTEM_H
+#pragma once
 
 #include <map>
 #include <vector>
@@ -147,5 +146,3 @@ namespace tui {
 		EventSubscriberMap m_subscribers;
 	};
 }
-
-#endif // TUI_EVENT_SYSTEM_H

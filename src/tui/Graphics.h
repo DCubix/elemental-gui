@@ -1,5 +1,4 @@
-#ifndef TUI_GRAPHICS_H
-#define TUI_GRAPHICS_H
+#pragma once
 
 #include "SDL3/SDL.h"
 #include "cairo/cairo.h"
@@ -114,5 +113,3 @@ namespace tui {
 		void Draw(DrawFunction func);
 	};
 }
-
-#endif // TUI_GRAPHICS_H

@@ -1,5 +1,4 @@
-#ifndef TUI_SLIDER_H
-#define TUI_SLIDER_H
+#pragma once
 
 #include "Element.h"
 
@@ -56,5 +55,3 @@ namespace tui {
 		void UpdateValue(int p);
 	};
 }
-
-#endif // TUI_SLIDER_H

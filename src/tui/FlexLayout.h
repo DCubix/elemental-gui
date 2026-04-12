@@ -1,5 +1,4 @@
-#ifndef TUI_FLEX_LAYOUT_H
-#define TUI_FLEX_LAYOUT_H
+#pragma once
 
 #include "Layout.h"
 #include <vector>
@@ -36,5 +35,3 @@ namespace tui {
 		std::vector<Element*> m_items;
 	};
 }
-
-#endif // TUI_FLEX_LAYOUT_H

@@ -1,5 +1,4 @@
-#ifndef TUI_BUTTON_H
-#define TUI_BUTTON_H
+#pragma once
 
 #include "Label.h"
 
@@ -26,5 +25,3 @@ namespace tui {
 		ButtonState m_state;
 	};
 }
-
-#endif // TUI_BUTTON_H

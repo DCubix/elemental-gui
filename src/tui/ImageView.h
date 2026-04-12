@@ -1,5 +1,4 @@
-#ifndef TUI_IMAGE_VIEW_H
-#define TUI_IMAGE_VIEW_H
+#pragma once
 
 #include "Element.h"
 
@@ -18,5 +17,3 @@ namespace tui {
 		Image *m_image;
 	};
 }
-
-#endif // TUI_IMAGE_VIEW_H

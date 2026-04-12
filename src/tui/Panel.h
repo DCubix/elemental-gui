@@ -1,5 +1,4 @@
-#ifndef TUI_PANEL_H
-#define TUI_PANEL_H
+#pragma once
 
 #include "Element.h"
 #include "Layout.h"
@@ -37,5 +36,3 @@ namespace tui {
 		bool IsDirty() override;
 	};
 }
-
-#endif // TUI_PANEL_H

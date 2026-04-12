@@ -1,5 +1,4 @@
-#ifndef TUI_LAYOUT_H
-#define TUI_LAYOUT_H
+#pragma once
 
 namespace tui {
 	class Layout {
@@ -17,5 +16,3 @@ namespace tui {
 		int m_padding{}, m_gap{};
 	};
 }
-
-#endif // TUI_LAYOUT_H

@@ -1,5 +1,4 @@
-#ifndef TUI_APPLICATION_H
-#define TUI_APPLICATION_H
+#pragma once
 
 #include <string>
 #include <cstdint>
@@ -90,5 +89,3 @@ namespace tui {
 		void RequestRedrawAll();
 	};
 }
-
-#endif // TUI_APPLICATION_H
