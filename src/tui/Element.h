@@ -85,7 +85,7 @@ namespace tui {
 		Rectangle GetIntersectedBounds();
 
 		Rectangle& GetLocalBounds() { return m_bounds; }
-		void SetLocalBounds(Rectangle b) { m_bounds = b; Invalidate(); }
+		void SetLocalBounds(Rectangle b) { m_bounds = b; m_preferredSize = {b.w, b.h}; Invalidate(); }
 
 		Element* GetParent() { return m_parent; }
 
@@ -103,20 +103,26 @@ namespace tui {
 		float GetFlexGrow() const { return m_flexGrow; }
 		void SetFlexGrow(float fg) { m_flexGrow = fg; Invalidate(); }
 
-		Application* GetApp() { return m_application; }
-
 		Json GetStyle() const;
 		void SetStyle(Json style) { m_style = style; Invalidate(); }
+
+		std::string GetTag() const { return m_tag; }
+		void SetTag(const std::string& tag) { m_tag = tag; }
+
+		Application* GetApp() { return m_application; }
 
 	private:
 		Application *m_application;
 		Element *m_parent;
 		Rectangle m_bounds;
-		bool m_dirty, m_visible, m_focused, m_autoSize;
+		Size m_preferredSize;
 
+		bool m_dirty, m_visible, m_focused, m_autoSize;
 		float m_flexGrow{0.0f};
 
 		Json m_style;
+
+		std::string m_tag{""};
 
 		virtual bool IsDirty() { return m_dirty; }
 	};

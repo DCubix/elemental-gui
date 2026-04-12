@@ -11,6 +11,7 @@ namespace tui {
 
 	Element::Element()
 		: m_parent(nullptr), m_bounds(0, 0, 50, 50),
+		  m_preferredSize{50, 50},
 		  m_dirty(true), m_visible(true),
 		  m_focused(false), m_autoSize(false),
 		  m_application(nullptr)
@@ -30,7 +31,7 @@ namespace tui {
 	}
 
 	Size Element::GetPreferredSize() {
-		return { m_bounds.w, m_bounds.h };
+		return m_preferredSize;
 	}
 
 	void Element::Invalidate() { m_dirty = true; if (GetApp()) GetApp()->RequestRedraw(); }

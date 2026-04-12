@@ -15,8 +15,7 @@ namespace tui {
 		  m_state(BSNormal),
 		  m_dragOffset(0)
 	{
-		GetLocalBounds().w = 120;
-		GetLocalBounds().h = 22;
+		SetLocalBounds(Rectangle(0, 0, 120, 22));
 	}
 
 	void Scrollbar::OnDraw(Graphics& g) {

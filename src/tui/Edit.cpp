@@ -16,7 +16,7 @@ namespace tui {
 		  m_selectionStart(-1), m_selectionEnd(0),
 		  m_offsetX(0),
 		  m_state(EditState::Normal)
-	{ SetText("Edit"); GetLocalBounds().h = 22; }
+	{ SetText("Edit"); SetLocalBounds(Rectangle(0, 0, 50, 22)); }
 
 	void Edit::OnDraw(Graphics& g) {
 		const auto textStyle = GetStyle()["DefaultText"];

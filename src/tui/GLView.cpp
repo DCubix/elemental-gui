@@ -62,9 +62,7 @@ namespace tui {
 
     GLView::GLView(GLContextConfig config)
     {
-        GetLocalBounds().w = 100;
-        GetLocalBounds().h = 100;
-
+		SetLocalBounds(Rectangle(0, 0, 100, 100));
         config.Apply();
 
         std::string thisStr = std::to_string((uintptr_t)this);

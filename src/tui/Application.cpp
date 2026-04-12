@@ -69,8 +69,6 @@ namespace tui {
 		SDL_RenderClear(m_renderer);
 
 		while (running) {
-			m_root->GetLocalBounds() = Rectangle(0, 0, m_width, m_height);
-
 			while (SDL_PollEvent(&evt)) {
 				switch (evt.type) {
 					case SDL_EVENT_QUIT: running = false; break;
@@ -138,6 +136,7 @@ namespace tui {
 			}
 
 			if (m_shouldRedraw) {
+				m_root->GetLocalBounds() = Rectangle(0, 0, m_width, m_height);
 				Redraw();
 				m_shouldRedraw = false;
 			}

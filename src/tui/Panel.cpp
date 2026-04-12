@@ -36,8 +36,10 @@ namespace tui {
 		if (m_layout)
 			m_layout->Apply(b.x, b.y, b.w, b.h);
 
+		int pad = m_layout ? m_layout->GetPadding() : 0;
 		Rectangle c = GetIntersectedBounds();
-		g.ClipPush(c.x, c.y, c.w, c.h);
+		Rectangle padded = { c.x + pad, c.y + pad, c.w - 2 * pad, c.h - 2 * pad };
+		g.ClipPush(padded.x, padded.y, padded.w, padded.h);
 		for (auto&& e : m_children) {
 			if (e == nullptr) continue;
 			if (e == this) continue;
@@ -46,6 +48,40 @@ namespace tui {
 			}
 		}
 		g.ClipPop();
+	}
+
+	Size Panel::GetPreferredSize() {
+		if (!IsAutoSize()) return Element::GetPreferredSize();
+
+		int pad = m_layout ? m_layout->GetPadding() : 0;
+		int gap = m_layout ? m_layout->GetGap() : 0;
+		FlexDirection dir = FlexDirection::Row;
+		if (FlexLayout* flex = dynamic_cast<FlexLayout*>(m_layout.get())) {
+			dir = flex->GetDirection();
+		}
+
+		int mainTotal = 0;
+		int crossMax = 0;
+		int visibleCount = 0;
+
+		for (auto& e : m_children) {
+			if (!e || e == this || !e->IsVisible()) continue;
+			Size s = e->GetPreferredSize();
+			int ms = (dir == FlexDirection::Row) ? s.w : s.h;
+			int cs = (dir == FlexDirection::Row) ? s.h : s.w;
+			mainTotal += ms;
+			if (cs > crossMax) crossMax = cs;
+			visibleCount++;
+		}
+
+		if (visibleCount > 1) mainTotal += (visibleCount - 1) * gap;
+		mainTotal += 2 * pad;
+		crossMax += 2 * pad;
+
+		if (dir == FlexDirection::Row)
+			return { mainTotal, crossMax };
+		else
+			return { crossMax, mainTotal };
 	}
 
 	bool Panel::IsDirty() {

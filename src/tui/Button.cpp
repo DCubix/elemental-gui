@@ -7,7 +7,7 @@ namespace tui {
 	Button::Button()
 		: Label()
 	{
-		GetLocalBounds().h = 22;
+		SetLocalBounds(Rectangle(0, 0, 50, 22));
 		m_alignment = Alignment::MiddleCenter;
 		m_text = "Button";
 		m_state = ButtonState::Normal;

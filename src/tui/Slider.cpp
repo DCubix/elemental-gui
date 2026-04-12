@@ -16,8 +16,7 @@ namespace tui {
 		  m_thumbPos(0),
 		  m_dragOffset(0)
 	{
-		GetLocalBounds().w = 120;
-		GetLocalBounds().h = 22;
+		SetLocalBounds(Rectangle(0, 0, 120, 22));
 	}
 
 	void Slider::OnDraw(Graphics& g) {

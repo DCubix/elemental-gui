@@ -53,6 +53,16 @@ namespace tui {
 			return *dynamic_cast<E*>(m_elements.back().get());
 		}
 
+		template <DerivedFromElement E>
+		E* FindByTag(const std::string& tag) {
+			for (auto&& el : m_elements) {
+				if (el->GetTag() == tag) {
+					return dynamic_cast<E*>(el.get());
+				}
+			}
+			return nullptr;
+		}
+
 		Panel& GetRoot() { return *m_root; }
 
 		void RequestRedraw();
