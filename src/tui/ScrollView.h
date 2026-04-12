@@ -9,17 +9,17 @@ namespace tui {
 	public:
 		ScrollView();
 
-		EventStatus onEvent(Event *event) override;
-		void onDraw(Graphics& g) override;
+		EventStatus OnEvent(Event *event) override;
+		void OnDraw(Graphics& g) override;
 
-		void element(Element *e);
-		Element* element() { return m_element; }
+		void SetElement(Element *e);
+		Element* GetElement() { return m_element; }
 
 	private:
 		Slider *m_verticalSlider, *m_horizontalSlider;
 		Element *m_element;
 
-		bool dirty() override;
+		bool IsDirty() override;
 	};
 }
 

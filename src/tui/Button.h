@@ -10,16 +10,16 @@ namespace tui {
 	public:
 		Button();
 
-		void onDraw(Graphics& g) override;
-		EventStatus onEvent(Event *event) override;
+		void OnDraw(Graphics& g) override;
+		EventStatus OnEvent(Event *event) override;
 
-		void onClick(ClickCallback cb) { m_onClick = cb; }
+		void SetOnClick(ClickCallback cb) { m_onClick = cb; }
 
 	private:
-		enum ButtonState {
-			BSNormal = 0,
-			BSHover,
-			BSClick
+		enum class ButtonState {
+			Normal = 0,
+			Hover,
+			Click
 		};
 
 		ClickCallback m_onClick;

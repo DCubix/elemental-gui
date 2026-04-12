@@ -11,15 +11,15 @@ using namespace tui;
 
 class App : public ApplicationAdapter {
 public:
-	void onCreate(Application *app) {
-		ScrollView *sv = app->create<ScrollView>(Layout::Center);
-		ImageView *img = app->create<ImageView>();
+	void OnCreate(Application *app) {
+		ScrollView& sv = app->Create<ScrollView>(Layout::Center);
+		ImageView& img = app->Create<ImageView>();
 		bg = new Image("bg.png");
-		img->image(bg);
-		sv->element(img);
+		img.SetImage(bg);
+		sv.SetElement(&img);
 	}
 
-	void onDestroy() {
+	void OnDestroy() {
 		if (icon) delete icon;
 		if (bg) delete bg;
 	}
@@ -29,5 +29,5 @@ public:
 
 int main(int argc, char** argv) {
 	tui::Application app{ "Elemental", 320, 320 };
-	return app.start(new App());
+	return app.Start(new App());
 }

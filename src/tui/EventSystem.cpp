@@ -2,7 +2,7 @@
 
 namespace tui {
 
-	void EventSystem::subscribe(Subscriber* sub, int event) {
+	void EventSystem::Subscribe(Subscriber* sub, EventType event) {
 		m_subscribers[event].push_back(sub);
 	}
 

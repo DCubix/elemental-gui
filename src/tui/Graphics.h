@@ -22,17 +22,17 @@ namespace tui {
 		int w, h;
 	};
 
-	struct Rect {
+	struct Rectangle {
 		int x, y, w, h;
 
-		Rect() = default;
-		Rect(int x, int y, int w, int h)
+		Rectangle() = default;
+		Rectangle(int x, int y, int w, int h)
 			: x(x), y(y), w(w), h(h)
 		{}
 
-		bool hasPoint(int x, int y);
-		bool intersects(Rect b);
-		std::optional<Rect> getIntersected(Rect b);
+		bool HasPoint(int x, int y);
+		bool Intersects(Rectangle b);
+		std::optional<Rectangle> GetIntersected(Rectangle b);
 	};
 
 	class Image {
@@ -42,8 +42,8 @@ namespace tui {
 		~Image();
 		Image(const std::string& fileName);
 
-		int width() const { return m_width; }
-		int height() const { return m_height; }
+		int GetWidth() const { return m_width; }
+		int GetHeight() const { return m_height; }
 
 	private:
 		int m_width, m_height;
@@ -66,39 +66,39 @@ namespace tui {
 		Graphics() = default;
 		Graphics(SDL_Renderer* ren);
 
-		void setViewport(int w, int h);
-		void clear(int r = 0, int g = 0, int b = 0);
+		void SetViewport(int w, int h);
+		void Clear(int r = 0, int g = 0, int b = 0);
 
-		void lineWidth(float w = 1.0f);
-		void color(float r, float g, float b, float a = 1.0f);
-		void rect(int x, int y, int w, int h);
-		void roundRect(int x, int y, int w, int h, float radius = 0.0f);
-		void line(int x1, int y1, int x2, int y2);
+		void LineWidth(float w = 1.0f);
+		void Color(float r, float g, float b, float a = 1.0f);
+		void Rect(int x, int y, int w, int h);
+		void RoundRect(int x, int y, int w, int h, float radius = 0.0f);
+		void Line(int x1, int y1, int x2, int y2);
 
-		void stroke(bool preserve = false);
-		void fill(bool preserve = false);
+		void Stroke(bool preserve = false);
+		void Fill(bool preserve = false);
 
-		void image(Image* img, int x, int y, int w, int h);
+		void DrawImage(Image* img, int x, int y, int w, int h);
 
-		void styledPaint(Json style);
-		void styledRect(int x, int y, int w, int h, Json style);
-		void styledTextBegin(Json style);
-		void styledTextEnd(const std::string& text, int x, int y, float rot = 0.0f);
-		cairo_text_extents_t measureText(const std::string& text);
+		void StyledPaint(Json style);
+		void StyledRect(int x, int y, int w, int h, Json style);
+		void StyledTextBegin(Json style);
+		void StyledTextEnd(const std::string& text, int x, int y, float rot = 0.0f);
+		cairo_text_extents_t MeasureText(const std::string& text);
 
-		void drawCharBegin(FontStyle style, const std::string& font, double fontSize);
-		int drawChar(char c, int x, int y);
+		void DrawCharBegin(FontStyle style, const std::string& font, double fontSize);
+		int DrawChar(char c, int x, int y);
 
-		void clipPush(int x, int y, int w, int h);
-		void clipPop();
+		void ClipPush(int x, int y, int w, int h);
+		void ClipPop();
 
-		void beginPath();
-		void addPathRect(int x, int y, int w, int h);
-		void addPathPoint(int x, int y);
-		void endPath(bool close = false);
+		void BeginPath();
+		void AddPathRect(int x, int y, int w, int h);
+		void AddPathPoint(int x, int y);
+		void EndPath(bool close = false);
 
-		void save();
-		void restore();
+		void Save();
+		void Restore();
 
 	private:
 		SDL_Renderer *m_renderer;
@@ -108,10 +108,10 @@ namespace tui {
 		cairo_t *m_context;
 		int m_width, m_height;
 
-		std::stack<Rect> m_clipRects;
+		std::stack<Rectangle> m_clipRects;
 		std::vector<Point> m_pathPoints;
 
-		void draw(DrawFunction func);
+		void Draw(DrawFunction func);
 	};
 }
 

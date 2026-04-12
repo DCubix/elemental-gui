@@ -3,17 +3,13 @@
 
 #include <map>
 #include <vector>
-#include <type_traits>
+#include <concepts>
 
 namespace tui {
 	class Subscriber;
 
-	struct Event {
-		virtual int type() { return -1; }
-	};
-
 	// Default events
-	enum EventType {
+	enum class EventType {
 		MouseEventType = 0,
 		MotionEventType,
 		KeyEventType,
@@ -22,20 +18,27 @@ namespace tui {
 		BlurEventType
 	};
 
+	struct Event {
+		virtual EventType Type() = 0;
+	};
+
+	template <typename E>
+	concept DerivedFromEvent = std::derived_from<E, Event>;
+
 	struct MouseEvent : public Event {
-		int type() { return EventType::MouseEventType; }
+		EventType Type() { return EventType::MouseEventType; }
 
 		MouseEvent() = default;
 		MouseEvent(int x, int y, int button, bool pressed)
 			: x(x), y(y), button(button), pressed(pressed)
 		{}
-
+		
 		int x, y, button;
 		bool pressed;
 	};
 
 	struct MotionEvent : public Event {
-		int type() { return EventType::MotionEventType; }
+		EventType Type() { return EventType::MotionEventType; }
 
 		MotionEvent() = default;
 		MotionEvent(int x, int y, int button)
@@ -46,7 +49,7 @@ namespace tui {
 	};
 
 	struct TextInput : public Event {
-		int type() { return EventType::TextInputEventType; }
+		EventType Type() { return EventType::TextInputEventType; }
 
 		TextInput() = default;
 		TextInput(char c) : inputChar(c) {}
@@ -55,7 +58,7 @@ namespace tui {
 	};
 
 	struct FocusEvent : public Event {
-		int type() { return EventType::FocusEventType; }
+		EventType Type() { return EventType::FocusEventType; }
 
 		FocusEvent() = default;
 		FocusEvent(Subscriber *e) : element(e) {}
@@ -64,7 +67,7 @@ namespace tui {
 	};
 
 	struct BlurEvent : public Event {
-		int type() { return EventType::BlurEventType; }
+		EventType Type() { return EventType::BlurEventType; }
 
 		BlurEvent() = default;
 		BlurEvent(Subscriber *e) : element(e) {}
@@ -73,7 +76,7 @@ namespace tui {
 	};
 
 	struct KeyEvent : public Event {
-		int type() { return EventType::KeyEventType; }
+		EventType Type() { return EventType::KeyEventType; }
 
 		KeyEvent() = default;
 		KeyEvent(int key, int mod, bool pressed)
@@ -85,42 +88,40 @@ namespace tui {
 	};
 
 	//
-	enum EventStatus {
+	enum class EventStatus {
 		Consumed = 0,
 		Active
 	};
 	class Subscriber {
 	public:
-		virtual EventStatus onEvent(Event *event) = 0;
+		virtual EventStatus OnEvent(Event *event) = 0;
 
-		bool enabled() const { return m_enabled; }
-		void enabled(bool v) { m_enabled = v; }
+		bool IsEnabled() const { return m_enabled; }
+		void SetEnabled(bool v) { m_enabled = v; }
 
 	private:
 		bool m_enabled = true;
 	};
-	using EventSubscriberMap = std::map<int, std::vector<Subscriber*>>;
+	using EventSubscriberMap = std::map<EventType, std::vector<Subscriber*>>;
 
 	class EventSystem {
 	public:
 		EventSystem() = default;
 		~EventSystem() = default;
 
-		void subscribe(Subscriber *sub, int event);
+		void Subscribe(Subscriber *sub, EventType event);
 
-		template <typename E, typename... Args>
-		void broadcast(Args&&... args) {
-			static_assert(std::is_base_of<Event, E>::value, "E must inherit from Event");
+		template <DerivedFromEvent E, typename... Args>
+		void Broadcast(Args&&... args) {
+			E *e = new E(std::forward<Args>(args)...);
 
-			E *e = new E(args...);
-
-			auto evt = m_subscribers.find(e->type());
+			auto evt = m_subscribers.find(e->Type());
 			if (evt == m_subscribers.end()) return;
 
 			for (auto&& sub : evt->second) {
-				if (!sub->enabled()) continue;
+				if (!sub->IsEnabled()) continue;
 
-				EventStatus status = sub->onEvent(e);
+				EventStatus status = sub->OnEvent(e);
 				if (status == EventStatus::Consumed) {
 					break;
 				}

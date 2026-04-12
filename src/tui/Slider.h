@@ -16,22 +16,22 @@ namespace tui {
 
 		Slider();
 
-		virtual void onDraw(Graphics& g) override;
-		virtual EventStatus onEvent(Event *event) override;
+		virtual void OnDraw(Graphics& g) override;
+		virtual EventStatus OnEvent(Event *event) override;
 
-		Range& range() { invalidate(); return m_range; }
-		void range(float min, float max);
+		Range& GetRange() { Invalidate(); return m_range; }
+		void SetRange(float min, float max);
 
-		float value() const { return m_value; }
-		void value(float v);
+		float GetValue() const { return m_value; }
+		void SetValue(float v);
 
-		float step() const { return m_step; }
-		void step(float s) { m_step = s; }
+		float GetStep() const { return m_step; }
+		void SetStep(float s) { m_step = s; }
 
-		Orientation orientation() const { return m_orientation; }
-		void orientation(Orientation ori) { m_orientation = ori; invalidate(); }
+		Slider::Orientation GetOrientation() const { return m_orientation; }
+		void SetOrientation(Orientation ori) { m_orientation = ori; Invalidate(); }
 
-		void onValueChange(ValueCallback cb) { m_onValueChange = cb; }
+		void SetOnValueChange(ValueCallback cb) { m_onValueChange = cb; }
 
 	private:
 		enum ButtonState {
@@ -51,8 +51,8 @@ namespace tui {
 
 		ValueCallback m_onValueChange;
 
-		void updateValue(int p);
-		int getButtonSize();
+		void UpdateValue(int p);
+		int GetButtonSize();
 	};
 }
 

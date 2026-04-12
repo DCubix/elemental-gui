@@ -8,11 +8,11 @@ namespace tui {
 	public:
 		ImageView();
 
-		Image* image() { return m_image; }
-		void image(Image *img) { m_image = img; invalidate(); }
+		Image* GetImage() { return m_image; }
+		void SetImage(Image *img) { m_image = img; Invalidate(); }
 
-		void onDraw(Graphics& g) override;
-		Size preferredSize() override;
+		void OnDraw(Graphics& g) override;
+		Size GetPreferredSize() override;
 
 	private:
 		Image *m_image;

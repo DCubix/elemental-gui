@@ -9,7 +9,7 @@ namespace tui {
 		: m_renderer(ren), m_buffer(nullptr), m_surface(nullptr)
 	{}
 
-	void Graphics::setViewport(int w, int h) {
+	void Graphics::SetViewport(int w, int h) {
 		if (m_buffer != nullptr) {
 			SDL_DestroyTexture(m_buffer);
 		}
@@ -24,26 +24,26 @@ namespace tui {
 		m_height = h;
 	}
 
-	void Graphics::clear(int r, int g, int b) {
+	void Graphics::Clear(int r, int g, int b) {
 		SDL_SetRenderDrawColor(m_renderer, r, g, b, 255);
 		SDL_RenderClear(m_renderer);
 	}
 
-	void Graphics::lineWidth(float w) {
+	void Graphics::LineWidth(float w) {
 		cairo_set_line_width(m_context, w);
 	}
 
-	void Graphics::color(float r, float g, float b, float a) {
+	void Graphics::Color(float r, float g, float b, float a) {
 		cairo_set_source_rgba(m_context, r, g, b, a);
 	}
 
-	void Graphics::rect(int x, int y, int w, int h) {
+	void Graphics::Rect(int x, int y, int w, int h) {
 		cairo_rectangle(m_context, double(x) + 0.5, double(y) + 0.5, w, h);
 	}
 
-	void Graphics::roundRect(int x, int y, int w, int h, float radius) {
+	void Graphics::RoundRect(int x, int y, int w, int h, float radius) {
 		if (radius <= 0) {
-			rect(x, y, w, h);
+			Rect(x, y, w, h);
 			return;
 		}
 
@@ -60,31 +60,31 @@ namespace tui {
 		cairo_close_path(m_context);
 	}
 
-	void Graphics::line(int x1, int y1, int x2, int y2) {
+	void Graphics::Line(int x1, int y1, int x2, int y2) {
 		cairo_move_to(m_context, x1+0.5, y1);
 		cairo_line_to(m_context, x2+0.5, y2);
 	}
 
-	void Graphics::stroke(bool preserve) {
+	void Graphics::Stroke(bool preserve) {
 		if (!preserve) cairo_stroke(m_context);
 		else cairo_stroke_preserve(m_context);
 	}
 
-	void Graphics::fill(bool preserve) {
+	void Graphics::Fill(bool preserve) {
 		if (!preserve) cairo_fill(m_context);
 		else cairo_fill_preserve(m_context);
 	}
 
-	void Graphics::image(Image* img, int x, int y, int w, int h) {
+	void Graphics::DrawImage(Image* img, int x, int y, int w, int h) {
 		cairo_save(m_context);
 		cairo_translate(m_context, x, y);
-		cairo_scale(m_context, double(w) / double(img->width()), double(h) / double(img->height()));
+		cairo_scale(m_context, double(w) / double(img->GetWidth()), double(h) / double(img->GetHeight()));
 		cairo_set_source_surface(m_context, img->m_surface, 0, 0);
 		cairo_paint(m_context);
 		cairo_restore(m_context);
 	}
 
-	void Graphics::styledPaint(Json style) {
+	void Graphics::StyledPaint(Json style) {
 		if (style["background"].is_object()) {
 			cairo_pattern_t *pat = nullptr;
 			Json bg = style["background"];
@@ -99,7 +99,7 @@ namespace tui {
 				);
 			}
 
-			fill(true);
+			Fill(true);
 			if (pat) cairo_pattern_destroy(pat);
 		}
 		if (style["border"].is_object()) {
@@ -114,17 +114,17 @@ namespace tui {
 						color[3].get<double>()
 			);
 			cairo_set_line_width(m_context, width);
-			stroke(false);
+			Stroke(false);
 		}
 	}
 
-	void Graphics::styledRect(int x, int y, int w, int h, Json style) {
+	void Graphics::StyledRect(int x, int y, int w, int h, Json style) {
 		cairo_save(m_context);
 		double borderRadius = 0.0;
 		if (style["border"].is_object()) {
 			Json border = style["border"];
 			borderRadius = border.value("radius", 0.0);
-			roundRect(x, y, w-1, h-1, borderRadius);
+			RoundRect(x, y, w-1, h-1, borderRadius);
 		}
 
 		if (style["background"].is_object()) {
@@ -168,14 +168,14 @@ namespace tui {
 				cairo_set_source(m_context, pat);
 			}
 
-			fill();
+			Fill();
 			if (pat) cairo_pattern_destroy(pat);
 		}
 		if (style["border"].is_object()) {
 			Json border = style["border"];
 			Json color = border.value("color", Json::array({ 0.0, 0.0, 0.0, 1.0 }));
 			double width = border.value("width", 1.0);
-			roundRect(x, y, w-1, h-1, borderRadius);
+			RoundRect(x, y, w-1, h-1, borderRadius);
 			cairo_set_source_rgba(
 						m_context,
 						color[0].get<double>(),
@@ -184,12 +184,12 @@ namespace tui {
 						color[3].get<double>()
 			);
 			cairo_set_line_width(m_context, width);
-			stroke();
+			Stroke();
 		}
 		cairo_restore(m_context);
 	}
 
-	void Graphics::styledTextBegin(Json style) {
+	void Graphics::StyledTextBegin(Json style) {
 		/*
 			{
 				"font": "Sans",
@@ -242,7 +242,7 @@ namespace tui {
 		cairo_set_source_rgba(m_context, color[0], color[1], color[2], color[3]);
 	}
 
-	void Graphics::styledTextEnd(const std::string& text, int x, int y, float rot) {
+	void Graphics::StyledTextEnd(const std::string& text, int x, int y, float rot) {
 		cairo_move_to(m_context, x, y);
 		cairo_rotate(m_context, rot);
 		cairo_text_path(m_context, text.c_str());
@@ -251,13 +251,13 @@ namespace tui {
 		cairo_move_to(m_context, -x, -y);
 	}
 
-	cairo_text_extents_t Graphics::measureText(const std::string& text) {
+	cairo_text_extents_t Graphics::MeasureText(const std::string& text) {
 		cairo_text_extents_t extents;
 		cairo_text_extents(m_context, text.c_str(), &extents);
 		return extents;
 	}
 
-	void Graphics::drawCharBegin(FontStyle style, const std::string& font, double fontSize) {
+	void Graphics::DrawCharBegin(FontStyle style, const std::string& font, double fontSize) {
 		cairo_font_slant_t slant = CAIRO_FONT_SLANT_NORMAL;
 		cairo_font_weight_t weight = CAIRO_FONT_WEIGHT_NORMAL;
 		switch (style) {
@@ -273,9 +273,9 @@ namespace tui {
 		cairo_set_font_size(m_context, fontSize);
 	}
 
-	int Graphics::drawChar(char c, int x, int y) {
+	int Graphics::DrawChar(char c, int x, int y) {
 		std::string txt = std::string(1, c);
-		auto&& ex = measureText(txt);
+		auto&& ex = MeasureText(txt);
 
 		cairo_move_to(m_context, x, y);
 		cairo_text_path(m_context, txt.c_str());
@@ -285,16 +285,16 @@ namespace tui {
 		return x + ex.x_advance;
 	}
 
-	void Graphics::clipPush(int x, int y, int w, int h) {
+	void Graphics::ClipPush(int x, int y, int w, int h) {
 		cairo_save(m_context);
 		cairo_rectangle(m_context, x, y, w, h);
 		cairo_clip(m_context);
-		m_clipRects.push(Rect(x, y, w, h));
+		m_clipRects.push(Rectangle(x, y, w, h));
 	}
 
-	void Graphics::clipPop() {
+	void Graphics::ClipPop() {
 		if (!m_clipRects.empty()) {
-			Rect b = m_clipRects.top();
+			Rectangle b = m_clipRects.top();
 			m_clipRects.pop();
 			cairo_rectangle(m_context, b.x, b.y, b.w, b.h);
 			cairo_clip(m_context);
@@ -304,22 +304,22 @@ namespace tui {
 		cairo_restore(m_context);
 	}
 
-	void Graphics::beginPath() {
+	void Graphics::BeginPath() {
 		m_pathPoints.clear();
 	}
 
-	void Graphics::addPathRect(int x, int y, int w, int h) {
+	void Graphics::AddPathRect(int x, int y, int w, int h) {
 		m_pathPoints.push_back({ x, y });
 		m_pathPoints.push_back({ x + w, y });
 		m_pathPoints.push_back({ x + w, y + h });
 		m_pathPoints.push_back({ x, y + h });
 	}
 
-	void Graphics::addPathPoint(int x, int y) {
+	void Graphics::AddPathPoint(int x, int y) {
 		m_pathPoints.push_back({ x, y });
 	}
 
-	void Graphics::endPath(bool close) {
+	void Graphics::EndPath(bool close) {
 		if (m_pathPoints.empty()) return;
 		cairo_new_path(m_context);
 		cairo_move_to(m_context, m_pathPoints[0].x, m_pathPoints[0].y);
@@ -329,15 +329,15 @@ namespace tui {
 		if (close) cairo_close_path(m_context);
 	}
 
-	void Graphics::save() {
+	void Graphics::Save() {
 		cairo_save(m_context);
 	}
 
-	void Graphics::restore() {
+	void Graphics::Restore() {
 		cairo_restore(m_context);
 	}
 
-	void Graphics::draw(DrawFunction func) {
+	void Graphics::Draw(DrawFunction func) {
 		if (func == nullptr) return;
 
 		const SDL_FRect dst = { 0, 0, (float)m_width, (float)m_height };
@@ -377,6 +377,45 @@ namespace tui {
 		m_surface = cairo_image_surface_create_from_png(fileName.c_str());
 		m_width = cairo_image_surface_get_width(m_surface);
 		m_height = cairo_image_surface_get_height(m_surface);
+	}
+	
+	bool Rectangle::HasPoint(int x, int y) {
+		return x >= this->x &&
+			x <= this->x + w &&
+			y >= this->y &&
+			y <= this->y + h;
+	}
+
+	bool Rectangle::Intersects(Rectangle b) {
+		int hwa = w / 2;
+		int hwb = b.w / 2;
+		int hha = h / 2;
+		int hhb = b.h / 2;
+
+		int cax = x + hwa;
+		int cay = y + hha;
+		int cbx = b.x + hwb;
+		int cby = b.y + hhb;
+
+		if (std::abs(cax - cbx) > (hwa + hwb)) return false;
+		if (std::abs(cay - cby) > (hha + hhb)) return false;
+
+		return true;
+	}
+
+	std::optional<Rectangle> Rectangle::GetIntersected(Rectangle b) {
+		int xmin = std::max(x, b.x);
+		int xmax1 = x + w, xmax2 = b.x + b.w;
+		int xmax = std::min(xmax1, xmax2);
+		if (xmax > xmin) {
+			int ymin = std::max(y, b.y);
+			int ymax1 = y + h, ymax2 = b.y + b.h;
+			int ymax = std::min(ymax1, ymax2);
+			if (ymax > ymin) {
+				return Rectangle(xmin, ymin, xmax - xmin, ymax - ymin);
+			}
+		}
+		return {};
 	}
 
 }

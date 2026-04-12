@@ -5,41 +5,41 @@
 namespace tui {
 
 	Panel::Panel() : Element(), m_backgroundVisible(true) {
-		m_layout.gap(2);
-		m_layout.padding(4);
+		m_layout.SetGap(2);
+		m_layout.SetPadding(4);
 	}
 
-	void Panel::add(Element *element, Layout::LayoutDirection dir) {
+	void Panel::Add(Element *element, Layout::LayoutDirection dir) {
 		element->m_parent = this;
-		m_layout.set(element, dir);
+		m_layout.Set(element, dir);
 		m_children.push_back(element);
 	}
 
-	void Panel::onDraw(Graphics& g) {
-		Rect b = bounds();
+	void Panel::OnDraw(Graphics& g) {
+		Rectangle b = GetBounds();
 		if (m_backgroundVisible)
-			g.styledRect(b.x, b.y, b.w, b.h, app()->style()["Panel"]);
+			g.StyledRect(b.x, b.y, b.w, b.h, GetApp()->GetStyle()["Panel"]);
 
-		m_layout.perform(b.x, b.y, b.w, b.h);
+		m_layout.Apply(b.x, b.y, b.w, b.h);
 
-		Rect c = intersectedBounds();
-		g.clipPush(c.x, c.y, c.w, c.h);
+		Rectangle c = GetIntersectedBounds();
+		g.ClipPush(c.x, c.y, c.w, c.h);
 		for (auto&& e : m_children) {
 			if (e == nullptr) continue;
 			if (e == this) continue;
-			if (e->bounds().intersects(b)) {
-				e->onDraw(g);
+			if (e->GetBounds().Intersects(b)) {
+				e->OnDraw(g);
 			}
 		}
-		g.clipPop();
+		g.ClipPop();
 	}
 
-	bool Panel::dirty() {
-		bool d = Element::dirty();
+	bool Panel::IsDirty() {
+		bool d = Element::IsDirty();
 		for (auto&& e : m_children) {
 			if (e == nullptr) continue;
 			if (e == this) continue;
-			d = d || e->dirty();
+			d = d || e->IsDirty();
 		}
 		return d;
 	}

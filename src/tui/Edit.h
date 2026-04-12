@@ -11,37 +11,37 @@ namespace tui {
 	public:
 		Edit();
 
-		void onDraw(Graphics& g) override;
-		EventStatus onEvent(Event *event) override;
-		Size preferredSize() override;
+		void OnDraw(Graphics& g) override;
+		EventStatus OnEvent(Event *event) override;
+		Size GetPreferredSize() override;
 
-		std::string text() const { return m_textRaw; }
-		void text(const std::string& txt);
+		std::string GetText() const { return m_textRaw; }
+		void SetText(const std::string& txt);
 
-		bool multiLine() const { return m_multiLine; }
-		void multiLine(bool m) { m_multiLine = m; invalidate(); }
+		bool IsMultiLine() const { return m_multiLine; }
+		void SetMultiLine(bool m) { m_multiLine = m; Invalidate(); }
 
-		bool masked() const { return m_masked; }
-		void masked(bool m) { m_masked = m; invalidate(); }
+		bool IsMasked() const { return m_masked; }
+		void SetMasked(bool m) { m_masked = m; Invalidate(); }
 
-		bool editable() const { return m_editable; }
-		void editable(bool m) { m_editable = m; invalidate(); }
+		bool IsEditable() const { return m_editable; }
+		void SetEditable(bool m) { m_editable = m; Invalidate(); }
 
-		void style(Json style) { m_style = style; invalidate(); }
+		void SetStyle(Json style) { m_style = style; Invalidate(); }
 
-		void format(int from, int len, FontStyle style, float r, float g, float b);
-		void format(FontStyle style, float r, float g, float b);
+		void Format(int from, int len, FontStyle style, float r, float g, float b);
+		void Format(FontStyle style, float r, float g, float b);
 
-		void select(int from, int len = -1);
-		void deselect();
-		bool isSelected();
+		void Select(int from, int len = -1);
+		void Deselect();
+		bool IsSelected();
 
-		void onChange(ChangeCallback cb) { m_onChange = cb; }
+		void SetOnChange(ChangeCallback cb) { m_onChange = cb; }
 
 	private:
-		enum EditState {
-			ESNormal = 0,
-			ESSelecting
+		enum class EditState {
+			Normal = 0,
+			Selecting
 		};
 
 		struct Char {
@@ -50,7 +50,7 @@ namespace tui {
 			FontStyle style = Normal;
 		};
 		struct CharRect {
-			Rect rect;
+			Rectangle rect;
 			int index;
 		};
 
@@ -68,13 +68,13 @@ namespace tui {
 
 		Json m_style;
 
-		void insertChar(char c);
-		void removeChar(int i);
-		void deleteSelected();
-		void updateOffset();
+		void InsertChar(char c);
+		void RemoveChar(int i);
+		void DeleteSelected();
+		void UpdateOffset();
 
-		std::vector<Point> buildOrthoHull(const std::vector<CharRect>& crs);
-		std::vector<Rect> buildLinesAABB(const std::vector<CharRect>& crs);
+		std::vector<Point> BuildOrthoHull(const std::vector<CharRect>& crs);
+		std::vector<Rectangle> BuildLinesAABB(const std::vector<CharRect>& crs);
 	};
 }
 

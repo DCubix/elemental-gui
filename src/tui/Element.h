@@ -35,11 +35,11 @@ namespace tui {
 		}
 
 		template <typename... Args>
-		inline std::string format(const std::string &fmt, Args &&...args) {
+		inline std::string Format(const std::string &fmt, Args &&...args) {
 			return formatHelper(fmt, 1, std::forward<Args>(args)...);
 		}
 
-		inline std::vector<std::string> splitString(const std::string& str, const std::string& delimiter) {
+		inline std::vector<std::string> SplitString(const std::string& str, const std::string& delimiter) {
 			std::vector<std::string> strings;
 
 			std::string::size_type pos = 0;
@@ -64,9 +64,9 @@ namespace tui {
 			: minimum(minv), maximum(maxv)
 		{}
 
-		float normalized(float value);
-		float remap(Range other, float value);
-		float constrain(float value);
+		float Normalized(float value);
+		float Remap(Range other, float value);
+		float Constrain(float value);
 	};
 
 	class Application;
@@ -85,22 +85,22 @@ namespace tui {
 			None
 		};
 
-		void set(Element *element, LayoutDirection dir);
-		void perform(int x, int y, int w, int h);
+		void Set(Element *element, LayoutDirection dir);
+		void Apply(int x, int y, int w, int h);
 
-		int padding() const { return m_padding; }
-		void padding(int p) { m_padding = p; }
+		int GetPadding() const { return m_padding; }
+		void SetPadding(int p) { m_padding = p; }
 
-		int gap() const { return m_gap; }
-		void gap(int p) { m_gap = p; }
+		int GetGap() const { return m_gap; }
+		void SetGap(int p) { m_gap = p; }
 
-		std::array<Element*, LayoutDirectionCount>& elements() { return m_elements; }
+		std::array<Element*, LayoutDirectionCount>& GetElements() { return m_elements; }
 
 	private:
 		std::array<Element*, LayoutDirectionCount> m_elements;
 		int m_padding{}, m_gap{};
 
-		Size calcElementSize(Element *element);
+		Size CalcElementSize(Element *element);
 	};
 
 	class Element : public Subscriber {
@@ -111,38 +111,38 @@ namespace tui {
 		Element();
 		~Element() = default;
 
-		virtual void onDraw(Graphics& g);
-		virtual EventStatus onEvent(Event *event) override;
-		virtual Size preferredSize();
+		virtual void OnDraw(Graphics& g);
+		virtual EventStatus OnEvent(Event *event) override;
+		virtual Size GetPreferredSize();
 
-		Rect bounds() const;
-		Rect intersectedBounds();
+		Rectangle GetBounds() const;
+		Rectangle GetIntersectedBounds();
 
-		Rect& localBounds() { return m_bounds; }
-		void localBounds(Rect b) { m_bounds = b; invalidate(); }
+		Rectangle& GetLocalBounds() { return m_bounds; }
+		void SetLocalBounds(Rectangle b) { m_bounds = b; Invalidate(); }
 
-		Element* parent() { return m_parent; }
+		Element* GetParent() { return m_parent; }
 
-		void invalidate();
+		void Invalidate();
 
-		bool visible() const { return m_visible; }
-		void visible(bool v) { m_visible = v; }
+		bool IsVisible() const { return m_visible; }
+		void SetVisible(bool v) { m_visible = v; Invalidate(); }
 
-		bool focused() const { return m_focused; }
-		void requestFocus();
+		bool IsFocused() const { return m_focused; }
+		void RequestFocus();
 
-		bool autoSize() const { return m_autoSize; }
-		void autoSize(bool as) { m_autoSize = as; invalidate(); }
+		bool IsAutoSize() const { return m_autoSize; }
+		void SetAutoSize(bool as) { m_autoSize = as; Invalidate(); }
 
-		Application* app() { return m_application; }
+		Application* GetApp() { return m_application; }
 
 	private:
 		Application *m_application;
 		Element *m_parent;
-		Rect m_bounds;
+		Rectangle m_bounds;
 		bool m_dirty, m_visible, m_focused, m_autoSize;
 
-		virtual bool dirty() { return m_dirty; }
+		virtual bool IsDirty() { return m_dirty; }
 	};
 }
 

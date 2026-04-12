@@ -8,23 +8,23 @@ namespace tui {
 	public:
 		Panel();
 
-		void add(Element *element, Layout::LayoutDirection dir);
+		void Add(Element *element, Layout::LayoutDirection dir);
 
-		void onDraw(Graphics& g) override;
+		void OnDraw(Graphics& g) override;
 //		EventStatus onEvent(Event *event) override;
 
-		Layout& layout() { return m_layout; }
-		std::vector<Element*> children() { return m_children; }
+		Layout& GetLayout() { return m_layout; }
+		std::vector<Element*> GetChildren() { return m_children; }
 
-		bool backgroundVisible() const { return m_backgroundVisible; }
-		void backgroundVisible(bool bv) { m_backgroundVisible = bv; invalidate(); }
+		bool IsBackgroundVisible() const { return m_backgroundVisible; }
+		void SetBackgroundVisible(bool bv) { m_backgroundVisible = bv; Invalidate(); }
 
 	private:
 		Layout m_layout;
 		std::vector<Element*> m_children;
 		bool m_backgroundVisible;
 
-		bool dirty() override;
+		bool IsDirty() override;
 	};
 }
 

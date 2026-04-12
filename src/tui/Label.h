@@ -4,7 +4,7 @@
 #include "Element.h"
 
 namespace tui {
-	enum Alignment {
+	enum class Alignment {
 		TopLeft = 0,
 		TopCenter,
 		TopRight,
@@ -21,19 +21,19 @@ namespace tui {
 	public:
 		Label();
 
-		void onDraw(Graphics& g) override;
+		void OnDraw(Graphics& g) override;
 
-		std::string text() const { return m_text; }
-		void text(const std::string& text) { m_text = text; invalidate(); }
+		std::string GetText() const { return m_text; }
+		void SetText(const std::string& text) { m_text = text; Invalidate(); }
 
-		Alignment alignment() const { return m_alignment; }
-		void alignment(Alignment align) { m_alignment = align; invalidate(); }
+		Alignment GetAlignment() const { return m_alignment; }
+		void SetAlignment(Alignment align) { m_alignment = align; Invalidate(); }
 
-		Json style() const { return m_style; }
-		void style(Json style) { m_style = style; invalidate(); }
+		Json GetStyle() const { return m_style; }
+		void SetStyle(Json style) { m_style = style; Invalidate(); }
 
-		Image* icon() { return m_icon; }
-		void icon(Image* image) { m_icon = image; invalidate(); }
+		Image* GetIcon() { return m_icon; }
+		void SetIcon(Image* image) { m_icon = image; Invalidate(); }
 
 	protected:
 		Json m_style;

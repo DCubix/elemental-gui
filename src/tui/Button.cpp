@@ -7,78 +7,78 @@ namespace tui {
 	Button::Button()
 		: Label()
 	{
-		localBounds().h = 22;
+		GetLocalBounds().h = 22;
 		m_alignment = Alignment::MiddleCenter;
 		m_text = "Button";
-		m_state = BSNormal;
+		m_state = ButtonState::Normal;
 	}
 
-	void Button::onDraw(Graphics& g) {
-		Rect b = bounds();
+	void Button::OnDraw(Graphics& g) {
+		Rectangle b = GetBounds();
 
 		std::string state = "normal";
 		switch (m_state) {
-			case BSNormal: state = "normal"; break;
-			case BSHover: state = "hover"; break;
-			case BSClick: state = "click"; break;
+			case ButtonState::Normal: state = "normal"; break;
+			case ButtonState::Hover: state = "hover"; break;
+			case ButtonState::Click: state = "click"; break;
 		}
 
-		g.styledRect(b.x, b.y, b.w, b.h, app()->style()["Button"][state]);
-		Label::onDraw(g);
+		g.StyledRect(b.x, b.y, b.w, b.h, GetApp()->GetStyle()["Button"][state]);
+		Label::OnDraw(g);
 	}
 
-	EventStatus Button::onEvent(Event* event) {
-		EventStatus status = Element::onEvent(event);
-		if (event->type() == MouseEventType) {
-			Rect b = intersectedBounds();
+	EventStatus Button::OnEvent(Event* event) {
+		EventStatus status = Element::OnEvent(event);
+		if (event->Type() == EventType::MouseEventType) {
+			Rectangle b = GetIntersectedBounds();
 			MouseEvent* e = dynamic_cast<MouseEvent*>(event);
 			switch (m_state) {
-				case BSHover: {
+				case ButtonState::Hover: {
 					if (e->pressed && e->button == 1) {
-						m_state = BSClick;
+						m_state = ButtonState::Click;
 						status = EventStatus::Consumed;
-						invalidate();
+						Invalidate();
 					}
 				} break;
-				case BSClick: {
-					if (!b.hasPoint(e->x, e->y)) {
-						m_state = BSNormal;
+				case ButtonState::Click: {
+					if (!b.HasPoint(e->x, e->y)) {
+						m_state = ButtonState::Normal;
 						status = EventStatus::Consumed;
-						invalidate();
+						Invalidate();
 					}
 					if (!e->pressed && e->button == 1) {
 						if (m_onClick)
 							m_onClick();
-						m_state = BSHover;
+						m_state = ButtonState::Hover;
 						status = EventStatus::Consumed;
-						invalidate();
+						Invalidate();
 					}
 				} break;
 				default: break;
 			}
-		} else if (event->type() == MotionEventType) {
-			Rect b = intersectedBounds();
+		} else if (event->Type() == EventType::MotionEventType) {
+			Rectangle b = GetIntersectedBounds();
 			MotionEvent* e = dynamic_cast<MotionEvent*>(event);
 			switch (m_state) {
-				case BSNormal: {
-					if (b.hasPoint(e->x, e->y)) {
-						m_state = BSHover;
-						invalidate();
+				case ButtonState::Normal: {
+					if (b.HasPoint(e->x, e->y)) {
+						m_state = ButtonState::Hover;
+						Invalidate();
 						status = EventStatus::Consumed;
 					}
 				} break;
-				case BSHover: {
-					if (!b.hasPoint(e->x, e->y)) {
-						m_state = BSNormal;
-						invalidate();
+				case ButtonState::Hover: {
+					if (!b.HasPoint(e->x, e->y)) {
+						m_state = ButtonState::Normal;
+						Invalidate();
 					} else {
 						status = EventStatus::Consumed;
 					}
 				} break;
-				case BSClick: {
-					if (!b.hasPoint(e->x, e->y)) {
-						m_state = BSNormal;
-						invalidate();
+				case ButtonState::Click: {
+					if (!b.HasPoint(e->x, e->y)) {
+						m_state = ButtonState::Normal;
+						Invalidate();
 					} else {
 						status = EventStatus::Consumed;
 					}

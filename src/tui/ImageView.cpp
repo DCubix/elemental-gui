@@ -6,23 +6,23 @@ namespace tui {
 		: m_image(nullptr)
 	{}
 
-	void ImageView::onDraw(Graphics& g) {
-		Rect b = bounds();
-		Rect c = intersectedBounds();
-		Size sz = preferredSize();
+	void ImageView::OnDraw(Graphics& g) {
+		Rectangle b = GetBounds();
+		Rectangle c = GetIntersectedBounds();
+		Size sz = GetPreferredSize();
 
 		if (m_image != nullptr) {
-			g.clipPush(c.x, c.y, c.w, c.h);
-			g.image(m_image, b.x, b.y, sz.w, sz.h);
-			g.clipPop();
+			g.ClipPush(c.x, c.y, c.w, c.h);
+			g.DrawImage(m_image, b.x, b.y, sz.w, sz.h);
+			g.ClipPop();
 		}
 	}
 
-	Size ImageView::preferredSize() {
-		if (m_image != nullptr && autoSize()) {
-			return { m_image->width(), m_image->height() };
+	Size ImageView::GetPreferredSize() {
+		if (m_image != nullptr && IsAutoSize()) {
+			return { m_image->GetWidth(), m_image->GetHeight() };
 		}
-		return { localBounds().w, localBounds().h };
+		return { GetLocalBounds().w, GetLocalBounds().h };
 	}
 
 }

@@ -11,12 +11,12 @@ namespace tui {
 		: m_title(title), m_width(width), m_height(height), m_shouldRedraw(true),
 		  m_focused(nullptr), m_resizable(resizable)
 	{
-		m_layout.gap(2);
-		m_layout.padding(0);
+		m_layout.SetGap(2);
+		m_layout.SetPadding(0);
 		m_style = DefaultStyle;
 	}
 
-	int Application::start(ApplicationAdapter* adapter) {
+	int Application::Start(ApplicationAdapter* adapter) {
 		if (adapter == nullptr) {
 			SDL_Log("Invalid adapter.");
 			return 7;
@@ -49,9 +49,9 @@ namespace tui {
 		}
 
 		m_graphics = Graphics(m_renderer);
-		m_graphics.setViewport(m_width, m_height);
+		m_graphics.SetViewport(m_width, m_height);
 
-		adapter->onCreate(this);
+		adapter->OnCreate(this);
 
 		bool running = true;
 		SDL_Event evt{};
@@ -67,11 +67,11 @@ namespace tui {
 							SDL_GetWindowSize(m_window, &w, &h);
 							m_width = uint(w);
 							m_height = uint(h);
-							requestRedrawAll();
-							m_graphics.setViewport(m_width, m_height);
+							RequestRedrawAll();
+							m_graphics.SetViewport(m_width, m_height);
 					} break;
 					case SDL_EVENT_MOUSE_BUTTON_DOWN: {
-						m_eventSystem.broadcast<MouseEvent>(
+						m_eventSystem.Broadcast<MouseEvent>(
 									(int)evt.button.x,
 									(int)evt.button.y,
 									evt.button.button,
@@ -79,7 +79,7 @@ namespace tui {
 						);
 					} break;
 					case SDL_EVENT_MOUSE_BUTTON_UP: {
-						m_eventSystem.broadcast<MouseEvent>(
+						m_eventSystem.Broadcast<MouseEvent>(
 									(int)evt.button.x,
 									(int)evt.button.y,
 									evt.button.button,
@@ -87,26 +87,26 @@ namespace tui {
 						);
 					} break;
 					case SDL_EVENT_MOUSE_MOTION: {
-						m_eventSystem.broadcast<MotionEvent>(
+						m_eventSystem.Broadcast<MotionEvent>(
 									(int)evt.motion.x,
 									(int)evt.motion.y,
 									evt.button.button
 						);
 					} break;
 					case SDL_EVENT_TEXT_INPUT: {
-						m_eventSystem.broadcast<TextInput>(
+						m_eventSystem.Broadcast<TextInput>(
 									evt.text.text[0]
 						);
 					} break;
 					case SDL_EVENT_KEY_DOWN: {
-						m_eventSystem.broadcast<KeyEvent>(
+						m_eventSystem.Broadcast<KeyEvent>(
 									evt.key.key,
 									evt.key.mod,
 									true
 						);
 					} break;
 					case SDL_EVENT_KEY_UP: {
-						m_eventSystem.broadcast<KeyEvent>(
+						m_eventSystem.Broadcast<KeyEvent>(
 									evt.key.key,
 									evt.key.mod,
 									false
@@ -116,12 +116,12 @@ namespace tui {
 			}
 
 			if (m_shouldRedraw) {
-				redraw();
+				Redraw();
 				m_shouldRedraw = false;
 			}
 		}
 
-		adapter->onDestroy();
+		adapter->OnDestroy();
 		delete adapter;
 
 		SDL_DestroyWindow(m_window);
@@ -131,61 +131,61 @@ namespace tui {
 		return 0;
 	}
 
-	void Application::requestRedraw() {
+	void Application::RequestRedraw() {
 		m_shouldRedraw = true;
 	}
 
-	void Application::focus(Element* e) {
+	void Application::Focus(Element* e) {
 		if (m_focused != nullptr) {
 			m_focused->m_focused = false;
-			m_eventSystem.broadcast<BlurEvent>(m_focused);
+			m_eventSystem.Broadcast<BlurEvent>(m_focused);
 		}
 		if (e != nullptr) {
 			e->m_focused = true;
-			m_eventSystem.broadcast<FocusEvent>(e);
+			m_eventSystem.Broadcast<FocusEvent>(e);
 		}
 		m_focused = e;
 	}
 
-	void Application::startInput() {
+	void Application::StartInput() {
 		SDL_StartTextInput(m_window);
 	}
 
-	void Application::stopInput() {
+	void Application::StopInput() {
 		SDL_StopTextInput(m_window);
 	}
 
-	void Application::clipboardSet(const std::string& str) {
+	void Application::SetClipboard(const std::string& str) {
 		SDL_SetClipboardText(str.c_str());
 	}
 
-	std::string Application::clipboardGet() {
+	std::string Application::GetClipboard() {
 		return std::string(SDL_GetClipboardText());
 	}
 
-	uint Application::getMod() {
+	uint Application::GetMod() {
 		return SDL_GetModState();
 	}
 
-	void Application::redraw() {
-		m_layout.perform(0, 0, m_width, m_height);
+	void Application::Redraw() {
+		m_layout.Apply(0, 0, m_width, m_height);
 
 		//m_graphics.clear();
-		m_graphics.draw([&](Graphics& g) {
+		m_graphics.Draw([&](Graphics& g) {
 			for (size_t i = 0; i < m_elements.size(); i++) {
-				if (m_elements[i]->parent() != nullptr) continue;
-				if (!m_elements[i]->visible()) continue;
-				if (m_elements[i]->dirty()) {
-					m_elements[i]->onDraw(g);
+				if (m_elements[i]->GetParent() != nullptr) continue;
+				if (!m_elements[i]->IsVisible()) continue;
+				if (m_elements[i]->IsDirty()) {
+					m_elements[i]->OnDraw(g);
 					m_elements[i]->m_dirty = false;
 				}
 			}
 		});
 	}
 
-	void Application::requestRedrawAll() {
+	void Application::RequestRedrawAll() {
 		for (auto&& e : m_elements) {
-			e->invalidate();
+			e->Invalidate();
 		}
 	}
 

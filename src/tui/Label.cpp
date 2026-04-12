@@ -14,24 +14,24 @@ namespace tui {
 		  m_icon(nullptr)
 	{}
 
-	void Label::onDraw(Graphics& g) {
+	void Label::OnDraw(Graphics& g) {
 		if (m_style.is_null()) {
-			m_style = app()->style()["DefaultText"];
+			m_style = GetApp()->GetStyle()["DefaultText"];
 		}
 
-		Rect b = bounds();
-		Rect c = intersectedBounds();
+		Rectangle b = GetBounds();
+		Rectangle c = GetIntersectedBounds();
 
-		g.save();
-		g.styledTextBegin(m_style);
+		g.Save();
+		g.StyledTextBegin(m_style);
 
-		g.clipPush(c.x, c.y, c.w, c.h);
+		g.ClipPush(c.x, c.y, c.w, c.h);
 		int offx = 0;
 		int maxW = 0, maxH = 0;
 
-		auto&& lines = utils::splitString(m_text, "\n");
+		auto&& lines = utils::SplitString(m_text, "\n");
 		for (auto&& text : lines) {
-			auto&& ex = g.measureText(text);
+			auto&& ex = g.MeasureText(text);
 			maxH += ex.height;
 			maxW = std::max(maxW, int(ex.width));
 		}
@@ -41,90 +41,90 @@ namespace tui {
 			int ix = b.x;
 			int iy = b.y;
 			int ty = 0;
-			int midY = (th / 2 - m_icon->height() / 2);
-			int midY2 = (th / 2 + m_icon->height() / 2);
-			int iwo = m_icon->width() + 4;
+			int midY = (th / 2 - m_icon->GetHeight() / 2);
+			int midY2 = (th / 2 + m_icon->GetHeight() / 2);
+			int iwo = m_icon->GetWidth() + 4;
 			switch (m_alignment) {
-				case TopLeft:
+				case Alignment::TopLeft:
 					offx += iwo;
 					ty = midY;
 					break;
-				case MiddleLeft:
+				case Alignment::MiddleLeft:
 					offx += iwo;
 					ty = b.h / 2 - midY;
 					break;
-				case BottomLeft:
+				case Alignment::BottomLeft:
 					offx += iwo;
 					ty = b.h - midY2;
 					break;
 
-				case TopCenter:
+				case Alignment::TopCenter:
 					ix += b.w / 2 - (maxW / 2 + iwo);
 					ty = midY;
 					break;
-				case MiddleCenter:
+				case Alignment::MiddleCenter:
 					ix += b.w / 2 - (maxW / 2 + iwo);
 					ty = b.h / 2 - midY;
 					break;
-				case BottomCenter:
+				case Alignment::BottomCenter:
 					ix += b.w / 2 - (maxW / 2 + iwo);
 					ty = b.h - midY2;
 					break;
 
-				case TopRight:
+				case Alignment::TopRight:
 					offx -= iwo + 4;
 					ix += b.w - iwo;
 					ty = midY;
 					break;
-				case MiddleRight:
+				case Alignment::MiddleRight:
 					offx -= iwo + 4;
 					ix += b.w - iwo;
 					ty = b.h / 2 - midY;
 					break;
-				case BottomRight:
+				case Alignment::BottomRight:
 					offx -= iwo + 4;
 					ix += b.w - iwo;
 					ty = b.h - midY2;
 					break;
 			}
-			g.image(m_icon, ix, iy + ty, m_icon->width(), m_icon->height());
+			g.DrawImage(m_icon, ix, iy + ty, m_icon->GetWidth(), m_icon->GetHeight());
 		}
 
 		int offy = 0;
 		switch (m_alignment) {
-			case TopLeft:
-			case TopCenter:
-			case TopRight: offy = 0; break;
-			case MiddleLeft:
-			case MiddleCenter:
-			case MiddleRight: offy = b.h / 2 - maxH / 2; break;
-			case BottomLeft:
-			case BottomCenter:
-			case BottomRight: offy = b.h - maxH; break;
+			case Alignment::TopLeft:
+			case Alignment::TopCenter:
+			case Alignment::TopRight: offy = 0; break;
+			case Alignment::MiddleLeft:
+			case Alignment::MiddleCenter:
+			case Alignment::MiddleRight: offy = b.h / 2 - maxH / 2; break;
+			case Alignment::BottomLeft:
+			case Alignment::BottomCenter:
+			case Alignment::BottomRight: offy = b.h - maxH; break;
 		}
 
 		for (auto&& text : lines) {
-			auto&& ex = g.measureText(text);
+			auto&& ex = g.MeasureText(text);
 			double hx = (ex.width / 2);
 
 			int tx = b.x;
 			int ty = b.y;
 			switch (m_alignment) {
-				case TopLeft: break;
-				case TopCenter: tx += b.w / 2 - hx; break;
-				case TopRight: tx += b.w - hx*2; break;
-				case MiddleLeft: break;
-				case MiddleCenter: tx += b.w / 2 - hx; break;
-				case MiddleRight: tx += b.w - hx*2; break;
-				case BottomLeft: break;
-				case BottomCenter: tx += b.w / 2 - hx; break;
-				case BottomRight: tx += b.w - hx*2; break;
+				case Alignment::TopLeft: break;
+				case Alignment::TopCenter: tx += b.w / 2 - hx; break;
+				case Alignment::TopRight: tx += b.w - hx*2; break;
+				case Alignment::MiddleLeft: break;
+				case Alignment::MiddleCenter: tx += b.w / 2 - hx; break;
+				case Alignment::MiddleRight: tx += b.w - hx*2; break;
+				case Alignment::BottomLeft: break;
+				case Alignment::BottomCenter: tx += b.w / 2 - hx; break;
+				case Alignment::BottomRight: tx += b.w - hx*2; break;
 			}
-			g.styledTextEnd(text, tx + offx, ty + ex.height + offy);
+			g.StyledTextEnd(text, tx + offx, ty + ex.height + offy);
 			offy += ex.height;
 		}
-		g.clipPop();
-		g.restore();
+		g.ClipPop();
+		g.Restore();
 	}
 
 }

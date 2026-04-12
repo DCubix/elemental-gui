@@ -14,17 +14,17 @@ namespace tui {
 		  m_step(1),
 		  m_state(BSNormal)
 	{
-		localBounds().w = 120;
-		localBounds().h = 22;
+		GetLocalBounds().w = 120;
+		GetLocalBounds().h = 22;
 	}
 
-	void Slider::onDraw(Graphics& g) {
-		Rect b = bounds();
-		int btn = getButtonSize();
+	void Slider::OnDraw(Graphics& g) {
+		Rectangle b = GetBounds();
+		int btn = GetButtonSize();
 		int sz = (m_orientation == Horizontal ? b.w : b.h) - btn;
-		m_buttonPos = int(m_range.normalized(m_value) * float(sz));
+		m_buttonPos = int(m_range.Normalized(m_value) * float(sz));
 
-		g.styledRect(b.x, b.y, b.w, b.h, app()->style()["Slider"]);
+		g.StyledRect(b.x, b.y, b.w, b.h, GetApp()->GetStyle()["Slider"]);
 
 		std::string state = "normal";
 		switch (m_state) {
@@ -38,10 +38,10 @@ namespace tui {
 //		auto&& ex = g.measureText(txt);
 
 		if (m_orientation == Horizontal) {
-			g.styledRect(b.x + m_buttonPos, b.y, btn, b.h, app()->style()["Button"][state]);
+			g.StyledRect(b.x + m_buttonPos, b.y, btn, b.h, GetApp()->GetStyle()["Button"][state]);
 //			g.styledTextEnd(txt, b.x + (b.w / 2 - int(ex.width) / 2), b.y + b.h / 2 + int(ex.height) / 2);
 		} else {
-			g.styledRect(b.x, b.y + m_buttonPos, b.w, btn, app()->style()["Button"][state]);
+			g.StyledRect(b.x, b.y + m_buttonPos, b.w, btn, GetApp()->GetStyle()["Button"][state]);
 //			g.styledTextEnd(
 //						txt,
 //						b.x + b.w / 2 - ex.height / 2,
@@ -51,11 +51,11 @@ namespace tui {
 		}
 	}
 
-	EventStatus Slider::onEvent(Event* event) {
-		EventStatus status = Element::onEvent(event);
-		if (event->type() == MouseEventType) {
-			Rect b = intersectedBounds();
-			Rect c = bounds();
+	EventStatus Slider::OnEvent(Event* event) {
+		EventStatus status = Element::OnEvent(event);
+		if (event->Type() == EventType::MouseEventType) {
+			Rectangle b = GetIntersectedBounds();
+			Rectangle c = GetBounds();
 			MouseEvent* e = dynamic_cast<MouseEvent*>(event);
 			int p = (m_orientation == Horizontal ? e->x - c.x : e->y - c.y);
 			switch (m_state) {
@@ -63,48 +63,48 @@ namespace tui {
 					if (e->pressed && e->button == 1) {
 						m_state = BSClick;
 						status = EventStatus::Consumed;
-						invalidate();
+						Invalidate();
 					}
 				} break;
 				case BSClick: {
-					if (!b.hasPoint(e->x, e->y)) {
+					if (!b.HasPoint(e->x, e->y)) {
 						m_state = BSNormal;
 						status = EventStatus::Consumed;
-						invalidate();
+						Invalidate();
 					}
 					if (!e->pressed && e->button == 1) {
 						m_state = BSHover;
 						status = EventStatus::Consumed;
-						invalidate();
+						Invalidate();
 					} else {
-						updateValue(p);
+						UpdateValue(p);
 					}
 				} break;
 				default: break;
 			}
-		} else if (event->type() == MotionEventType) {
-			Rect b = intersectedBounds();
-			Rect c = bounds();
+		} else if (event->Type() == EventType::MotionEventType) {
+			Rectangle b = GetIntersectedBounds();
+			Rectangle c = GetBounds();
 			MotionEvent* e = dynamic_cast<MotionEvent*>(event);
 			int p = (m_orientation == Horizontal ? e->x - c.x : e->y - c.y);
 			switch (m_state) {
 				case BSNormal: {
-					if (b.hasPoint(e->x, e->y)) {
+					if (b.HasPoint(e->x, e->y)) {
 						m_state = BSHover;
 						status = EventStatus::Consumed;
-						invalidate();
+						Invalidate();
 					}
 				} break;
 				case BSHover: {
-					if (!b.hasPoint(e->x, e->y)) {
+					if (!b.HasPoint(e->x, e->y)) {
 						m_state = BSNormal;
-						invalidate();
+						Invalidate();
 					} else {
 						status = EventStatus::Consumed;
 					}
 				} break;
 				case BSClick: {
-					updateValue(p);
+					UpdateValue(p);
 					status = EventStatus::Consumed;
 				} break;
 			}
@@ -112,21 +112,21 @@ namespace tui {
 		return status;
 	}
 
-	void Slider::range(float min, float max) {
+	void Slider::SetRange(float min, float max) {
 		m_range.minimum = min;
 		m_range.maximum = max;
-		value(m_range.constrain(m_value));
-		invalidate();
+		SetValue(m_range.Constrain(m_value));
+		Invalidate();
 	}
 
-	void Slider::value(float v) {
-		m_value = v; invalidate();
+	void Slider::SetValue(float v) {
+		m_value = v; Invalidate();
 		if (m_onValueChange) m_onValueChange();
 	}
 
-	void Slider::updateValue(int p) {
-		int btn = getButtonSize();
-		Rect b = bounds();
+	void Slider::UpdateValue(int p) {
+		int btn = GetButtonSize();
+		Rectangle b = GetBounds();
 		p -= btn/2;
 		int sz = (m_orientation == Horizontal ? b.w : b.h) - btn;
 //		if (m_orientation == Vertical) {
@@ -134,13 +134,13 @@ namespace tui {
 //		}
 
 		Range vp{ 0, float(sz) };
-		m_value = m_range.constrain(m_range.remap(vp, p));
-		value(std::floor(m_value / m_step) * m_step);
-		invalidate();
+		m_value = m_range.Constrain(m_range.Remap(vp, p));
+		SetValue(std::floor(m_value / m_step) * m_step);
+		Invalidate();
 	}
 
-	int Slider::getButtonSize() {
-		Rect b = bounds();
+	int Slider::GetButtonSize() {
+		Rectangle b = GetBounds();
 		int vpSize = (m_orientation == Horizontal ? b.w : b.h);
 		float contentSize = (m_range.maximum - m_range.minimum) + vpSize;
 		float viewRatio = vpSize / contentSize;

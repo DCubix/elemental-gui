@@ -16,85 +16,46 @@ namespace tui {
 		  m_application(nullptr)
 	{}
 
-	void Element::onDraw(Graphics& g) {}
+	void Element::OnDraw(Graphics& g) {}
 
-	EventStatus Element::onEvent(Event* event) {
-		if (event->type() == MouseEventType) {
-			Rect b = intersectedBounds();
+	EventStatus Element::OnEvent(Event* event) {
+		if (event->Type() == EventType::MouseEventType) {
+			Rectangle b = GetIntersectedBounds();
 			MouseEvent* e = dynamic_cast<MouseEvent*>(event);
-			if (b.hasPoint(e->x, e->y) && e->pressed && e->button == 1) {
-				requestFocus();
+			if (b.HasPoint(e->x, e->y) && e->pressed && e->button == 1) {
+				RequestFocus();
 			}
 		}
 		return EventStatus::Active;
 	}
 
-	Size Element::preferredSize() {
+	Size Element::GetPreferredSize() {
 		return { m_bounds.w, m_bounds.h };
 	}
 
-	void Element::invalidate() { m_dirty = true; if (app()) app()->requestRedraw(); }
+	void Element::Invalidate() { m_dirty = true; if (GetApp()) GetApp()->RequestRedraw(); }
 
-	void Element::requestFocus() {
-		if (app()) {
-			app()->focus(this);
-			invalidate();
+	void Element::RequestFocus() {
+		if (GetApp()) {
+			GetApp()->Focus(this);
+			Invalidate();
 		}
 	}
 
-	Rect Element::bounds() const {
-		Rect b = m_bounds;
+	Rectangle Element::GetBounds() const {
+		Rectangle b = m_bounds;
 		if (m_parent != nullptr) {
-			b.x += m_parent->bounds().x;
-			b.y += m_parent->bounds().y;
+			b.x += m_parent->GetBounds().x;
+			b.y += m_parent->GetBounds().y;
 		}
 		return b;
 	}
 
-	Rect Element::intersectedBounds() {
+	Rectangle Element::GetIntersectedBounds() {
 		if (m_parent != nullptr) {
-			return m_parent->intersectedBounds().getIntersected(bounds()).value_or(bounds());
+			return m_parent->GetIntersectedBounds().GetIntersected(GetBounds()).value_or(GetBounds());
 		}
-		return bounds();
-	}
-
-	bool Rect::hasPoint(int x, int y) {
-		return x >= this->x &&
-			x <= this->x + w &&
-			y >= this->y &&
-			y <= this->y + h;
-	}
-
-	bool Rect::intersects(Rect b) {
-		int hwa = w / 2;
-		int hwb = b.w / 2;
-		int hha = h / 2;
-		int hhb = b.h / 2;
-
-		int cax = x + hwa;
-		int cay = y + hha;
-		int cbx = b.x + hwb;
-		int cby = b.y + hhb;
-
-		if (std::abs(cax - cbx) > (hwa + hwb)) return false;
-		if (std::abs(cay - cby) > (hha + hhb)) return false;
-
-		return true;
-	}
-
-	std::optional<Rect> Rect::getIntersected(Rect b) {
-		int xmin = std::max(x, b.x);
-		int xmax1 = x + w, xmax2 = b.x + b.w;
-		int xmax = std::min(xmax1, xmax2);
-		if (xmax > xmin) {
-			int ymin = std::max(y, b.y);
-			int ymax1 = y + h, ymax2 = b.y + b.h;
-			int ymax = std::min(ymax1, ymax2);
-			if (ymax > ymin) {
-				return Rect(xmin, ymin, xmax - xmin, ymax - ymin);
-			}
-		}
-		return {};
+		return GetBounds();
 	}
 
 	Layout::Layout()
@@ -102,12 +63,12 @@ namespace tui {
 		for (int i = 0; i < LayoutDirectionCount; i++) m_elements[i] = nullptr;
 	}
 
-	void Layout::set(Element* element, Layout::LayoutDirection dir) {
+	void Layout::Set(Element* element, Layout::LayoutDirection dir) {
 		if (dir == LayoutDirection::None) return;
 		m_elements[dir] = element;
 	}
 
-	void Layout::perform(int x, int y, int w, int h) {
+	void Layout::Apply(int x, int y, int w, int h) {
 #define EL(x) m_elements[x]
 		int top = m_padding;
 		int bottom = h - m_padding;
@@ -115,53 +76,53 @@ namespace tui {
 		int right = w - m_padding;
 
 		if (EL(Layout::Top) != nullptr) {
-			int h = EL(Layout::Top)->bounds().h;
-			Size s = calcElementSize(EL(Layout::Top));
-			EL(Layout::Top)->localBounds() = Rect(left, top, right - left, h);
+			int h = EL(Layout::Top)->GetBounds().h;
+			Size s = CalcElementSize(EL(Layout::Top));
+			EL(Layout::Top)->GetLocalBounds() = Rectangle(left, top, right - left, h);
 			top += s.h + m_gap;
 		}
 		if (EL(Layout::Bottom) != nullptr) {
-			int h = EL(Layout::Bottom)->bounds().h;
-			Size s = calcElementSize(EL(Layout::Bottom));
-			EL(Layout::Bottom)->localBounds() = Rect(left, bottom - s.h, right - left, h);
+			int h = EL(Layout::Bottom)->GetBounds().h;
+			Size s = CalcElementSize(EL(Layout::Bottom));
+			EL(Layout::Bottom)->GetLocalBounds() = Rectangle(left, bottom - s.h, right - left, h);
 			bottom -= s.h + m_gap;
 		}
 		if (EL(Layout::Right) != nullptr) {
-			int w = EL(Layout::Right)->bounds().w;
-			Size s = calcElementSize(EL(Layout::Right));
-			EL(Layout::Right)->localBounds() = Rect(right - s.w, top, w, bottom - top);
+			int w = EL(Layout::Right)->GetBounds().w;
+			Size s = CalcElementSize(EL(Layout::Right));
+			EL(Layout::Right)->GetLocalBounds() = Rectangle(right - s.w, top, w, bottom - top);
 			right -= s.w + m_gap;
 		}
 		if (EL(Layout::Left) != nullptr) {
-			int w = EL(Layout::Left)->bounds().w;
-			Size s = calcElementSize(EL(Layout::Left));
-			EL(Layout::Left)->localBounds() = Rect(left, top, w, bottom - top);
+			int w = EL(Layout::Left)->GetBounds().w;
+			Size s = CalcElementSize(EL(Layout::Left));
+			EL(Layout::Left)->GetLocalBounds() = Rectangle(left, top, w, bottom - top);
 			left += s.w + m_gap;
 		}
 		if (EL(Layout::Center) != nullptr) {
-			EL(Layout::Center)->localBounds() = Rect(left, top, right - left, bottom - top);
+			EL(Layout::Center)->GetLocalBounds() = Rectangle(left, top, right - left, bottom - top);
 		}
 	}
 
-	Size Layout::calcElementSize(Element* element) {
-		if (!element->visible()) {
+	Size Layout::CalcElementSize(Element* element) {
+		if (!element->IsVisible()) {
 			return { 0, 0 };
 		}
-		return { element->bounds().w, element->bounds().h };
+		return { element->GetBounds().w, element->GetBounds().h };
 	}
 
-	float Range::normalized(float value) {
+	float Range::Normalized(float value) {
 		const float w = maximum - minimum;
 		return (value - minimum) / w;
 	}
 
-	float Range::remap(Range other, float value) {
+	float Range::Remap(Range other, float value) {
 		const float w = maximum - minimum;
-		float n = other.normalized(value);
+		float n = other.Normalized(value);
 		return minimum + n * w;
 	}
 
-	float Range::constrain(float value) {
+	float Range::Constrain(float value) {
 		return std::max(std::min(value, maximum), minimum);
 	}
 
