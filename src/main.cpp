@@ -20,8 +20,6 @@ namespace decl = tui::declarative;
 
 class CubeView : public GLView {
 public:
-	Timer timer{};
-	float angle = 0.0f;
 
 	CubeView() : GLView([] {
 		GLContextConfig cfg;
@@ -29,17 +27,16 @@ public:
 		cfg.minorVersion = 1;
 		cfg.profile = GLContextConfig::Profile::Compatibility;
 		return cfg;
-	}()) {
-		timer.Start(33, [this]() {
-			angle += 2.0f;
-			if (angle >= 360.0f) angle -= 360.0f;
-			Invalidate();
-		});
-	}
+	}()) {}
 
 	void OnRender() override {
-		float sliderValue = GetApp()->FindByTag<Slider>("scale")->GetValue() / 100.0f;
-		sliderValue = 0.1f + sliderValue * 0.9f; // Scale from 0.1 to 1.0
+		float angleX = GetApp()->FindByTag<Slider>("rot_x")->GetValue() / 360.0f;
+		float angleY = GetApp()->FindByTag<Slider>("rot_y")->GetValue() / 360.0f;
+		float angleZ = GetApp()->FindByTag<Slider>("rot_z")->GetValue() / 360.0f;
+
+		angleX = (angleX * 2.0f - 1.0f) * 180.0f;
+		angleY = (angleY * 2.0f - 1.0f) * 180.0f;
+		angleZ = (angleZ * 2.0f - 1.0f) * 180.0f;
 
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -59,8 +56,9 @@ public:
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
 		glTranslatef(0.0f, 0.0f, -4.0f);
-		glRotatef(angle, 0.0f, 1.0f, 0.0f);
-		glScalef(sliderValue, sliderValue, sliderValue);
+		glRotatef(angleX, 1.0f, 0.0f, 0.0f);
+		glRotatef(angleY, 0.0f, 1.0f, 0.0f);
+		glRotatef(angleZ, 0.0f, 0.0f, 1.0f);
 
 		glBegin(GL_QUADS);
 			// Front (red)
@@ -110,77 +108,34 @@ struct CubeViewProps {
 class App : public ApplicationAdapter {
 public:
 	void OnCreate(Application& app) {
-		auto gui = decl::Column({
+		auto gui = decl::Row({
 			.gap = 8,
 			.padding = EdgeInsets::All(8),
-			.align = FlexAlign::Center,
-			.justify = FlexJustify::Center,
+			.align = FlexAlign::Stretch,
+			.justify = FlexJustify::Start,
 			.showBackground = true
 		}, {
-			decl::Button({
-				.base = {
-					.tag = "menuBtn",
-					.autoSize = true
-				},
-				.text = "Open Menu",
-				.onClick = [&app]() {
-					auto* menu = app.FindByTag<tui::Menu>("contextMenu");
-					if (menu && !menu->IsOpen()) {
-						auto* btn = app.FindByTag<Button>("menuBtn");
-						auto bounds = btn->GetBounds();
-						app.ShowPopup(menu);
-						menu->Show(bounds.x, bounds.y + bounds.h + 2);
-					}
-				}
-			}),
-			decl::Text("Elemental GUI Demo", {
-				.base = {
-					.tag = "title",
-					.autoSize = true
-				},
-				.align = Alignment::MiddleCenter
-			}),
-			decl::Button({
-				.base = {
-					.autoSize = true
-				},
-				.text = "Click Me",
-				.onClick = [&app]() {
-					app.FindByTag<Label>("title")->SetText("Button Clicked!");
-				}
+			decl::Column({
+				.base = { .bounds = Rectangle(0, 0, 200, 0) },
+				.gap = 8,
+				.padding = EdgeInsets::All(8),
+				.align = FlexAlign::Stretch,
+				.justify = FlexJustify::Start,
+				.showBackground = true
+			}, {
+				decl::Text("Rotation X", { .base = { .autoSize = true } }),
+				decl::Slider({ .base = { .tag = "rot_x" }, .range = { 0.0f, 360.0f }, .value = 0.0f }),
+				decl::Text("Rotation Y", { .base = { .autoSize = true } }),
+				decl::Slider({ .base = { .tag = "rot_y" }, .range = { 0.0f, 360.0f }, .value = 0.0f }),
+				decl::Text("Rotation Z", { .base = { .autoSize = true } }),
+				decl::Slider({ .base = { .tag = "rot_z" }, .range = { 0.0f, 360.0f }, .value = 0.0f })
 			}),
 			decl::Custom<CubeView, CubeViewProps>(CubeViewProps{
 				.base = {
+					.flexGrow = 1.0f,
 					.bounds = Rectangle(0, 0, 200, 200)
 				}
 			}),
-			decl::Slider({
-				.base = {
-					.tag = "scale",
-					.bounds = Rectangle(0, 0, 200, 20)
-				},
-				.direction = Direction::Horizontal,
-				.range = { 0, 100 },
-				.value = 50,
-				.step = 1
-			}),
-			decl::Switch({
-				.base = {
-					.tag = "switch",
-					.autoSize = true
-				},
-				.checked = false,
-				.onChanged = [](bool checked) {}
-			}),
-			decl::CheckBox({
-				.base = {
-					.tag = "checkbox",
-					.autoSize = true
-				},
-				.text = "Check me",
-				.checked = false,
-				.onChanged = [](bool checked) {}
-			})
 		});
 		app.SetRoot(gui(app));
 

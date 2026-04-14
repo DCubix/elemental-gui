@@ -18,16 +18,15 @@ namespace tui {
 
         void Show(int x, int y);
         void Hide();
+        void HideAll();
         bool IsOpen() const { return m_open; }
+        bool HitTest(int x, int y) const;
+        bool HasOpenSubMenu() const;
 
         void SetOnDismiss(VoidCallback callback) { m_onDismiss = callback; }
 
         void OpenSubMenu(MenuItem* item);
         void CloseSubMenu();
-        MenuItem* GetActiveSubMenuItem() const { return m_activeSubMenuItem; }
-
-        // Hide the entire menu chain (this menu + all open submenus)
-        void HideAll();
 
         Menu* GetParentMenu() const { return m_parentMenu; }
         void SetParentMenu(Menu* parent) { m_parentMenu = parent; }

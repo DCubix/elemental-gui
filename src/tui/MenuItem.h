@@ -31,6 +31,8 @@ namespace tui {
         Menu* GetSubMenu() const { return m_subMenu; }
         void SetSubMenu(Menu* subMenu) { m_subMenu = subMenu; Invalidate(); }
 
+        Menu* GetParentMenu() const;
+
     private:
         std::string m_text;
         Image* m_icon{nullptr};
@@ -39,5 +41,7 @@ namespace tui {
         ButtonState m_state{ButtonState::Normal};
         bool m_checked{false};
         bool m_separator{false};
+
+        void NotifyParentMenuHover();
     };
 }
