@@ -79,6 +79,9 @@ namespace tui {
 
 		Graphics& GetGraphics() { return m_graphics; }
 
+		void ShowPopup(Element *popup);
+		void DismissPopup(Element *popup);
+
 		static Json DefaultStyle;
 	private:
 		SDL_Window *m_window;
@@ -88,6 +91,7 @@ namespace tui {
 		EventSystem m_eventSystem;
 
 		std::vector<ElementPtr> m_elements;
+		std::vector<Element*> m_popups;
 		Element *m_focused;
 		Element *m_root;
 
@@ -97,5 +101,16 @@ namespace tui {
 
 		void Redraw();
 		void RequestRedrawAll();
+
+		template <DerivedFromEvent E, typename... Args>
+		void DispatchEvent(Args&&... args) {
+			E event(std::forward<Args>(args)...);
+			// Try popups first (topmost = last)
+			for (auto it = m_popups.rbegin(); it != m_popups.rend(); ++it) {
+				if ((*it)->OnEvent(&event) == EventStatus::Consumed)
+					return;
+			}
+			m_eventSystem.Broadcast<E>(std::forward<Args>(args)...);
+		}
 	};
 }

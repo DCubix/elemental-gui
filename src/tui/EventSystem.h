@@ -130,12 +130,19 @@ namespace tui {
 			auto evt = m_subscribers.find(e->Type());
 			if (evt == m_subscribers.end()) return;
 
+			bool consumed = false;
 			for (auto&& sub : evt->second) {
 				if (!sub->IsEnabled()) continue;
 
+				// Motion events must reach all subscribers so elements
+				// can clear their hover state when the mouse leaves.
+				if (consumed && e->Type() != EventType::MouseMotion) {
+					break;
+				}
+
 				EventStatus status = sub->OnEvent(e);
 				if (status == EventStatus::Consumed) {
-					break;
+					consumed = true;
 				}
 			}
 

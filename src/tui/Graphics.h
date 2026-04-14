@@ -116,6 +116,11 @@ namespace tui {
 		void AddPathPoint(int x, int y);
 		void EndPath(bool close = false);
 
+		// Transformations
+		void Translate(double tx, double ty);
+		void Rotate(double angle);
+		void Scale(double sx, double sy);
+
 		void Save();
 		void Restore();
 
@@ -126,6 +131,11 @@ namespace tui {
 		cairo_surface_t *m_surface;
 		cairo_t *m_context;
 		int m_width, m_height;
+
+		cairo_surface_t *m_measureSurface;
+		cairo_t *m_measureContext;
+
+		cairo_t* Ctx() const { return m_context ? m_context : m_measureContext; }
 
 		std::stack<Rectangle> m_clipRects;
 		std::vector<Point> m_pathPoints;

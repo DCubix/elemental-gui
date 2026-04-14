@@ -3,6 +3,8 @@
 #include "Panel.h"
 #include "FlexLayout.h"
 
+#include <algorithm>
+
 namespace tui {
 
 	static const std::string DefaultStyleJson =
@@ -79,7 +81,7 @@ namespace tui {
 							m_graphics.SetViewport(m_width, m_height);
 					} break;
 					case SDL_EVENT_MOUSE_BUTTON_DOWN: {
-						m_eventSystem.Broadcast<MouseEvent>(
+						DispatchEvent<MouseEvent>(
 									(int)evt.button.x,
 									(int)evt.button.y,
 									evt.button.button,
@@ -87,7 +89,7 @@ namespace tui {
 						);
 					} break;
 					case SDL_EVENT_MOUSE_BUTTON_UP: {
-						m_eventSystem.Broadcast<MouseEvent>(
+						DispatchEvent<MouseEvent>(
 									(int)evt.button.x,
 									(int)evt.button.y,
 									evt.button.button,
@@ -95,33 +97,33 @@ namespace tui {
 						);
 					} break;
 					case SDL_EVENT_MOUSE_MOTION: {
-						m_eventSystem.Broadcast<MotionEvent>(
+						DispatchEvent<MotionEvent>(
 									(int)evt.motion.x,
 									(int)evt.motion.y,
 									evt.button.button
 						);
 					} break;
 					case SDL_EVENT_TEXT_INPUT: {
-						m_eventSystem.Broadcast<TextInput>(
+						DispatchEvent<TextInput>(
 									evt.text.text[0]
 						);
 					} break;
 					case SDL_EVENT_KEY_DOWN: {
-						m_eventSystem.Broadcast<KeyEvent>(
+						DispatchEvent<KeyEvent>(
 									evt.key.key,
 									evt.key.mod,
 									true
 						);
 					} break;
 					case SDL_EVENT_KEY_UP: {
-						m_eventSystem.Broadcast<KeyEvent>(
+						DispatchEvent<KeyEvent>(
 									evt.key.key,
 									evt.key.mod,
 									false
 						);
 					} break;
 					case SDL_EVENT_MOUSE_WHEEL: {
-						m_eventSystem.Broadcast<ScrollEvent>(
+						DispatchEvent<ScrollEvent>(
 									evt.wheel.x,
 									evt.wheel.y,
 									(int)evt.wheel.mouse_x,
@@ -209,6 +211,12 @@ namespace tui {
 					m_elements[i]->m_dirty = false;
 				}
 			}
+			// Draw popups on top
+			for (auto* popup : m_popups) {
+				if (!popup->IsVisible()) continue;
+				popup->OnDraw(g);
+				popup->m_dirty = false;
+			}
 		});
 	}
 
@@ -216,6 +224,24 @@ namespace tui {
 		for (auto&& e : m_elements) {
 			e->Invalidate();
 		}
+	}
+
+	void Application::ShowPopup(Element *popup) {
+		// Avoid duplicates
+		for (auto* p : m_popups) {
+			if (p == popup) return;
+		}
+		popup->m_application = this;
+		m_popups.push_back(popup);
+		RequestRedraw();
+	}
+
+	void Application::DismissPopup(Element *popup) {
+		m_popups.erase(
+			std::remove(m_popups.begin(), m_popups.end(), popup),
+			m_popups.end()
+		);
+		RequestRedraw();
 	}
 
 }

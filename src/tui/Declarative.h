@@ -5,6 +5,7 @@
 #include "Application.h"
 #include "FlexLayout.h"
 #include "ImageView.h"
+#include "Menu.h"
 
 namespace tui::declarative {
     using WidgetDesc = std::function<Element*(Application&)>;
@@ -113,6 +114,27 @@ namespace tui::declarative {
         ValueChanged<float> onValueChange;
     };
     WidgetDesc Slider(const SliderProps& props);
+
+    // --- MenuItem widget ----------------------------------
+    using MenuDesc = std::function<tui::Menu*(Application&)>;
+
+    struct MenuItemProps {
+        ElementProps base{};
+        std::string text{""};
+        tui::Image* icon{nullptr};
+        bool checked{false};
+        VoidCallback onClick;
+        MenuDesc subMenu{nullptr};
+    };
+    WidgetDesc MenuItem(const MenuItemProps& props);
+    WidgetDesc MenuSeparator();
+
+    // --- Menu widget -------------------------------------
+    struct MenuProps {
+        ElementProps base{};
+        VoidCallback onDismiss;
+    };
+    MenuDesc Menu(const MenuProps& props, const std::vector<WidgetDesc>& items);
 
     // --- Custom widget ------------------------------------
     template <DerivedFromElement Elem, HasBaseProps Props>

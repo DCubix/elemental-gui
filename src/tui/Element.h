@@ -14,10 +14,12 @@ using namespace tui::utils;
 
 namespace tui {
 	class Application;
+	class Menu;
 	class Element : public Subscriber {
 		friend class Application;
 		friend class Panel;
 		friend class ScrollView;
+		friend class Menu;
 	public:
 		Element();
 		~Element() = default;

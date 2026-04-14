@@ -8,6 +8,7 @@
 #include "Slider.h"
 #include "Switch.h"
 #include "CheckBox.h"
+#include "Menu.h"
 
 namespace tui::declarative {
 
@@ -163,6 +164,53 @@ namespace tui::declarative {
             slider.SetStep(props.step);
             slider.SetOnValueChange(props.onValueChange);
             return &slider;
+        };
+    }
+
+    WidgetDesc MenuItem(const MenuItemProps &props)
+    {
+        return [props](Application& app) -> Element* {
+            auto& item = app.Create<tui::MenuItem>();
+            ElementSetup(item, props.base);
+            item.SetText(props.text);
+            item.SetIcon(props.icon);
+            item.SetChecked(props.checked);
+            item.SetOnClick(props.onClick);
+            if (props.subMenu) {
+                tui::Menu* subMenu = props.subMenu(app);
+                item.SetSubMenu(subMenu);
+            }
+            return &item;
+        };
+    }
+
+    WidgetDesc MenuSeparator()
+    {
+        return [](Application& app) -> Element* {
+            auto& item = app.Create<tui::MenuItem>();
+            item.SetSeparator(true);
+            item.SetAutoSize(true);
+            return &item;
+        };
+    }
+
+    MenuDesc Menu(const MenuProps &props, const std::vector<WidgetDesc> &items)
+    {
+        return [props, items](Application& app) -> tui::Menu* {
+            auto& menu = app.Create<tui::Menu>();
+            ElementSetup(menu, props.base);
+            menu.SetAutoSize(true);
+            menu.SetOnDismiss(props.onDismiss);
+
+            for (auto&& itemDesc : items) {
+                Element* el = itemDesc(app);
+                if (auto* item = dynamic_cast<tui::MenuItem*>(el)) {
+                    item->SetAutoSize(true);
+                    menu.Add(item);
+                }
+            }
+
+            return &menu;
         };
     }
 }

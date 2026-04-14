@@ -8,10 +8,13 @@
 namespace tui {
 
 	Graphics::Graphics(SDL_Renderer* ren)
-		: m_renderer(ren), m_buffer(nullptr), m_surface(nullptr)
-	{}
+		: m_renderer(ren), m_buffer(nullptr), m_surface(nullptr), m_context(nullptr)
+	{
+		m_measureSurface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 1, 1);
+		m_measureContext = cairo_create(m_measureSurface);
+	}
 
-	void Graphics::SetViewport(int w, int h) {
+    void Graphics::SetViewport(int w, int h) {
 		if (m_buffer != nullptr) {
 			SDL_DestroyTexture(m_buffer);
 		}
@@ -153,10 +156,10 @@ namespace tui {
 			borderRadius = border.value("radius", 0.0);
 			// constrain radius to half of the smaller dimension
 			borderRadius = std::min(borderRadius, std::min(w, h) / 2.0);
-			RoundRect(x, y, w-1, h-1, borderRadius);
 		}
 
 		if (style["background"].is_object()) {
+			RoundRect(x, y, w-1, h-1, borderRadius);
 			auto pat = ApplyPaint(style["background"], x, y, w, h);
 			Fill();
 			if (pat) cairo_pattern_destroy(pat);
@@ -221,9 +224,9 @@ namespace tui {
 		if      (fontWeight == "normal") weight = CAIRO_FONT_WEIGHT_NORMAL;
 		else if (fontWeight == "bold")   weight = CAIRO_FONT_WEIGHT_BOLD;
 
-		cairo_select_font_face(m_context, font.c_str(), slant, weight);
-		cairo_set_font_size(m_context, fontSize);
-		cairo_set_source_rgba(m_context, color[0], color[1], color[2], color[3]);
+		cairo_select_font_face(Ctx(), font.c_str(), slant, weight);
+		cairo_set_font_size(Ctx(), fontSize);
+		cairo_set_source_rgba(Ctx(), color[0], color[1], color[2], color[3]);
 	}
 
 	void Graphics::StyledTextEnd(const std::string& text, int x, int y, float rot) {
@@ -237,7 +240,7 @@ namespace tui {
 
 	cairo_text_extents_t Graphics::MeasureText(const std::string& text) {
 		cairo_text_extents_t extents;
-		cairo_text_extents(m_context, text.c_str(), &extents);
+		cairo_text_extents(Ctx(), text.c_str(), &extents);
 		return extents;
 	}
 
@@ -278,6 +281,11 @@ namespace tui {
 
 		cairo_save(m_context);
 		cairo_translate(m_context, x, y);
+
+		// Scale from 24x24 viewbox to target size
+		double viewWidth = svgStyle.value("width", 24.0);
+		double viewHeight = svgStyle.value("height", 24.0);
+		cairo_scale(m_context, w / viewWidth, h / viewHeight);
 
 		// Build the cairo path
 		cairo_new_path(m_context);
@@ -567,8 +575,9 @@ namespace tui {
 		}
 
 		// Apply fill and/or stroke using ApplyPaint
+		// Use viewbox coordinates since we've translated and scaled
 		if (svgStyle["fill"].is_object()) {
-			auto pat = ApplyPaint(svgStyle["fill"], x, y, w, h);
+			auto pat = ApplyPaint(svgStyle["fill"], 0, 0, viewWidth, viewHeight);
 			Fill(svgStyle.contains("stroke"));
 			if (pat) cairo_pattern_destroy(pat);
 		}
@@ -578,7 +587,7 @@ namespace tui {
 			cairo_set_line_width(m_context, lineWidth);
 			cairo_set_line_cap(m_context, lineCap);
 			cairo_set_line_join(m_context, lineJoin);
-			auto pat = ApplyPaint(strokeStyle, x, y, w, h);
+			auto pat = ApplyPaint(strokeStyle, 0, 0, viewWidth, viewHeight);
 			Stroke();
 			if (pat) cairo_pattern_destroy(pat);
 		}
@@ -630,12 +639,27 @@ namespace tui {
 		if (close) cairo_close_path(m_context);
 	}
 
-	void Graphics::Save() {
-		cairo_save(m_context);
+    void Graphics::Translate(double tx, double ty)
+    {
+		cairo_translate(m_context, tx, ty);
+    }
+
+    void Graphics::Rotate(double angle)
+    {
+		cairo_rotate(m_context, angle);
+    }
+
+    void Graphics::Scale(double sx, double sy)
+    {
+		cairo_scale(m_context, sx, sy);
+    }
+
+    void Graphics::Save() {
+		cairo_save(Ctx());
 	}
 
 	void Graphics::Restore() {
-		cairo_restore(m_context);
+		cairo_restore(Ctx());
 	}
 
 	void Graphics::Draw(DrawFunction func) {

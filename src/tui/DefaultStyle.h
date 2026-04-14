@@ -625,5 +625,56 @@ R"({
 		"line-join": "round",
 		"svg": "M20 6 9 17l-5-5"
 	}
+},
+"Menu": {
+	"padding": {
+		"horizontal": 0.0,
+		"vertical": 4.0
+	},
+	"border": {
+		"radius": 4.0,
+		"color": [0.28, 0.28, 0.30, 1.0],
+		"width": 1.0
+	},
+	"background": {
+		"color": [0.16, 0.16, 0.16, 1.0]
+	}
+},
+"MenuItem": {
+	"padding": {
+		"horizontal": 8.0,
+		"vertical": 4.0
+	},
+	"normal": {
+		"background": {
+			"color": [0.0, 0.0, 0.0, 0.0]
+		}
+	},
+	"hover": {
+		"background": {
+			"color": [0.20, 0.35, 0.65, 1.0]
+		}
+	},
+	"click": {
+		"background": {
+			"color": [0.15, 0.28, 0.55, 1.0]
+		}
+	},
+	"arrow": {
+		"stroke": {
+			"color": [1.0, 1.0, 1.0, 1.0],
+			"width": 2.0
+		},
+		"line-cap": "round",
+		"line-join": "round",
+		"svg": "m9 18 6-6-6-6"
+	}
+},
+"MenuSeparator": {
+	"color": [0.28, 0.28, 0.30, 1.0],
+	"margin": {
+		"horizontal": 8.0,
+		"vertical": 4.0
+	}
 }
 })"
