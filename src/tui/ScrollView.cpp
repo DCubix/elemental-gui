@@ -27,7 +27,7 @@ namespace tui {
 				return EventStatus::Consumed;
 		}
 
-		if (event->Type() == EventType::ScrollEventType) {
+		if (event->Type() == EventType::Scroll) {
 			ScrollEvent* e = dynamic_cast<ScrollEvent*>(event);
 			Rectangle full = GetIntersectedBounds();
 			if (full.HasPoint(e->mouseX, e->mouseY)) {
@@ -63,7 +63,7 @@ namespace tui {
 			}
 		}
 
-		if (event->Type() == EventType::MouseEventType) {
+		if (event->Type() == EventType::MouseButton) {
 			MouseEvent* e = dynamic_cast<MouseEvent*>(event);
 			if (b.HasPoint(e->x, e->y) && m_element != nullptr) {
 				return m_element->OnEvent(event);
@@ -81,8 +81,8 @@ namespace tui {
 			m_verticalScrollbar->m_parent = this;
 			m_horizontalScrollbar->m_parent = this;
 
-			m_verticalScrollbar->SetOrientation(Scrollbar::Vertical);
-			m_horizontalScrollbar->SetOrientation(Scrollbar::Horizontal);
+			m_verticalScrollbar->SetDirection(Direction::Vertical);
+			m_horizontalScrollbar->SetDirection(Direction::Horizontal);
 			m_verticalScrollbar->SetStep(1);
 			m_horizontalScrollbar->SetStep(1);
 		}
@@ -102,8 +102,10 @@ namespace tui {
 		if (m_element != nullptr) {
 			m_element->SetAutoSize(true);
 
-			m_element->GetLocalBounds().x = -m_horizontalScrollbar->GetValue();
-			m_element->GetLocalBounds().y = -m_verticalScrollbar->GetValue();
+			m_element->SetPosition({
+				-static_cast<int>(m_horizontalScrollbar->GetValue()),
+				-static_cast<int>(m_verticalScrollbar->GetValue())
+			});
 
 			Size ps = m_element->GetPreferredSize();
 
@@ -126,8 +128,10 @@ namespace tui {
 				m_verticalScrollbar->SetLocalBounds(Rectangle(b.w - barsize, 0, barsize, maxregiony));
 			}
 
-			m_element->GetLocalBounds().w = std::max(ps.w, maxregionx);
-			m_element->GetLocalBounds().h = std::max(ps.h, maxregiony);
+			m_element->SetSize({
+				std::max(ps.w, maxregionx),
+				std::max(ps.h, maxregiony)
+			});
 
 			Rectangle i{ c.x, c.y, maxregionx, maxregiony };
 			g.ClipPush(i.x, i.y, i.w, i.h);

@@ -9,24 +9,24 @@ namespace tui {
 
 	// Default events
 	enum class EventType {
-		MouseEventType = 0,
-		MotionEventType,
-		KeyEventType,
-		TextInputEventType,
-		FocusEventType,
-		BlurEventType,
-		ScrollEventType
+		MouseButton = 0,
+		MouseMotion,
+		Key,
+		TextInput,
+		Focus,
+		Blur,
+		Scroll
 	};
 
 	struct Event {
-		virtual EventType Type() = 0;
+		virtual EventType Type() const = 0;
 	};
 
 	template <typename E>
 	concept DerivedFromEvent = std::derived_from<E, Event>;
 
 	struct MouseEvent : public Event {
-		EventType Type() { return EventType::MouseEventType; }
+		EventType Type() const override { return EventType::MouseButton; }
 
 		MouseEvent() = default;
 		MouseEvent(int x, int y, int button, bool pressed)
@@ -38,7 +38,7 @@ namespace tui {
 	};
 
 	struct MotionEvent : public Event {
-		EventType Type() { return EventType::MotionEventType; }
+		EventType Type() const override { return EventType::MouseMotion; }
 
 		MotionEvent() = default;
 		MotionEvent(int x, int y, int button)
@@ -49,7 +49,7 @@ namespace tui {
 	};
 
 	struct TextInput : public Event {
-		EventType Type() { return EventType::TextInputEventType; }
+		EventType Type() const override { return EventType::TextInput; }
 
 		TextInput() = default;
 		TextInput(char c) : inputChar(c) {}
@@ -58,7 +58,7 @@ namespace tui {
 	};
 
 	struct FocusEvent : public Event {
-		EventType Type() { return EventType::FocusEventType; }
+		EventType Type() const override { return EventType::Focus; }
 
 		FocusEvent() = default;
 		FocusEvent(Subscriber *e) : element(e) {}
@@ -67,7 +67,7 @@ namespace tui {
 	};
 
 	struct BlurEvent : public Event {
-		EventType Type() { return EventType::BlurEventType; }
+		EventType Type() const override { return EventType::Blur; }
 
 		BlurEvent() = default;
 		BlurEvent(Subscriber *e) : element(e) {}
@@ -76,7 +76,7 @@ namespace tui {
 	};
 
 	struct KeyEvent : public Event {
-		EventType Type() { return EventType::KeyEventType; }
+		EventType Type() const override { return EventType::Key; }
 
 		KeyEvent() = default;
 		KeyEvent(int key, int mod, bool pressed)
@@ -88,7 +88,7 @@ namespace tui {
 	};
 
 	struct ScrollEvent : public Event {
-		EventType Type() { return EventType::ScrollEventType; }
+		EventType Type() const override { return EventType::Scroll; }
 
 		ScrollEvent() = default;
 		ScrollEvent(float scrollX, float scrollY, int mouseX, int mouseY)

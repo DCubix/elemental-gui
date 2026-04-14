@@ -8,7 +8,7 @@ namespace tui {
 	Panel::Panel() : Element(), m_backgroundVisible(true) {
 		m_layout = std::make_unique<FlexLayout>();
 		m_layout->SetGap(4);
-		m_layout->SetPadding(8);
+		m_layout->SetPadding(EdgeInsets::All(6));
 	}
 
 	void Panel::Add(Element *element) {
@@ -34,11 +34,16 @@ namespace tui {
 			g.StyledRect(b.x, b.y, b.w, b.h, GetStyle()["Panel"]);
 
 		if (m_layout)
-			m_layout->Apply(b.x, b.y, b.w, b.h);
+			m_layout->Apply(b);
 
-		int pad = m_layout ? m_layout->GetPadding() : 0;
+		EdgeInsets pad = m_layout ? m_layout->GetPadding() : EdgeInsets();
 		Rectangle c = GetIntersectedBounds();
-		Rectangle padded = { c.x + pad, c.y + pad, c.w - 2 * pad, c.h - 2 * pad };
+		Rectangle padded{
+			c.x + pad.left,
+			c.y + pad.top,
+			c.w - pad.GetHorizontal(),
+			c.h - pad.GetVertical()
+		};
 		g.ClipPush(padded.x, padded.y, padded.w, padded.h);
 		for (auto&& e : m_children) {
 			if (e == nullptr) continue;
@@ -50,38 +55,9 @@ namespace tui {
 		g.ClipPop();
 	}
 
-	Size Panel::GetPreferredSize() {
+	Size Panel::GetPreferredSize() const {
 		if (!IsAutoSize()) return Element::GetPreferredSize();
-
-		int pad = m_layout ? m_layout->GetPadding() : 0;
-		int gap = m_layout ? m_layout->GetGap() : 0;
-		FlexDirection dir = FlexDirection::Row;
-		if (FlexLayout* flex = dynamic_cast<FlexLayout*>(m_layout.get())) {
-			dir = flex->GetDirection();
-		}
-
-		int mainTotal = 0;
-		int crossMax = 0;
-		int visibleCount = 0;
-
-		for (auto& e : m_children) {
-			if (!e || e == this || !e->IsVisible()) continue;
-			Size s = e->GetPreferredSize();
-			int ms = (dir == FlexDirection::Row) ? s.w : s.h;
-			int cs = (dir == FlexDirection::Row) ? s.h : s.w;
-			mainTotal += ms;
-			if (cs > crossMax) crossMax = cs;
-			visibleCount++;
-		}
-
-		if (visibleCount > 1) mainTotal += (visibleCount - 1) * gap;
-		mainTotal += 2 * pad;
-		crossMax += 2 * pad;
-
-		if (dir == FlexDirection::Row)
-			return { mainTotal, crossMax };
-		else
-			return { crossMax, mainTotal };
+		return m_layout->GetLaidOutSize();
 	}
 
 	bool Panel::IsDirty() {

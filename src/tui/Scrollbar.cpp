@@ -8,11 +8,11 @@ namespace tui {
 
 	Scrollbar::Scrollbar()
 		: Element(),
-		  m_orientation(Horizontal),
+		  m_direction(Direction::Horizontal),
 		  m_range(Range(0, 100)),
 		  m_value(0),
 		  m_step(1),
-		  m_state(BSNormal),
+		  m_state(ButtonState::Normal),
 		  m_dragOffset(0)
 	{
 		SetLocalBounds(Rectangle(0, 0, 120, 22));
@@ -21,20 +21,20 @@ namespace tui {
 	void Scrollbar::OnDraw(Graphics& g) {
 		Rectangle b = GetBounds();
 		int btn = GetButtonSize();
-		int sz = (m_orientation == Horizontal ? b.w : b.h) - btn;
+		int sz = (m_direction == Direction::Horizontal ? b.w : b.h) - btn;
 		m_buttonPos = int(m_range.Normalized(m_value) * float(sz));
 
 		g.StyledRect(b.x, b.y, b.w, b.h, GetStyle()["Scrollbar"]["track"]);
 
 		std::string state = "normal";
 		switch (m_state) {
-			case BSNormal: state = "normal"; break;
-			case BSHover: state = "hover"; break;
-			case BSClick: state = "click"; break;
+			case ButtonState::Normal: state = "normal"; break;
+			case ButtonState::Hover: state = "hover"; break;
+			case ButtonState::Click: state = "click"; break;
 		}
 
 		Json thumbStyle = GetStyle()["Scrollbar"]["thumb"][state];
-		if (m_orientation == Horizontal) {
+		if (m_direction == Direction::Horizontal) {
 			g.StyledRect(b.x + m_buttonPos, b.y, btn, b.h, thumbStyle);
 		} else {
 			g.StyledRect(b.x, b.y + m_buttonPos, b.w, btn, thumbStyle);
@@ -43,16 +43,16 @@ namespace tui {
 
 	EventStatus Scrollbar::OnEvent(Event* event) {
 		EventStatus status = Element::OnEvent(event);
-		if (event->Type() == EventType::MouseEventType) {
+		if (event->Type() == EventType::MouseButton) {
 			Rectangle b = GetIntersectedBounds();
 			Rectangle c = GetBounds();
 			MouseEvent* e = dynamic_cast<MouseEvent*>(event);
-			int p = (m_orientation == Horizontal ? e->x - c.x : e->y - c.y);
+			int p = (m_direction == Direction::Horizontal ? e->x - c.x : e->y - c.y);
 			int btn = GetButtonSize();
 			switch (m_state) {
-				case BSHover: {
+				case ButtonState::Hover: {
 					if (e->pressed && e->button == 1) {
-						m_state = BSClick;
+						m_state = ButtonState::Click;
 						// If clicking on the thumb, track offset; otherwise center thumb on click
 						if (p >= m_buttonPos && p < m_buttonPos + btn) {
 							m_dragOffset = p - m_buttonPos - btn / 2;
@@ -64,9 +64,9 @@ namespace tui {
 						Invalidate();
 					}
 				} break;
-				case BSClick: {
+				case ButtonState::Click: {
 					if (!e->pressed && e->button == 1) {
-						m_state = b.HasPoint(e->x, e->y) ? BSHover : BSNormal;
+						m_state = b.HasPoint(e->x, e->y) ? ButtonState::Hover : ButtonState::Normal;
 						status = EventStatus::Consumed;
 						Invalidate();
 					} else {
@@ -76,37 +76,37 @@ namespace tui {
 				} break;
 				default: break;
 			}
-		} else if (event->Type() == EventType::MotionEventType) {
+		} else if (event->Type() == EventType::MouseMotion) {
 			Rectangle b = GetIntersectedBounds();
 			Rectangle c = GetBounds();
 			MotionEvent* e = dynamic_cast<MotionEvent*>(event);
-			int p = (m_orientation == Horizontal ? e->x - c.x : e->y - c.y);
+			int p = (m_direction == Direction::Horizontal ? e->x - c.x : e->y - c.y);
 			switch (m_state) {
-				case BSNormal: {
+				case ButtonState::Normal: {
 					if (b.HasPoint(e->x, e->y)) {
-						m_state = BSHover;
+						m_state = ButtonState::Hover;
 						status = EventStatus::Consumed;
 						Invalidate();
 					}
 				} break;
-				case BSHover: {
+				case ButtonState::Hover: {
 					if (!b.HasPoint(e->x, e->y)) {
-						m_state = BSNormal;
+						m_state = ButtonState::Normal;
 						Invalidate();
 					} else {
 						status = EventStatus::Consumed;
 					}
 				} break;
-				case BSClick: {
+				case ButtonState::Click: {
 					UpdateValue(p - m_dragOffset);
 					status = EventStatus::Consumed;
 				} break;
 			}
-		} else if (event->Type() == EventType::ScrollEventType) {
+		} else if (event->Type() == EventType::Scroll) {
 			Rectangle b = GetIntersectedBounds();
 			ScrollEvent* e = dynamic_cast<ScrollEvent*>(event);
 			if (b.HasPoint(e->mouseX, e->mouseY)) {
-				float delta = (m_orientation == Horizontal ? e->scrollY : -e->scrollY);
+				float delta = (m_direction == Direction::Horizontal ? e->scrollY : -e->scrollY);
 				SetValue(m_range.Constrain(m_value + delta * m_step));
 				status = EventStatus::Consumed;
 			}
@@ -122,15 +122,15 @@ namespace tui {
 	}
 
 	void Scrollbar::SetValue(float v) {
+		if (m_onValueChange && m_value != v) m_onValueChange(m_value);
 		m_value = v; Invalidate();
-		if (m_onValueChange) m_onValueChange();
 	}
 
 	void Scrollbar::UpdateValue(int p) {
 		int btn = GetButtonSize();
 		Rectangle b = GetBounds();
 		p -= btn/2;
-		int sz = (m_orientation == Horizontal ? b.w : b.h) - btn;
+		int sz = (m_direction == Direction::Horizontal ? b.w : b.h) - btn;
 
 		Range vp{ 0, float(sz) };
 		m_value = m_range.Constrain(m_range.Remap(vp, p));
@@ -140,7 +140,7 @@ namespace tui {
 
 	int Scrollbar::GetButtonSize() {
 		Rectangle b = GetBounds();
-		int vpSize = (m_orientation == Horizontal ? b.w : b.h);
+		int vpSize = (m_direction == Direction::Horizontal ? b.w : b.h);
 		float contentSize = (m_range.maximum - m_range.minimum) + vpSize;
 		float viewRatio = vpSize / contentSize;
 		int btnSize = int(vpSize * viewRatio);

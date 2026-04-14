@@ -120,6 +120,7 @@ namespace tui {
 
 	void Graphics::StyledRect(int x, int y, int w, int h, Json style) {
 		cairo_save(m_context);
+
 		double borderRadius = 0.0;
 		if (style["border"].is_object()) {
 			Json border = style["border"];
@@ -474,7 +475,7 @@ namespace tui {
 		return true;
 	}
 
-	std::optional<Rectangle> Rectangle::GetIntersected(Rectangle b) {
+	std::optional<Rectangle> Rectangle::Intersect(Rectangle b) {
 		int xmin = std::max(x, b.x);
 		int xmax1 = x + w, xmax2 = b.x + b.w;
 		int xmax = std::min(xmax1, xmax2);

@@ -3,23 +3,16 @@
 #include "Element.h"
 
 namespace tui {
-	using ValueCallback = std::function<void()>;
-
 	constexpr int SliderThumbSize = 14;
 
 	class Slider : public Element {
 	public:
-		enum Orientation {
-			Horizontal = 0,
-			Vertical
-		};
-
 		Slider();
 
 		virtual void OnDraw(Graphics& g) override;
 		virtual EventStatus OnEvent(Event *event) override;
 
-		Range& GetRange() { Invalidate(); return m_range; }
+		const Range& GetRange() const { return m_range; }
 		void SetRange(float min, float max);
 
 		float GetValue() const { return m_value; }
@@ -28,19 +21,19 @@ namespace tui {
 		float GetStep() const { return m_step; }
 		void SetStep(float s) { m_step = s; }
 
-		Slider::Orientation GetOrientation() const { return m_orientation; }
-		void SetOrientation(Orientation ori) { m_orientation = ori; Invalidate(); }
+		Direction GetDirection() const { return m_direction; }
+		void SetDirection(Direction dir) { m_direction = dir; Invalidate(); }
 
-		void SetOnValueChange(ValueCallback cb) { m_onValueChange = cb; }
+		void SetOnValueChange(const ValueChanged<float>& cb) { m_onValueChange = cb; }
 
 	private:
-		enum ButtonState {
-			BSNormal = 0,
-			BSHover,
-			BSClick
+		enum class ButtonState {
+			Normal = 0,
+			Hover,
+			Click
 		};
 
-		Orientation m_orientation;
+		Direction m_direction;
 		Range m_range;
 		float m_value;
 		float m_step;
@@ -50,7 +43,7 @@ namespace tui {
 
 		ButtonState m_state;
 
-		ValueCallback m_onValueChange;
+		ValueChanged<float> m_onValueChange;
 
 		void UpdateValue(int p);
 	};

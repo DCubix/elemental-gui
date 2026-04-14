@@ -5,14 +5,14 @@
 #include <vector>
 
 namespace tui {
-	using ChangeCallback = std::function<void()>;
 	class Edit : public Element {
 	public:
 		Edit();
 
 		void OnDraw(Graphics& g) override;
 		EventStatus OnEvent(Event *event) override;
-		Size GetPreferredSize() override;
+
+		Size GetPreferredSize() const override;
 
 		std::string GetText() const { return m_textRaw; }
 		void SetText(const std::string& txt);
@@ -33,7 +33,7 @@ namespace tui {
 		void Deselect();
 		bool IsSelected();
 
-		void SetOnChange(ChangeCallback cb) { m_onChange = cb; }
+		void SetOnChange(const ValueChanged<std::string>& cb) { m_onChange = cb; }
 
 	private:
 		enum class EditState {
@@ -61,7 +61,7 @@ namespace tui {
 		int m_offsetX, m_textWidth, m_textHeight;
 		EditState m_state;
 
-		ChangeCallback m_onChange;
+		ValueChanged<std::string> m_onChange;
 
 		void InsertChar(char c);
 		void RemoveChar(int i);

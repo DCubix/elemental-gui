@@ -17,7 +17,7 @@ namespace tui {
 		void Add(Element *element);
 
 		void OnDraw(Graphics& g) override;
-		Size GetPreferredSize() override;
+		Size GetPreferredSize() const override;
 
 		void SetLayout(std::unique_ptr<Layout> layout);
 

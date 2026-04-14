@@ -3,17 +3,27 @@
 #include "Element.h"
 
 namespace tui {
+	enum class ImageScalingMode {
+		Stretch,
+		Contain,
+		Cover
+	};
+
 	class ImageView : public Element {
 	public:
 		ImageView();
 
-		Image* GetImage() { return m_image; }
-		void SetImage(Image *img) { m_image = img; Invalidate(); }
+		Image* GetImage() { return m_image.get(); }
+		void SetImage(const Image *img) { m_image.reset(const_cast<Image*>(img)); Invalidate(); }
+
+		ImageScalingMode GetScalingMode() const { return m_scalingMode; }
+		void SetScalingMode(ImageScalingMode mode) { m_scalingMode = mode; Invalidate(); }
 
 		void OnDraw(Graphics& g) override;
-		Size GetPreferredSize() override;
+		Size GetPreferredSize() const override;
 
 	private:
-		Image *m_image;
+		std::unique_ptr<Image> m_image;
+		ImageScalingMode m_scalingMode{ ImageScalingMode::Stretch };
 	};
 }

@@ -31,7 +31,7 @@ namespace tui {
 
 		bool HasPoint(int x, int y);
 		bool Intersects(Rectangle b);
-		std::optional<Rectangle> GetIntersected(Rectangle b);
+		std::optional<Rectangle> Intersect(Rectangle b);
 	};
 
 	class Image {

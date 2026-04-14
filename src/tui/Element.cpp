@@ -11,7 +11,6 @@ namespace tui {
 
 	Element::Element()
 		: m_parent(nullptr), m_bounds(0, 0, 50, 50),
-		  m_preferredSize{50, 50},
 		  m_dirty(true), m_visible(true),
 		  m_focused(false), m_autoSize(false),
 		  m_application(nullptr)
@@ -20,7 +19,8 @@ namespace tui {
 	void Element::OnDraw(Graphics& g) {}
 
 	EventStatus Element::OnEvent(Event* event) {
-		if (event->Type() == EventType::MouseEventType) {
+		// Handle focus on mouse click
+		if (event->Type() == EventType::MouseButton) {
 			Rectangle b = GetIntersectedBounds();
 			MouseEvent* e = dynamic_cast<MouseEvent*>(event);
 			if (b.HasPoint(e->x, e->y) && e->pressed && e->button == 1) {
@@ -30,15 +30,14 @@ namespace tui {
 		return EventStatus::Active;
 	}
 
-	Size Element::GetPreferredSize() {
-		return m_preferredSize;
+	void Element::Invalidate() {
+		m_dirty = true;
+		if (m_application) m_application->RequestRedraw();
 	}
 
-	void Element::Invalidate() { m_dirty = true; if (GetApp()) GetApp()->RequestRedraw(); }
-
 	void Element::RequestFocus() {
-		if (GetApp()) {
-			GetApp()->Focus(this);
+		if (m_application) {
+			m_application->Focus(this);
 			Invalidate();
 		}
 	}
@@ -60,26 +59,14 @@ namespace tui {
 		return b;
 	}
 
-	Rectangle Element::GetIntersectedBounds() {
+	Rectangle Element::GetIntersectedBounds() const {
 		if (m_parent != nullptr) {
-			return m_parent->GetIntersectedBounds().GetIntersected(GetBounds()).value_or(GetBounds());
+			// Returns only the visible part of the element
+			// by intersecting it with the parent's intersected bounds
+			return m_parent->GetIntersectedBounds()
+				.Intersect(GetBounds()).value_or(GetBounds());
 		}
 		return GetBounds();
-	}
-
-	float Range::Normalized(float value) {
-		const float w = maximum - minimum;
-		return (value - minimum) / w;
-	}
-
-	float Range::Remap(Range other, float value) {
-		const float w = maximum - minimum;
-		float n = other.Normalized(value);
-		return minimum + n * w;
-	}
-
-	float Range::Constrain(float value) {
-		return std::max(std::min(value, maximum), minimum);
 	}
 
 }

@@ -1,6 +1,7 @@
 #include "Button.h"
 
 #include "Application.h"
+#include "Layout.h"
 
 namespace tui {
 
@@ -16,6 +17,8 @@ namespace tui {
 	void Button::OnDraw(Graphics& g) {
 		Rectangle b = GetBounds();
 
+		EdgeInsets pad = EdgeInsets::FromStyle(GetStyle()["Button"]["padding"]);
+
 		std::string state = "normal";
 		switch (m_state) {
 			case ButtonState::Normal: state = "normal"; break;
@@ -23,13 +26,19 @@ namespace tui {
 			case ButtonState::Click: state = "click"; break;
 		}
 
-		g.StyledRect(b.x, b.y, b.w, b.h, GetStyle()["Button"][state]);
+		g.StyledRect(
+			b.x,
+			b.y,
+			b.w,
+			b.h,
+			GetStyle()["Button"][state]
+		);
 		Label::OnDraw(g);
 	}
 
 	EventStatus Button::OnEvent(Event* event) {
 		EventStatus status = Element::OnEvent(event);
-		if (event->Type() == EventType::MouseEventType) {
+		if (event->Type() == EventType::MouseButton) {
 			Rectangle b = GetIntersectedBounds();
 			MouseEvent* e = dynamic_cast<MouseEvent*>(event);
 			switch (m_state) {
@@ -56,7 +65,7 @@ namespace tui {
 				} break;
 				default: break;
 			}
-		} else if (event->Type() == EventType::MotionEventType) {
+		} else if (event->Type() == EventType::MouseMotion) {
 			Rectangle b = GetIntersectedBounds();
 			MotionEvent* e = dynamic_cast<MotionEvent*>(event);
 			switch (m_state) {
@@ -88,4 +97,15 @@ namespace tui {
 		return status;
 	}
 
+    Size Button::GetPreferredSize() const
+    {
+		if (IsAutoSize()) {
+			Size size = Label::GetPreferredSize();
+			EdgeInsets padding = EdgeInsets::FromStyle(GetStyle()["Button"]["padding"]);
+			size.w += padding.left + padding.right;
+			size.h += padding.top + padding.bottom;
+			return size;
+		}
+		return Element::GetPreferredSize();
+    }
 }

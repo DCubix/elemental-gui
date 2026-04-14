@@ -42,6 +42,10 @@ R"({
 	}
 },
 "Button": {
+	"padding": {
+		"horizontal": 12.0,
+		"vertical": 6.0
+	},
 	"normal": {
 		"border": {
 			"radius": 2.0,

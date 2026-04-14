@@ -56,10 +56,6 @@ namespace tui {
 		m_graphics = Graphics(m_renderer);
 		m_graphics.SetViewport(m_width, m_height);
 
-		// Create root panel
-		m_root = &Create<Panel>();
-		m_root->GetLayout<FlexLayout>()->SetDirection(FlexDirection::Column);
-
 		adapter->OnCreate(*this);
 
 		bool running = true;
@@ -136,7 +132,7 @@ namespace tui {
 			}
 
 			if (m_shouldRedraw) {
-				m_root->GetLocalBounds() = Rectangle(0, 0, m_width, m_height);
+				if (m_root) m_root->SetLocalBounds(Rectangle(0, 0, m_width, m_height));
 				Redraw();
 				m_shouldRedraw = false;
 			}
@@ -152,11 +148,25 @@ namespace tui {
 		return 0;
 	}
 
-	void Application::RequestRedraw() {
-		m_shouldRedraw = true;
-	}
+    void Application::SetRoot(Element *root)
+    {
+		// check if root is in elements
+		auto it = std::find_if(m_elements.begin(), m_elements.end(), [&](const ElementPtr& el) {
+			return el.get() == root;
+		});
+		if (it == m_elements.end()) {
+			return;
+		}
+		m_root = root;
+		RequestRedraw();
+    }
 
-	void Application::Focus(Element* e) {
+    void Application::RequestRedraw()
+    {
+        m_shouldRedraw = true;
+    }
+
+    void Application::Focus(Element* e) {
 		if (m_focused != nullptr) {
 			m_focused->m_focused = false;
 			m_eventSystem.Broadcast<BlurEvent>(m_focused);

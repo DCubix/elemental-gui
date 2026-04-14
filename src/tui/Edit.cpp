@@ -192,7 +192,7 @@ namespace tui {
 
 	EventStatus Edit::OnEvent(Event* event) {
 		EventStatus status = Element::OnEvent(event);
-		if (event->Type() == EventType::MouseEventType) {
+		if (event->Type() == EventType::MouseButton) {
 			Rectangle b = GetIntersectedBounds();
 			MouseEvent* e = dynamic_cast<MouseEvent*>(event);
 			switch (m_state) {
@@ -225,7 +225,7 @@ namespace tui {
 					}
 				} break;
 			}
-		} else if (event->Type() == EventType::MotionEventType) {
+		} else if (event->Type() == EventType::MouseMotion) {
 			MotionEvent* e = dynamic_cast<MotionEvent*>(event);
 			switch (m_state) {
 				default: break;
@@ -243,14 +243,14 @@ namespace tui {
 					Invalidate();
 				} break;
 			}
-		} else if (event->Type() == EventType::TextInputEventType) {
+		} else if (event->Type() == EventType::TextInput) {
 			TextInput *e = dynamic_cast<TextInput*>(event);
 			if (IsFocused() && m_editable) {
 				InsertChar(e->inputChar);
 				Invalidate();
 				status = EventStatus::Consumed;
 			}
-		} else if (event->Type() == EventType::KeyEventType) {
+		} else if (event->Type() == EventType::Key) {
 			KeyEvent *e = dynamic_cast<KeyEvent*>(event);
 			if (e->pressed && IsFocused() && m_editable) {
 				// Map out the lines start offset and length.
@@ -365,13 +365,13 @@ namespace tui {
 			} else if (!e->pressed && IsFocused()) {
 				Invalidate();
 			}
-		} else if (event->Type() == EventType::FocusEventType) {
+		} else if (event->Type() == EventType::Focus) {
 			FocusEvent *e = dynamic_cast<FocusEvent*>(event);
 			if (e->element == this) {
 				GetApp()->StartInput();
 				status = EventStatus::Consumed;
 			}
-		} else if (event->Type() == EventType::BlurEventType) {
+		} else if (event->Type() == EventType::Blur) {
 			BlurEvent *e = dynamic_cast<BlurEvent*>(event);
 			if (e->element == this) {
 				GetApp()->StopInput();
@@ -381,7 +381,7 @@ namespace tui {
 		return status;
 	}
 
-	Size Edit::GetPreferredSize() {
+	Size Edit::GetPreferredSize() const {
 		return { m_textWidth, m_textHeight };
 	}
 
@@ -467,13 +467,13 @@ namespace tui {
 		else m_text.insert(m_text.begin() + m_caretIndex, chr);
 
 		m_caretIndex++;
-		if (m_onChange) m_onChange();
+		if (m_onChange) m_onChange(m_textRaw);
 	}
 
 	void Edit::RemoveChar(int i) {
 		m_textRaw.erase(i, 1);
 		m_text.erase(m_text.begin() + i);
-		if (m_onChange) m_onChange();
+		if (m_onChange) m_onChange(m_textRaw);
 	}
 
 	void Edit::DeleteSelected() {

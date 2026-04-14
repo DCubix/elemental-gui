@@ -3,16 +3,9 @@
 #include "Element.h"
 
 namespace tui {
-	using ValueCallback = std::function<void()>;
-
 	constexpr int ScrollbarButtonSize = 16;
 	class Scrollbar : public Element {
 	public:
-		enum Orientation {
-			Horizontal = 0,
-			Vertical
-		};
-
 		Scrollbar();
 
 		virtual void OnDraw(Graphics& g) override;
@@ -27,19 +20,13 @@ namespace tui {
 		float GetStep() const { return m_step; }
 		void SetStep(float s) { m_step = s; }
 
-		Scrollbar::Orientation GetOrientation() const { return m_orientation; }
-		void SetOrientation(Orientation ori) { m_orientation = ori; Invalidate(); }
+		Direction GetDirection() const { return m_direction; }
+		void SetDirection(Direction dir) { m_direction = dir; Invalidate(); }
 
-		void SetOnValueChange(ValueCallback cb) { m_onValueChange = cb; }
+		void SetOnValueChange(const ValueChanged<float>& cb) { m_onValueChange = cb; }
 
 	private:
-		enum ButtonState {
-			BSNormal = 0,
-			BSHover,
-			BSClick
-		};
-
-		Orientation m_orientation;
+		Direction m_direction;
 		Range m_range;
 		float m_value;
 		float m_step;
@@ -49,7 +36,7 @@ namespace tui {
 
 		ButtonState m_state;
 
-		ValueCallback m_onValueChange;
+		ValueChanged<float> m_onValueChange;
 
 		void UpdateValue(int p);
 		int GetButtonSize();

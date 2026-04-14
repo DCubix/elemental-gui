@@ -12,12 +12,10 @@
 #include "EventSystem.h"
 #include "Element.h"
 
-using uint = uint32_t;
+#include "Utils.h"
+using namespace tui::utils;
 
 namespace tui {
-	template <typename E>
-	concept DerivedFromElement = std::derived_from<E, Element>;
-
 	using ElementPtr = std::unique_ptr<Element>;
 
 	class Application;
@@ -42,13 +40,13 @@ namespace tui {
 			m_elements.back()->m_application = this;
 
 			// Subscribe this element to the event system
-			m_eventSystem.Subscribe(m_elements.back().get(), EventType::MouseEventType);
-			m_eventSystem.Subscribe(m_elements.back().get(), EventType::MotionEventType);
-			m_eventSystem.Subscribe(m_elements.back().get(), EventType::TextInputEventType);
-			m_eventSystem.Subscribe(m_elements.back().get(), EventType::FocusEventType);
-			m_eventSystem.Subscribe(m_elements.back().get(), EventType::BlurEventType);
-			m_eventSystem.Subscribe(m_elements.back().get(), EventType::KeyEventType);
-			m_eventSystem.Subscribe(m_elements.back().get(), EventType::ScrollEventType);
+			m_eventSystem.Subscribe(m_elements.back().get(), EventType::MouseButton);
+			m_eventSystem.Subscribe(m_elements.back().get(), EventType::MouseMotion);
+			m_eventSystem.Subscribe(m_elements.back().get(), EventType::TextInput);
+			m_eventSystem.Subscribe(m_elements.back().get(), EventType::Focus);
+			m_eventSystem.Subscribe(m_elements.back().get(), EventType::Blur);
+			m_eventSystem.Subscribe(m_elements.back().get(), EventType::Key);
+			m_eventSystem.Subscribe(m_elements.back().get(), EventType::Scroll);
 
 			return *dynamic_cast<E*>(m_elements.back().get());
 		}
@@ -63,7 +61,8 @@ namespace tui {
 			return nullptr;
 		}
 
-		Panel& GetRoot() { return *m_root; }
+		Element& GetRoot() { return *m_root; }
+		void SetRoot(Element *root);
 
 		void RequestRedraw();
 		void Focus(Element *e);
@@ -79,6 +78,8 @@ namespace tui {
 
 		uint GetMod();
 
+		Graphics& GetGraphics() { return m_graphics; }
+
 		static Json DefaultStyle;
 	private:
 		SDL_Window *m_window;
@@ -89,7 +90,7 @@ namespace tui {
 
 		std::vector<ElementPtr> m_elements;
 		Element *m_focused;
-		Panel *m_root;
+		Element *m_root;
 
 		std::string m_title;
 		uint m_width, m_height;

@@ -31,10 +31,10 @@ namespace tui {
 		for (auto&& text : lines) {
 			auto&& ex = g.MeasureText(text);
 			maxH += ex.height;
-			maxW = std::max(maxW, int(ex.width));
+			maxW = std::max(maxW, static_cast<int>(ex.width));
 		}
 
-		if (m_icon != nullptr) {
+		if (m_icon) {
 			int th = maxH;
 			int ix = b.x;
 			int iy = b.y;
@@ -125,4 +125,29 @@ namespace tui {
 		g.Restore();
 	}
 
+    Size Label::GetPreferredSize() const
+    {
+		if (IsAutoSize()) {
+			const auto textStyle = GetStyle()["DefaultText"];
+
+			auto& g = GetApp()->GetGraphics();
+			int maxW = 0, maxH = 0;
+
+			g.Save();
+			g.StyledTextBegin(textStyle);
+
+			auto&& lines = utils::SplitString(m_text, "\n");
+			for (auto&& text : lines) {
+				auto&& ex = g.MeasureText(text);
+				maxH += ex.height;
+				maxW = std::max(maxW, static_cast<int>(ex.width));
+			}
+
+			g.Restore();
+
+			int offx = m_icon ? m_icon->GetWidth() + 4 : 0;
+        	return { maxW + offx, maxH };
+		}
+		return Element::GetPreferredSize();
+    }
 }

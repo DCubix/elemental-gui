@@ -17,7 +17,8 @@ namespace tui {
 				   FlexAlign align = FlexAlign::Stretch);
 
 		void Add(Element* element);
-		void Apply(int x, int y, int w, int h) override;
+		void Apply(const Rectangle& bounds) override;
+		Size GetLaidOutSize() const override;
 
 		void SetDirection(FlexDirection dir) { m_direction = dir; }
 		FlexDirection GetDirection() const { return m_direction; }
