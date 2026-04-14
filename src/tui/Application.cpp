@@ -199,7 +199,7 @@ namespace tui {
 	}
 
 	void Application::Redraw() {
-		//m_graphics.clear();
+		//m_graphics.Clear();
 		m_graphics.Draw([&](Graphics& g) {
 			for (size_t i = 0; i < m_elements.size(); i++) {
 				if (m_elements[i]->GetParent() != nullptr) continue;

@@ -90,6 +90,11 @@ namespace tui {
 		void Stroke(bool preserve = false);
 		void Fill(bool preserve = false);
 
+		// Parses a JSON paint object ({"color": [...]} or {"gradient": {...}})
+		// and sets it as the cairo source. Returns a pattern that must be destroyed
+		// by the caller, or nullptr for solid colors.
+		cairo_pattern_t* ApplyPaint(Json paint, int x = 0, int y = 0, int w = 0, int h = 0);
+
 		void DrawImage(Image* img, int x, int y, int w, int h);
 
 		void StyledPaint(Json style);
@@ -100,6 +105,8 @@ namespace tui {
 
 		void DrawCharBegin(FontStyle style, const std::string& font, double fontSize);
 		int DrawChar(char c, int x, int y);
+
+		void DrawSVG(Json svgStyle, int x, int y, int w, int h);
 
 		void ClipPush(int x, int y, int w, int h);
 		void ClipPop();

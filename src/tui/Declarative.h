@@ -86,6 +86,23 @@ namespace tui::declarative {
     // --- ScrollView widget ---------------------------------
     WidgetDesc ScrollView(const WidgetDesc& child);
 
+    // --- CheckBox widget ----------------------------------
+    struct CheckBoxProps {
+        ElementProps base{};
+        std::string text{""};
+        bool checked{false};
+        ValueChanged<bool> onChanged;
+    };
+    WidgetDesc CheckBox(const CheckBoxProps& props);
+
+    // --- Switch widget ------------------------------------
+    struct SwitchProps {
+        ElementProps base{};
+        bool checked{false};
+        ValueChanged<bool> onChanged;
+    };
+    WidgetDesc Switch(const SwitchProps& props);
+
     // --- Slider widget -------------------------------------
     struct SliderProps {
         ElementProps base{};

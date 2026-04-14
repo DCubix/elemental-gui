@@ -6,6 +6,8 @@
 #include "Edit.h"
 #include "ScrollView.h"
 #include "Slider.h"
+#include "Switch.h"
+#include "CheckBox.h"
 
 namespace tui::declarative {
 
@@ -127,6 +129,29 @@ namespace tui::declarative {
         };
     }
     
+    WidgetDesc CheckBox(const CheckBoxProps &props)
+    {
+        return [props](Application& app) -> Element* {
+            auto& cb = app.Create<tui::CheckBox>();
+            ElementSetup(cb, props.base);
+            cb.SetText(props.text);
+            cb.SetChecked(props.checked);
+            cb.SetOnChanged(props.onChanged);
+            return &cb;
+        };
+    }
+
+    WidgetDesc Switch(const SwitchProps &props)
+    {
+        return [props](Application& app) -> Element* {
+            auto& sw = app.Create<tui::Switch>();
+            ElementSetup(sw, props.base);
+            sw.SetChecked(props.checked);
+            sw.SetOnChanged(props.onChanged);
+            return &sw;
+        };
+    }
+
     WidgetDesc Slider(const SliderProps &props)
     {
         return [props](Application& app) -> Element* {

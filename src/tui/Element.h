@@ -64,7 +64,7 @@ namespace tui {
 
 		Application* GetApp() const { return m_application; }
 
-	private:
+	protected:
 		Application *m_application;
 		Element *m_parent;
 		Rectangle m_bounds;

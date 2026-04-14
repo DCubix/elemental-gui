@@ -4,7 +4,6 @@
 #include <cstdint>
 #include <vector>
 #include <memory>
-#include <concepts>
 
 #include "SDL3/SDL.h"
 

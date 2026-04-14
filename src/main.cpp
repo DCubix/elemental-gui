@@ -125,7 +125,6 @@ public:
 			}),
 			decl::Button({
 				.base = {
-					.tag = "clickButton",
 					.autoSize = true
 				},
 				.text = "Click Me",
@@ -135,7 +134,6 @@ public:
 			}),
 			decl::Custom<CubeView, CubeViewProps>(CubeViewProps{
 				.base = {
-					.tag = "cube",
 					.bounds = Rectangle(0, 0, 200, 200)
 				}
 			}),
@@ -148,6 +146,23 @@ public:
 				.range = { 0, 100 },
 				.value = 50,
 				.step = 1
+			}),
+			decl::Switch({
+				.base = {
+					.tag = "switch",
+					.autoSize = true
+				},
+				.checked = false,
+				.onChanged = [](bool checked) {}
+			}),
+			decl::CheckBox({
+				.base = {
+					.tag = "checkbox",
+					.autoSize = true
+				},
+				.text = "Check me",
+				.checked = false,
+				.onChanged = [](bool checked) {}
 			})
 		});
 		app.SetRoot(gui(app));

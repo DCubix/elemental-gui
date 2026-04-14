@@ -1,7 +1,9 @@
 #include "Graphics.h"
 
 #include <cctype>
+#include <cmath>
 #include <algorithm>
+#include <sstream>
 
 namespace tui {
 
@@ -84,37 +86,61 @@ namespace tui {
 		cairo_restore(m_context);
 	}
 
+	cairo_pattern_t* Graphics::ApplyPaint(Json paint, int x, int y, int w, int h) {
+		cairo_pattern_t *pat = nullptr;
+		if (paint["color"].is_array()) {
+			Json col = paint["color"];
+			cairo_set_source_rgba(
+					m_context,
+					col[0].get<double>(),
+					col[1].get<double>(),
+					col[2].get<double>(),
+					col[3].get<double>()
+			);
+		} else if (paint["gradient"].is_object()) {
+			Json grad = paint["gradient"];
+			Json startPos = grad.value("startPos", Json::array({ 0.0, 0.0 }));
+			Json endPos = grad.value("endPos", Json::array({ 1.0, 0.0 }));
+
+			pat = cairo_pattern_create_linear(
+					startPos[0].get<double>() * w + x,
+					startPos[1].get<double>() * h + y,
+					endPos[0].get<double>() * w + x,
+					endPos[1].get<double>() * h + y
+			);
+
+			if (grad["colors"].is_array()) {
+				for (auto&& col : grad["colors"]) {
+					Json color = col.value("color", Json::array({ 0.0, 0.0, 0.0, 1.0 }));
+					Json offset = col.value("offset", 0.0);
+					cairo_pattern_add_color_stop_rgba(
+							pat,
+							offset.get<double>(),
+							color[0].get<double>(),
+							color[1].get<double>(),
+							color[2].get<double>(),
+							color[3].get<double>()
+					);
+				}
+			}
+			cairo_set_source(m_context, pat);
+		}
+		return pat;
+	}
+
 	void Graphics::StyledPaint(Json style) {
 		if (style["background"].is_object()) {
-			cairo_pattern_t *pat = nullptr;
-			Json bg = style["background"];
-			if (bg["color"].is_array()) {
-				Json col = bg["color"];
-				cairo_set_source_rgba(
-						m_context,
-						col[0].get<double>(),
-						col[1].get<double>(),
-						col[2].get<double>(),
-						col[3].get<double>()
-				);
-			}
-
+			auto pat = ApplyPaint(style["background"]);
 			Fill(true);
 			if (pat) cairo_pattern_destroy(pat);
 		}
 		if (style["border"].is_object()) {
 			Json border = style["border"];
-			Json color = border.value("color", Json::array({ 0.0, 0.0, 0.0, 1.0 }));
 			double width = border.value("width", 1.0);
-			cairo_set_source_rgba(
-						m_context,
-						color[0].get<double>(),
-						color[1].get<double>(),
-						color[2].get<double>(),
-						color[3].get<double>()
-			);
+			auto pat = ApplyPaint(border);
 			cairo_set_line_width(m_context, width);
 			Stroke(false);
+			if (pat) cairo_pattern_destroy(pat);
 		}
 	}
 
@@ -131,63 +157,18 @@ namespace tui {
 		}
 
 		if (style["background"].is_object()) {
-			cairo_pattern_t *pat = nullptr;
-			Json bg = style["background"];
-			if (bg["color"].is_array()) {
-				Json col = bg["color"];
-				cairo_set_source_rgba(
-						m_context,
-						col[0].get<double>(),
-						col[1].get<double>(),
-						col[2].get<double>(),
-						col[3].get<double>()
-				);
-			} else if (bg["gradient"].is_object()) {
-				Json grad = bg["gradient"];
-				Json startPos = grad.value("startPos", Json::array({ 0.0, 0.0 }));
-				Json endPos = grad.value("endPos", Json::array({ 1.0, 0.0 }));
-
-				pat = cairo_pattern_create_linear(
-						startPos[0].get<double>() * w + x,
-						startPos[1].get<double>() * h + y,
-						endPos[0].get<double>() * w + x,
-						endPos[1].get<double>() * h + y
-				);
-
-				if (grad["colors"].is_array()) {
-					for (auto&& col : grad["colors"]) {
-						Json color = col.value("color", Json::array({ 0.0, 0.0, 0.0, 1.0 }));
-						Json offset = col.value("offset", 0.0);
-						cairo_pattern_add_color_stop_rgba(
-								pat,
-								offset.get<double>(),
-								color[0].get<double>(),
-								color[1].get<double>(),
-								color[2].get<double>(),
-								color[3].get<double>()
-						);
-					}
-				}
-				cairo_set_source(m_context, pat);
-			}
-
+			auto pat = ApplyPaint(style["background"], x, y, w, h);
 			Fill();
 			if (pat) cairo_pattern_destroy(pat);
 		}
 		if (style["border"].is_object()) {
 			Json border = style["border"];
-			Json color = border.value("color", Json::array({ 0.0, 0.0, 0.0, 1.0 }));
 			double width = border.value("width", 1.0);
 			RoundRect(x, y, w-1, h-1, borderRadius);
-			cairo_set_source_rgba(
-						m_context,
-						color[0].get<double>(),
-						color[1].get<double>(),
-						color[2].get<double>(),
-						color[3].get<double>()
-			);
+			auto pat = ApplyPaint(border, x, y, w, h);
 			cairo_set_line_width(m_context, width);
 			Stroke();
+			if (pat) cairo_pattern_destroy(pat);
 		}
 		cairo_restore(m_context);
 	}
@@ -288,7 +269,324 @@ namespace tui {
 		return x + ex.x_advance;
 	}
 
-	void Graphics::ClipPush(int x, int y, int w, int h) {
+    void Graphics::DrawSVG(Json svgStyle, int x, int y, int w, int h)
+    {
+		if (!svgStyle["svg"].is_string()) return;
+
+		std::string svgPath = svgStyle["svg"].get<std::string>();
+		std::istringstream ss(svgPath);
+
+		cairo_save(m_context);
+		cairo_translate(m_context, x, y);
+
+		// Build the cairo path
+		cairo_new_path(m_context);
+		char cmd;
+		double currentX = 0, currentY = 0;
+		double startX = 0, startY = 0;
+		// Last control point for smooth curves (S/s, T/t)
+		double lastCpX = 0, lastCpY = 0;
+		char lastCmd = 0;
+
+		auto skipSep = [&]() {
+			while (ss.peek() == ' ' || ss.peek() == ',') ss.get();
+		};
+		auto hasCoords = [&]() -> bool {
+			skipSep();
+			int c = ss.peek();
+			return c != EOF && !std::isalpha(c);
+		};
+
+		while (ss >> cmd) {
+			switch (cmd) {
+				case 'M': {
+					double x1, y1;
+					ss >> x1 >> y1;
+					cairo_move_to(m_context, x1, y1);
+					currentX = x1; currentY = y1;
+					startX = x1; startY = y1;
+					while (hasCoords()) {
+						ss >> x1 >> y1;
+						cairo_line_to(m_context, x1, y1);
+						currentX = x1; currentY = y1;
+					}
+					break;
+				}
+				case 'm': {
+					double dx, dy;
+					ss >> dx >> dy;
+					currentX += dx; currentY += dy;
+					cairo_move_to(m_context, currentX, currentY);
+					startX = currentX; startY = currentY;
+					while (hasCoords()) {
+						ss >> dx >> dy;
+						currentX += dx; currentY += dy;
+						cairo_line_to(m_context, currentX, currentY);
+					}
+					break;
+				}
+				case 'L': {
+					double x1, y1;
+					ss >> x1 >> y1;
+					cairo_line_to(m_context, x1, y1);
+					currentX = x1; currentY = y1;
+					while (hasCoords()) {
+						ss >> x1 >> y1;
+						cairo_line_to(m_context, x1, y1);
+						currentX = x1; currentY = y1;
+					}
+					break;
+				}
+				case 'l': {
+					double dx, dy;
+					ss >> dx >> dy;
+					currentX += dx; currentY += dy;
+					cairo_line_to(m_context, currentX, currentY);
+					while (hasCoords()) {
+						ss >> dx >> dy;
+						currentX += dx; currentY += dy;
+						cairo_line_to(m_context, currentX, currentY);
+					}
+					break;
+				}
+				case 'H': {
+					double x1;
+					ss >> x1;
+					cairo_line_to(m_context, x1, currentY);
+					currentX = x1;
+					break;
+				}
+				case 'h': {
+					double dx;
+					ss >> dx;
+					currentX += dx;
+					cairo_line_to(m_context, currentX, currentY);
+					break;
+				}
+				case 'V': {
+					double y1;
+					ss >> y1;
+					cairo_line_to(m_context, currentX, y1);
+					currentY = y1;
+					break;
+				}
+				case 'v': {
+					double dy;
+					ss >> dy;
+					currentY += dy;
+					cairo_line_to(m_context, currentX, currentY);
+					break;
+				}
+				case 'C': {
+					double cx1, cy1, cx2, cy2, ex, ey;
+					do {
+						ss >> cx1 >> cy1 >> cx2 >> cy2 >> ex >> ey;
+						cairo_curve_to(m_context, cx1, cy1, cx2, cy2, ex, ey);
+						lastCpX = cx2; lastCpY = cy2;
+						currentX = ex; currentY = ey;
+					} while (hasCoords());
+					break;
+				}
+				case 'c': {
+					double cx1, cy1, cx2, cy2, dx, dy;
+					do {
+						ss >> cx1 >> cy1 >> cx2 >> cy2 >> dx >> dy;
+						cairo_curve_to(m_context,
+							currentX + cx1, currentY + cy1,
+							currentX + cx2, currentY + cy2,
+							currentX + dx, currentY + dy);
+						lastCpX = currentX + cx2; lastCpY = currentY + cy2;
+						currentX += dx; currentY += dy;
+					} while (hasCoords());
+					break;
+				}
+				case 'S': {
+					double cx2, cy2, ex, ey;
+					do {
+						double cx1, cy1;
+						if (lastCmd == 'C' || lastCmd == 'c' || lastCmd == 'S' || lastCmd == 's') {
+							cx1 = 2 * currentX - lastCpX;
+							cy1 = 2 * currentY - lastCpY;
+						} else {
+							cx1 = currentX; cy1 = currentY;
+						}
+						ss >> cx2 >> cy2 >> ex >> ey;
+						cairo_curve_to(m_context, cx1, cy1, cx2, cy2, ex, ey);
+						lastCpX = cx2; lastCpY = cy2;
+						currentX = ex; currentY = ey;
+					} while (hasCoords());
+					break;
+				}
+				case 's': {
+					double cx2, cy2, dx, dy;
+					do {
+						double cx1, cy1;
+						if (lastCmd == 'C' || lastCmd == 'c' || lastCmd == 'S' || lastCmd == 's') {
+							cx1 = 2 * currentX - lastCpX;
+							cy1 = 2 * currentY - lastCpY;
+						} else {
+							cx1 = currentX; cy1 = currentY;
+						}
+						ss >> cx2 >> cy2 >> dx >> dy;
+						cairo_curve_to(m_context, cx1, cy1,
+							currentX + cx2, currentY + cy2,
+							currentX + dx, currentY + dy);
+						lastCpX = currentX + cx2; lastCpY = currentY + cy2;
+						currentX += dx; currentY += dy;
+					} while (hasCoords());
+					break;
+				}
+				case 'Q': {
+					double qx, qy, ex, ey;
+					do {
+						ss >> qx >> qy >> ex >> ey;
+						// Convert quadratic to cubic: CP1 = P0 + 2/3*(QP-P0), CP2 = P1 + 2/3*(QP-P1)
+						double cx1 = currentX + 2.0/3.0 * (qx - currentX);
+						double cy1 = currentY + 2.0/3.0 * (qy - currentY);
+						double cx2 = ex + 2.0/3.0 * (qx - ex);
+						double cy2 = ey + 2.0/3.0 * (qy - ey);
+						cairo_curve_to(m_context, cx1, cy1, cx2, cy2, ex, ey);
+						lastCpX = qx; lastCpY = qy;
+						currentX = ex; currentY = ey;
+					} while (hasCoords());
+					break;
+				}
+				case 'q': {
+					double dqx, dqy, dx, dy;
+					do {
+						ss >> dqx >> dqy >> dx >> dy;
+						double qx = currentX + dqx, qy = currentY + dqy;
+						double ex = currentX + dx, ey = currentY + dy;
+						double cx1 = currentX + 2.0/3.0 * (qx - currentX);
+						double cy1 = currentY + 2.0/3.0 * (qy - currentY);
+						double cx2 = ex + 2.0/3.0 * (qx - ex);
+						double cy2 = ey + 2.0/3.0 * (qy - ey);
+						cairo_curve_to(m_context, cx1, cy1, cx2, cy2, ex, ey);
+						lastCpX = qx; lastCpY = qy;
+						currentX = ex; currentY = ey;
+					} while (hasCoords());
+					break;
+				}
+				case 'T': {
+					double ex, ey;
+					do {
+						double qx, qy;
+						if (lastCmd == 'Q' || lastCmd == 'q' || lastCmd == 'T' || lastCmd == 't') {
+							qx = 2 * currentX - lastCpX;
+							qy = 2 * currentY - lastCpY;
+						} else {
+							qx = currentX; qy = currentY;
+						}
+						ss >> ex >> ey;
+						double cx1 = currentX + 2.0/3.0 * (qx - currentX);
+						double cy1 = currentY + 2.0/3.0 * (qy - currentY);
+						double cx2 = ex + 2.0/3.0 * (qx - ex);
+						double cy2 = ey + 2.0/3.0 * (qy - ey);
+						cairo_curve_to(m_context, cx1, cy1, cx2, cy2, ex, ey);
+						lastCpX = qx; lastCpY = qy;
+						currentX = ex; currentY = ey;
+					} while (hasCoords());
+					break;
+				}
+				case 't': {
+					double dx, dy;
+					do {
+						double qx, qy;
+						if (lastCmd == 'Q' || lastCmd == 'q' || lastCmd == 'T' || lastCmd == 't') {
+							qx = 2 * currentX - lastCpX;
+							qy = 2 * currentY - lastCpY;
+						} else {
+							qx = currentX; qy = currentY;
+						}
+						ss >> dx >> dy;
+						double ex = currentX + dx, ey = currentY + dy;
+						double cx1 = currentX + 2.0/3.0 * (qx - currentX);
+						double cy1 = currentY + 2.0/3.0 * (qy - currentY);
+						double cx2 = ex + 2.0/3.0 * (qx - ex);
+						double cy2 = ey + 2.0/3.0 * (qy - ey);
+						cairo_curve_to(m_context, cx1, cy1, cx2, cy2, ex, ey);
+						lastCpX = qx; lastCpY = qy;
+						currentX = ex; currentY = ey;
+					} while (hasCoords());
+					break;
+				}
+				case 'A': case 'a': {
+					double rx, ry, xRot, ex, ey;
+					int largeArc, sweep;
+					do {
+						ss >> rx >> ry >> xRot >> largeArc >> sweep >> ex >> ey;
+						if (cmd == 'a') { ex += currentX; ey += currentY; }
+						// Approximate arc with cairo_arc for circular arcs, otherwise lineto as fallback
+						if (rx == ry && rx > 0) {
+							// Circular arc — compute center parameterization
+							double dx2 = (currentX - ex) / 2.0;
+							double dy2 = (currentY - ey) / 2.0;
+							double r = rx;
+							double d = dx2 * dx2 + dy2 * dy2;
+							double sf = std::sqrt(std::max(0.0, r * r / d - 1.0));
+							if (largeArc == sweep) sf = -sf;
+							double cx = (currentX + ex) / 2.0 + sf * dy2;
+							double cy = (currentY + ey) / 2.0 - sf * dx2;
+							double a1 = std::atan2(currentY - cy, currentX - cx);
+							double a2 = std::atan2(ey - cy, ex - cx);
+							if (sweep)
+								cairo_arc(m_context, cx, cy, r, a1, a2);
+							else
+								cairo_arc_negative(m_context, cx, cy, r, a1, a2);
+						} else {
+							cairo_line_to(m_context, ex, ey);
+						}
+						currentX = ex; currentY = ey;
+					} while (hasCoords());
+					break;
+				}
+				case 'Z':
+				case 'z': {
+					cairo_close_path(m_context);
+					currentX = startX;
+					currentY = startY;
+					break;
+				}
+				default: break;
+			}
+			lastCmd = cmd;
+		}
+
+		// Parse line-cap and line-join
+		cairo_line_cap_t lineCap = CAIRO_LINE_CAP_BUTT;
+		cairo_line_join_t lineJoin = CAIRO_LINE_JOIN_MITER;
+		if (svgStyle["line-cap"].is_string()) {
+			std::string cap = svgStyle["line-cap"].get<std::string>();
+			if (cap == "round") lineCap = CAIRO_LINE_CAP_ROUND;
+			else if (cap == "square") lineCap = CAIRO_LINE_CAP_SQUARE;
+		}
+		if (svgStyle["line-join"].is_string()) {
+			std::string join = svgStyle["line-join"].get<std::string>();
+			if (join == "round") lineJoin = CAIRO_LINE_JOIN_ROUND;
+			else if (join == "bevel") lineJoin = CAIRO_LINE_JOIN_BEVEL;
+		}
+
+		// Apply fill and/or stroke using ApplyPaint
+		if (svgStyle["fill"].is_object()) {
+			auto pat = ApplyPaint(svgStyle["fill"], x, y, w, h);
+			Fill(svgStyle.contains("stroke"));
+			if (pat) cairo_pattern_destroy(pat);
+		}
+		if (svgStyle["stroke"].is_object()) {
+			Json strokeStyle = svgStyle["stroke"];
+			double lineWidth = strokeStyle.value("width", 1.0);
+			cairo_set_line_width(m_context, lineWidth);
+			cairo_set_line_cap(m_context, lineCap);
+			cairo_set_line_join(m_context, lineJoin);
+			auto pat = ApplyPaint(strokeStyle, x, y, w, h);
+			Stroke();
+			if (pat) cairo_pattern_destroy(pat);
+		}
+
+		cairo_restore(m_context);
+	}
+
+    void Graphics::ClipPush(int x, int y, int w, int h) {
 		cairo_save(m_context);
 		cairo_rectangle(m_context, x, y, w, h);
 		cairo_clip(m_context);
