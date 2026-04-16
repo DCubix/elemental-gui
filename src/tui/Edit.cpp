@@ -170,8 +170,8 @@ namespace tui {
 				rects.push_back(r);
 			}
 
-			std::vector<Point> pts = BuildOrthoHull(rects);
-			for (Point& p : pts) {
+			std::vector<PointI> pts = BuildOrthoHull(rects);
+			for (PointI& p : pts) {
 				g.AddPathPoint(p.x, p.y);
 			}
 
@@ -501,9 +501,9 @@ namespace tui {
 		}
 	}
 
-	std::vector<Point> Edit::BuildOrthoHull(const std::vector<CharRect>& crs) {
+	std::vector<PointI> Edit::BuildOrthoHull(const std::vector<CharRect>& crs) {
 		std::vector<Rectangle> lines = BuildLinesAABB(crs);
-		std::vector<Point> out;
+		std::vector<PointI> out;
 
 		if (lines.empty()) return out;
 
@@ -518,7 +518,7 @@ namespace tui {
 		//    later
 
 		if (lines.size() > 1) {
-			std::stack<Point> points;
+			std::stack<PointI> points;
 			for (int i = 1; i < lines.size(); i++) {
 				Rectangle lr = lines[i];
 				out.push_back({ lr.x + lr.w, lr.y }); // 2nd
@@ -531,7 +531,7 @@ namespace tui {
 
 			// Push the rest of the points
 			while (!points.empty()) {
-				Point pt = points.top();
+				PointI pt = points.top();
 				points.pop();
 				out.push_back(pt);
 			}

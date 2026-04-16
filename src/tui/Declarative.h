@@ -60,11 +60,10 @@ namespace tui::declarative {
     // --- Button widget -----------------------------------
     struct ButtonProps {
         ElementProps base{};
-        std::string text{""};
         tui::Image* icon{nullptr};
         VoidCallback onClick;
     };
-    WidgetDesc Button(const ButtonProps& props);
+    WidgetDesc Button(const std::string& text, const ButtonProps& props);
 
     // --- TextEdit widget -------------------------------------
     struct TextEditProps {

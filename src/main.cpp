@@ -116,7 +116,7 @@ public:
 			.showBackground = true
 		}, {
 			decl::Column({
-				.base = { .bounds = Rectangle(0, 0, 200, 0) },
+				.base = { .bounds = Rectangle::FromWidth(200) },
 				.gap = 8,
 				.padding = EdgeInsets::All(8),
 				.align = FlexAlign::Stretch,
@@ -128,12 +128,17 @@ public:
 				decl::Text("Rotation Y", { .base = { .autoSize = true } }),
 				decl::Slider({ .base = { .tag = "rot_y" }, .range = { 0.0f, 360.0f }, .value = 0.0f }),
 				decl::Text("Rotation Z", { .base = { .autoSize = true } }),
-				decl::Slider({ .base = { .tag = "rot_z" }, .range = { 0.0f, 360.0f }, .value = 0.0f })
+				decl::Slider({ .base = { .tag = "rot_z" }, .range = { 0.0f, 360.0f }, .value = 0.0f }),
+				decl::Button("Reset", { .base = { .bounds = Rectangle::FromHeight(32) }, .onClick = [&app]() {
+					app.FindByTag<Slider>("rot_x")->SetValue(0.0f);
+					app.FindByTag<Slider>("rot_y")->SetValue(0.0f);
+					app.FindByTag<Slider>("rot_z")->SetValue(0.0f);
+				}}),
 			}),
 			decl::Custom<CubeView, CubeViewProps>(CubeViewProps{
 				.base = {
 					.flexGrow = 1.0f,
-					.bounds = Rectangle(0, 0, 200, 200)
+					.bounds = Rectangle::FromSize(200, 200)
 				}
 			}),
 		});

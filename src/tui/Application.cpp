@@ -8,7 +8,7 @@
 namespace tui {
 
 	static const std::string DefaultStyleJson =
-		#include "DefaultStyle.h"
+		#include "generated/NeumorphismDark.h"
 			;
 	Json Application::DefaultStyle = Json::parse(DefaultStyleJson);
 

@@ -82,12 +82,12 @@ namespace tui::declarative {
         };
     }
     
-    WidgetDesc Button(const ButtonProps &props)
+    WidgetDesc Button(const std::string &text, const ButtonProps &props)
     {
-        return [props](Application& app) -> Element* {
+        return [text, props](Application& app) -> Element* {
             auto& button = app.Create<tui::Button>();
             ElementSetup(button, props.base);
-            button.SetText(props.text);
+            button.SetText(text);
             button.SetIcon(props.icon);
             button.SetOnClick(props.onClick);
             return &button;

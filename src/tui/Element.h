@@ -36,8 +36,8 @@ namespace tui {
 		const Rectangle& GetLocalBounds() const { return m_bounds; }
 		void SetLocalBounds(Rectangle b) { m_bounds = b; Invalidate(); }
 
-		Point GetPosition() const { return { m_bounds.x, m_bounds.y }; }
-		void SetPosition(Point p) { m_bounds.x = p.x; m_bounds.y = p.y; Invalidate(); }
+		PointI GetPosition() const { return { m_bounds.x, m_bounds.y }; }
+		void SetPosition(PointI p) { m_bounds.x = p.x; m_bounds.y = p.y; Invalidate(); }
 
 		Size GetSize() const { return { m_bounds.w, m_bounds.h }; }
 		void SetSize(Size s) { m_bounds.w = s.w; m_bounds.h = s.h; Invalidate(); }

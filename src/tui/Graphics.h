@@ -7,15 +7,23 @@
 #include <functional>
 #include <stack>
 #include <optional>
+#include <concepts>
 
 #define PI 3.141592654
 
 using Json = nlohmann::json;
 
 namespace tui {
+	template <typename T>
+	concept IsNumber = std::is_arithmetic_v<T>;
+
+	template <IsNumber T>
 	struct Point {
-		int x{}, y{};
+		T x{}, y{};
 	};
+
+	using PointF = Point<float>;
+	using PointI = Point<int>;
 
 	struct Size {
 		int w, h;
@@ -32,6 +40,59 @@ namespace tui {
 		bool HasPoint(int x, int y);
 		bool Intersects(Rectangle b);
 		std::optional<Rectangle> Intersect(Rectangle b);
+
+		static Rectangle FromLRTB(int left, int right, int top, int bottom);
+		static Rectangle FromWidth(int w);
+		static Rectangle FromHeight(int h);
+		static Rectangle FromSize(int w, int h);
+	};
+
+    struct Color {
+        float r, g, b, a;
+
+        std::string ToHex() const;
+
+        Color Darken(float amount) const;
+        Color Lighten(float amount) const;
+
+        static Color FromHex(const std::string& hex);
+        static Color FromRGBA(float r, float g, float b, float a = 1.0f);
+        static Color FromRGB(float r, float g, float b);
+        static Color FromHSLA(float h, float s, float l, float a = 1.0f);
+        static Color FromHSL(float h, float s, float l);
+    };
+
+	class LinearGradient {
+	public:
+		LinearGradient(const PointF& start, const PointF& end)
+			: m_start(start), m_end(end) {}
+
+		void AddStop(float offset, const Color& color);
+
+		PointF GetStart() const { return m_start; }
+		PointF GetEnd() const { return m_end; }
+		const std::vector<std::pair<float, Color>>& GetStops() const { return m_stops; }
+
+	private:
+		std::vector<std::pair<float, Color>> m_stops;
+		PointF m_start, m_end;
+	};
+
+	class RadialGradient {
+	public:
+		RadialGradient(const PointF& center, float radius)
+			: m_center(center), m_radius(radius) {}
+
+		void AddStop(float offset, const Color& color);
+
+		PointF GetCenter() const { return m_center; }
+		float GetRadius() const { return m_radius; }
+		const std::vector<std::pair<float, Color>>& GetStops() const { return m_stops; }
+
+	private:
+		std::vector<std::pair<float, Color>> m_stops;
+		PointF m_center;
+		float m_radius;
 	};
 
 	class Image {
@@ -90,11 +151,6 @@ namespace tui {
 		void Stroke(bool preserve = false);
 		void Fill(bool preserve = false);
 
-		// Parses a JSON paint object ({"color": [...]} or {"gradient": {...}})
-		// and sets it as the cairo source. Returns a pattern that must be destroyed
-		// by the caller, or nullptr for solid colors.
-		cairo_pattern_t* ApplyPaint(Json paint, int x = 0, int y = 0, int w = 0, int h = 0);
-
 		void DrawImage(Image* img, int x, int y, int w, int h);
 
 		void StyledPaint(Json style);
@@ -124,6 +180,8 @@ namespace tui {
 		void Save();
 		void Restore();
 
+		cairo_t* GetCairoContext() const { return Ctx(); }
+
 	private:
 		SDL_Renderer *m_renderer;
 
@@ -138,7 +196,12 @@ namespace tui {
 		cairo_t* Ctx() const { return m_context ? m_context : m_measureContext; }
 
 		std::stack<Rectangle> m_clipRects;
-		std::vector<Point> m_pathPoints;
+		std::vector<PointI> m_pathPoints;
+
+		// Parses a JSON paint object ({"color": [...]} or {"gradient": {...}})
+		// and sets it as the cairo source. Returns a pattern that must be destroyed
+		// by the caller, or nullptr for solid colors.
+		cairo_pattern_t* ApplyPaint(Json paint, int x = 0, int y = 0, int w = 0, int h = 0);
 
 		void Draw(DrawFunction func);
 	};

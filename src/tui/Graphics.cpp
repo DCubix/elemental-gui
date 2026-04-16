@@ -4,6 +4,7 @@
 #include <cmath>
 #include <algorithm>
 #include <sstream>
+#include <stdexcept>
 
 namespace tui {
 
@@ -100,16 +101,49 @@ namespace tui {
 					col[2].get<double>(),
 					col[3].get<double>()
 			);
-		} else if (paint["gradient"].is_object()) {
-			Json grad = paint["gradient"];
-			Json startPos = grad.value("startPos", Json::array({ 0.0, 0.0 }));
-			Json endPos = grad.value("endPos", Json::array({ 1.0, 0.0 }));
+		} else if (paint["color"].is_string()) {
+			std::string hex = paint["color"].get<std::string>();
+			tui::Color col = Color::FromHex(hex);
+			cairo_set_source_rgba(m_context, col.r, col.g, col.b, col.a);
+		} else if (paint["linearGradient"].is_object()) {
+			Json grad = paint["linearGradient"];
+			Json startPos = grad.value("start", Json::array({ 0.0, 0.0 }));
+			Json endPos = grad.value("end", Json::array({ 1.0, 0.0 }));
 
 			pat = cairo_pattern_create_linear(
 					startPos[0].get<double>() * w + x,
 					startPos[1].get<double>() * h + y,
 					endPos[0].get<double>() * w + x,
 					endPos[1].get<double>() * h + y
+			);
+
+			if (grad["colors"].is_array()) {
+				for (auto&& col : grad["colors"]) {
+					Json color = col.value("color", Json::array({ 0.0, 0.0, 0.0, 1.0 }));
+					Json offset = col.value("offset", 0.0);
+					cairo_pattern_add_color_stop_rgba(
+							pat,
+							offset.get<double>(),
+							color[0].get<double>(),
+							color[1].get<double>(),
+							color[2].get<double>(),
+							color[3].get<double>()
+					);
+				}
+			}
+			cairo_set_source(m_context, pat);
+		} else if (paint["radialGradient"].is_object()) {
+			Json grad = paint["radialGradient"];
+			Json center = grad.value("center", Json::array({ 0.5, 0.5 }));
+			double radius = grad.value("radius", 0.5);
+
+			pat = cairo_pattern_create_radial(
+					center[0].get<double>() * w + x,
+					center[1].get<double>() * h + y,
+					0,
+					center[0].get<double>() * w + x,
+					center[1].get<double>() * h + y,
+					radius * std::max(w, h)
 			);
 
 			if (grad["colors"].is_array()) {
@@ -177,15 +211,6 @@ namespace tui {
 	}
 
 	void Graphics::StyledTextBegin(Json style) {
-		/*
-			{
-				"font": "Sans",
-				"fontSize": 14.0,
-				"fontSlant": "normal",
-				"fontWeight": "normal",
-				"color": [0.0, 0.0, 0.0, 1.0],
-			}
-		*/
 		std::string font = "", fontSlant = "", fontWeight = "";
 		double fontSize = 0.0;
 		double color[4] = { 0 };
@@ -209,6 +234,13 @@ namespace tui {
 			color[1] = style["color"][1].get<double>();
 			color[2] = style["color"][2].get<double>();
 			color[3] = style["color"][3].get<double>();
+		} else if (style["color"].is_string()) {
+			std::string hex = style["color"].get<std::string>();
+			tui::Color col = Color::FromHex(hex);
+			color[0] = col.r;
+			color[1] = col.g;
+			color[2] = col.b;
+			color[3] = col.a;
 		}
 
 		if (font.empty() || fontSize <= 0.0) {
@@ -563,13 +595,13 @@ namespace tui {
 		// Parse line-cap and line-join
 		cairo_line_cap_t lineCap = CAIRO_LINE_CAP_BUTT;
 		cairo_line_join_t lineJoin = CAIRO_LINE_JOIN_MITER;
-		if (svgStyle["line-cap"].is_string()) {
-			std::string cap = svgStyle["line-cap"].get<std::string>();
+		if (svgStyle["lineCap"].is_string()) {
+			std::string cap = svgStyle["lineCap"].get<std::string>();
 			if (cap == "round") lineCap = CAIRO_LINE_CAP_ROUND;
 			else if (cap == "square") lineCap = CAIRO_LINE_CAP_SQUARE;
 		}
-		if (svgStyle["line-join"].is_string()) {
-			std::string join = svgStyle["line-join"].get<std::string>();
+		if (svgStyle["lineJoin"].is_string()) {
+			std::string join = svgStyle["lineJoin"].get<std::string>();
 			if (join == "round") lineJoin = CAIRO_LINE_JOIN_ROUND;
 			else if (join == "bevel") lineJoin = CAIRO_LINE_JOIN_BEVEL;
 		}
@@ -812,4 +844,136 @@ namespace tui {
 		return {};
 	}
 
+    Rectangle Rectangle::FromLRTB(int left, int right, int top, int bottom)
+    {
+        return Rectangle(left, top, right - left, bottom - top);
+    }
+
+    Rectangle Rectangle::FromWidth(int w)
+    {
+        return Rectangle(0, 0, w, 0);
+    }
+
+    Rectangle Rectangle::FromHeight(int h)
+    {
+        return Rectangle(0, 0, 0, h);
+    }
+
+    Rectangle Rectangle::FromSize(int w, int h)
+    {
+        return Rectangle(0, 0, w, h);
+    }
+
+    std::string Color::ToHex() const
+    {
+		std::stringstream ss;
+		ss << "#" << std::hex << std::uppercase;
+		ss << (int)(r * 255) << (int)(g * 255) << (int)(b * 255);
+		return ss.str();
+    }
+
+    Color Color::Darken(float amount) const
+    {
+		return Color(
+			std::max(0.0f, r - amount),
+			std::max(0.0f, g - amount),
+			std::max(0.0f, b - amount),
+			a
+		);
+    }
+    
+	Color Color::Lighten(float amount) const
+    {
+		return Color(
+			std::min(1.0f, r + amount),
+			std::min(1.0f, g + amount),
+			std::min(1.0f, b + amount),
+			a
+		);
+    }
+    
+	Color Color::FromHex(const std::string &hex)
+    {
+		std::string cleanHex = hex;
+		if (cleanHex[0] == '#') {
+			cleanHex = cleanHex.substr(1);
+		}
+		if (cleanHex.length() == 6) {
+			int r = std::stoi(cleanHex.substr(0, 2), nullptr, 16);
+			int g = std::stoi(cleanHex.substr(2, 2), nullptr, 16);
+			int b = std::stoi(cleanHex.substr(4, 2), nullptr, 16);
+			return Color::FromRGB(r / 255.0f, g / 255.0f, b / 255.0f);
+		} else if (cleanHex.length() == 8) {
+			int a = std::stoi(cleanHex.substr(0, 2), nullptr, 16);
+			int r = std::stoi(cleanHex.substr(2, 2), nullptr, 16);
+			int g = std::stoi(cleanHex.substr(4, 2), nullptr, 16);
+			int b = std::stoi(cleanHex.substr(6, 2), nullptr, 16);
+			return Color::FromRGBA(r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f);
+		} else if (cleanHex.length() == 3) {
+			int r = std::stoi(std::string(2, cleanHex[0]), nullptr, 16);
+			int g = std::stoi(std::string(2, cleanHex[1]), nullptr, 16);
+			int b = std::stoi(std::string(2, cleanHex[2]), nullptr, 16);
+			return Color::FromRGB(r / 255.0f, g / 255.0f, b / 255.0f);
+		}
+		throw std::invalid_argument("Invalid hex color format: " + hex);
+    }
+    
+	Color Color::FromRGBA(float r, float g, float b, float a)
+    {
+        return Color(r, g, b, a);
+    }
+    
+	Color Color::FromRGB(float r, float g, float b)
+    {
+        return Color(r, g, b, 1.0f);
+    }
+    
+	Color Color::FromHSLA(float h, float s, float l, float a)
+    {
+		h = std::fmod(h, 360.0f) / 60.0f;
+		s = std::clamp(s, 0.0f, 1.0f);
+		l = std::clamp(l, 0.0f, 1.0f);
+		a = std::clamp(a, 0.0f, 1.0f);
+
+		float c = (1 - std::abs(2 * l - 1)) * s;
+		float x = c * (1 - std::abs(std::fmod(h, 2) - 1));
+		float m = l - c / 2;
+
+		float r1, g1, b1;
+		if (h < 1) { r1 = c; g1 = x; b1 = 0; }
+		else if (h < 2) { r1 = x; g1 = c; b1 = 0; }
+		else if (h < 3) { r1 = 0; g1 = c; b1 = x; }
+		else if (h < 4) { r1 = 0; g1 = x; b1 = c; }
+		else if (h < 5) { r1 = x; g1 = 0; b1 = c; }
+		else { r1 = c; g1 = 0; b1 = x; }
+
+		return Color(r1 + m, g1 + m, b1 + m, a);
+    }
+    
+	Color Color::FromHSL(float h, float s, float l)
+    {
+        return Color::FromHSLA(h, s, l, 1.0f);
+    }
+    
+	void LinearGradient::AddStop(float offset, const Color &color)
+    {
+		m_stops.push_back({ offset, color });
+		std::sort(
+			m_stops.begin(), m_stops.end(),
+			[](const std::pair<float, Color> &a, const std::pair<float, Color> &b) {
+				return a.first < b.first;
+			}
+		);
+    }
+
+    void RadialGradient::AddStop(float offset, const Color &color)
+    {
+		m_stops.push_back({ offset, color });
+		std::sort(
+			m_stops.begin(), m_stops.end(),
+			[](const std::pair<float, Color> &a, const std::pair<float, Color> &b) {
+				return a.first < b.first;
+			}
+		);
+    }
 }

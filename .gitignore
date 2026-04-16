@@ -6,4 +6,4 @@
 *.lib
 *.user
 *.png
-*.json
+src/tui/generated/

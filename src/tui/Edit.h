@@ -68,7 +68,7 @@ namespace tui {
 		void DeleteSelected();
 		void UpdateOffset();
 
-		std::vector<Point> BuildOrthoHull(const std::vector<CharRect>& crs);
+		std::vector<PointI> BuildOrthoHull(const std::vector<CharRect>& crs);
 		std::vector<Rectangle> BuildLinesAABB(const std::vector<CharRect>& crs);
 	};
 }

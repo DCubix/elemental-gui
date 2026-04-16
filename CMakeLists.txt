@@ -52,6 +52,16 @@ find_package(OpenGL REQUIRED)
 
 add_definitions(-DSDL_MAIN_HANDLED)
 
+# Embed resources as headers before building
+set(RESOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/resources")
+set(GENERATED_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/tui/generated")
+execute_process(
+	COMMAND ${CMAKE_COMMAND}
+		-DRESOURCE_DIR=${RESOURCE_DIR}
+		-DOUTPUT_DIR=${GENERATED_DIR}
+		-P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/embed_resources.cmake"
+)
+
 file(GLOB_RECURSE TUI_SRC
 	"src/tui/*.h"
 	"src/tui/*.cpp"
@@ -61,6 +71,16 @@ file(GLOB_RECURSE TUI_SRC
 add_library(${PROJECT_NAME} ${TUI_SRC})
 target_include_directories(${PROJECT_NAME} PUBLIC ${CAIRO_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} PUBLIC SDL3::SDL3 ${CAIRO_LIBRARIES} nlohmann_json OpenGL::GL)
+
+# Re-embed resources before each build
+add_custom_target(embed_resources ALL
+	COMMAND ${CMAKE_COMMAND}
+		-DRESOURCE_DIR=${RESOURCE_DIR}
+		-DOUTPUT_DIR=${GENERATED_DIR}
+		-P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/embed_resources.cmake"
+	COMMENT "Embedding resources into headers"
+)
+add_dependencies(${PROJECT_NAME} embed_resources)
 
 add_executable(tui_test "src/main.cpp")
 target_link_libraries(tui_test PRIVATE ${PROJECT_NAME})
