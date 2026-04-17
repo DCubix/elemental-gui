@@ -15,11 +15,13 @@ using namespace tui::utils;
 namespace tui {
 	class Application;
 	class Menu;
+	template<typename> class List;
 	class Element : public Subscriber {
 		friend class Application;
 		friend class Container;
 		friend class ScrollView;
 		friend class Menu;
+		template<typename> friend class List;
 	public:
 		Element();
 		~Element() = default;

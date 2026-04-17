@@ -14,9 +14,17 @@ namespace tui {
 		void SetElement(Element *e);
 		Element* GetElement() { return m_element; }
 
+		void SetVerticalScrollEnabled(bool enabled) { m_verticalEnabled = enabled; Invalidate(); }
+		bool IsVerticalScrollEnabled() const { return m_verticalEnabled; }
+
+		void SetHorizontalScrollEnabled(bool enabled) { m_horizontalEnabled = enabled; Invalidate(); }
+		bool IsHorizontalScrollEnabled() const { return m_horizontalEnabled; }
+
 	private:
 		Scrollbar *m_verticalScrollbar, *m_horizontalScrollbar;
 		Element *m_element;
+		bool m_verticalEnabled{ true };
+		bool m_horizontalEnabled{ true };
 
 		bool IsDirty() override;
 	};

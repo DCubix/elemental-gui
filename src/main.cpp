@@ -111,7 +111,7 @@ public:
 		auto gui = decl::SplitView({
 			.direction = Direction::Vertical,
 			.splitPosition = 200,
-			.first = decl::Column({
+			.first = decl::ScrollView(decl::Column({
 				.base = { .bounds = Rectangle::FromWidth(200) },
 				.gap = 8,
 				.padding = EdgeInsets::All(8),
@@ -138,8 +138,21 @@ public:
 				}}),
 				decl::CheckBox("Check me", { .onChanged = [](bool checked) {
 					printf("Checkbox is now %s\n", checked ? "checked" : "unchecked");
-				}})
-			}),
+				}}),
+				decl::BasicList({
+					.base = { .flexGrow = 1.0f },
+					.items = {
+						"Item 1",
+						"Item 2",
+						"Item 3",
+						"Item 4",
+						"Item 5"
+					},
+					.onSelectionChanged = [](int index) {
+						printf("Selected index: %d\n", index);
+					}
+				})
+			}), { .verticalEnabled = true, .horizontalEnabled = false }),
 			.second = decl::Custom<CubeView, CubeViewProps>(CubeViewProps{
 				.base = {
 					.flexGrow = 1.0f,

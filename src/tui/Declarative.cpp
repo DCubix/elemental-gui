@@ -122,10 +122,13 @@ namespace tui::declarative {
         };
     }
     
-    WidgetDesc ScrollView(const WidgetDesc &child)
+    WidgetDesc ScrollView(const WidgetDesc &child, const ScrollViewProps& props)
     {
-        return [child](Application& app) -> Element* {
+        return [child, props](Application& app) -> Element* {
             auto& sv = app.Create<tui::ScrollView>();
+            ElementSetup(sv, props.base);
+            sv.SetVerticalScrollEnabled(props.verticalEnabled);
+            sv.SetHorizontalScrollEnabled(props.horizontalEnabled);
             Element* content = child(app);
             sv.SetElement(content);
             return &sv;
@@ -245,6 +248,20 @@ namespace tui::declarative {
                 splitView.Add(second);
             }
             return &splitView;
+        };
+    }
+    
+    WidgetDesc BasicList(const BasicListProps &props)
+    {
+        return [props](Application& app) -> Element* {
+            auto& list = app.Create<tui::List<std::string>>();
+            ElementSetup(list, props.base);
+            for (const auto& item : props.items) {
+                list.AddItem(item, item);
+            }
+            list.SetSelectedIndex(props.selectedIndex);
+            list.SetOnSelectionChanged(props.onSelectionChanged);
+            return &list;
         };
     }
 }

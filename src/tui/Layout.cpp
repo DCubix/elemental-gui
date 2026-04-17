@@ -3,6 +3,15 @@
 namespace tui {
     const EdgeInsets EdgeInsets::Zero = EdgeInsets{ 0, 0, 0, 0 };
 
+    Rectangle EdgeInsets::Apply(const Rectangle& rect) const {
+    	return Rectangle{
+    		rect.x + left,
+    		rect.y + top,
+    		rect.w - GetHorizontal(),
+    		rect.h - GetVertical()
+    	};
+    }
+
     EdgeInsets EdgeInsets::All(uint32_t v)
     {
         return EdgeInsets{v, v, v, v};

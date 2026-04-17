@@ -12,17 +12,14 @@ namespace tui {
 	{}
 
 	EventStatus ScrollView::OnEvent(Event* event) {
-		const int barsize = 16;
 		Rectangle b = GetIntersectedBounds();
-		b.w -= barsize;
-		b.h -= barsize;
 
-		if (m_verticalScrollbar != nullptr) {
+		if (m_verticalScrollbar != nullptr && m_verticalScrollbar->IsVisible()) {
 			if (m_verticalScrollbar->OnEvent(event) == EventStatus::Consumed)
 				return EventStatus::Consumed;
 		}
 
-		if (m_horizontalScrollbar != nullptr) {
+		if (m_horizontalScrollbar != nullptr && m_horizontalScrollbar->IsVisible()) {
 			if (m_horizontalScrollbar->OnEvent(event) == EventStatus::Consumed)
 				return EventStatus::Consumed;
 		}
@@ -101,48 +98,63 @@ namespace tui {
 
 		if (m_element != nullptr) {
 			m_element->SetAutoSize(true);
+			Size ps = m_element->GetPreferredSize();
+
+			// First pass: determine which scrollbars are needed
+			bool needsVertical = m_verticalEnabled && ps.h > b.h;
+			bool needsHorizontal = m_horizontalEnabled && ps.w > b.w;
+
+			// Second pass: account for scrollbar space stealing
+			if (needsVertical && !needsHorizontal && m_horizontalEnabled) {
+				needsHorizontal = ps.w > (b.w - barsize);
+			}
+			if (needsHorizontal && !needsVertical && m_verticalEnabled) {
+				needsVertical = ps.h > (b.h - barsize);
+			}
+
+			int contentWidth = needsVertical ? (b.w - barsize) : b.w;
+			int contentHeight = needsHorizontal ? (b.h - barsize) : b.h;
+
+			if (needsHorizontal) {
+				m_horizontalScrollbar->SetEnabled(true);
+				m_horizontalScrollbar->SetVisible(true);
+				m_horizontalScrollbar->SetRange(0, ps.w - contentWidth);
+				m_horizontalScrollbar->SetLocalBounds(Rectangle(0, b.h - barsize, contentWidth, barsize));
+			} else {
+				m_horizontalScrollbar->SetValue(0);
+			}
+
+			if (needsVertical) {
+				m_verticalScrollbar->SetEnabled(true);
+				m_verticalScrollbar->SetVisible(true);
+				m_verticalScrollbar->SetRange(0, ps.h - contentHeight);
+				m_verticalScrollbar->SetLocalBounds(Rectangle(b.w - barsize, 0, barsize, contentHeight));
+			} else {
+				m_verticalScrollbar->SetValue(0);
+			}
 
 			m_element->SetPosition({
 				-static_cast<int>(m_horizontalScrollbar->GetValue()),
 				-static_cast<int>(m_verticalScrollbar->GetValue())
 			});
 
-			Size ps = m_element->GetPreferredSize();
-
-			int maxx = ps.w;
-			int maxy = ps.h;
-
-			int maxregionx = b.w - barsize;
-			int maxregiony = b.h - barsize;
-
-			if (maxx > maxregionx) {
-				m_horizontalScrollbar->SetEnabled(true);
-				m_horizontalScrollbar->SetVisible(true);
-				m_horizontalScrollbar->SetRange(0, maxx - maxregionx);
-				m_horizontalScrollbar->SetLocalBounds(Rectangle(0, b.h - barsize, maxregionx, barsize));
-			}
-			if (maxy > maxregiony) {
-				m_verticalScrollbar->SetEnabled(true);
-				m_verticalScrollbar->SetVisible(true);
-				m_verticalScrollbar->SetRange(0, maxy - maxregiony);
-				m_verticalScrollbar->SetLocalBounds(Rectangle(b.w - barsize, 0, barsize, maxregiony));
+			if (needsVertical && !needsHorizontal) {
+				// Only vertical scrolling: fit element width to content area
+				m_element->SetSize({ contentWidth, std::max(ps.h, contentHeight) });
+			} else if (needsHorizontal && !needsVertical) {
+				// Only horizontal scrolling: fit element height to content area
+				m_element->SetSize({ std::max(ps.w, contentWidth), contentHeight });
+			} else {
+				m_element->SetSize({ std::max(ps.w, contentWidth), std::max(ps.h, contentHeight) });
 			}
 
-			m_element->SetSize({
-				std::max(ps.w, maxregionx),
-				std::max(ps.h, maxregiony)
-			});
-
-			Rectangle i{ c.x, c.y, maxregionx, maxregiony };
-			g.ClipPush(i.x, i.y, i.w, i.h);
+			g.ClipPush(c.x, c.y, contentWidth, contentHeight);
 			m_element->OnDraw(g);
 			g.ClipPop();
 		}
 
-		if (m_horizontalScrollbar != nullptr) {
-			if (m_horizontalScrollbar->IsVisible()) m_horizontalScrollbar->OnDraw(g);
-			if (m_verticalScrollbar->IsVisible()) m_verticalScrollbar->OnDraw(g);
-		}
+		if (m_horizontalScrollbar->IsVisible()) m_horizontalScrollbar->OnDraw(g);
+		if (m_verticalScrollbar->IsVisible()) m_verticalScrollbar->OnDraw(g);
 	}
 
 	void ScrollView::SetElement(Element* e) {

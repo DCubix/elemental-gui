@@ -432,5 +432,37 @@
             "horizontal": 12.0,
             "vertical": 6.0
         }
+    },
+    "List": {
+        "padding": 8.0,
+        "border": {
+            "radius": 8.0,
+            "color": "#FF383838",
+            "width": 1.0
+        },
+        "background": {
+            "color": "#FF141414"
+        },
+        "item": {
+            "height": 22.0,
+            "padding": {
+                "vertical": 8.0,
+                "horizontal": 12.0
+            }
+        },
+        "itemSelected": {
+            "border": {
+                "radius": 6.0,
+                "color": "#FFF",
+                "width": 0.0
+            },
+            "background": {
+                "color": "#732666D9"
+            },
+            "text": {
+                "color": "#FFFFFFFF",
+                "fontWeight": "bold"
+            }
+        }
     }
 }

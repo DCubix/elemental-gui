@@ -11,6 +11,8 @@ namespace tui {
 		uint32_t GetHorizontal() const { return left + right; }
 		uint32_t GetVertical() const { return top + bottom; }
 
+		Rectangle Apply(const Rectangle& rect) const;
+
 		static EdgeInsets All(uint32_t v = 0);
 		static EdgeInsets Symmetric(uint32_t horizontal = 0, uint32_t vertical = 0);
 		static EdgeInsets Only(uint32_t left = 0, uint32_t top = 0, uint32_t right = 0, uint32_t bottom = 0);

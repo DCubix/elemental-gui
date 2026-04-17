@@ -6,6 +6,7 @@
 #include "FlexLayout.h"
 #include "ImageView.h"
 #include "Menu.h"
+#include "List.h"
 
 namespace tui::declarative {
     using WidgetDesc = std::function<Element*(Application&)>;
@@ -84,7 +85,12 @@ namespace tui::declarative {
     WidgetDesc Image(const ImageProps& props);
 
     // --- ScrollView widget ---------------------------------
-    WidgetDesc ScrollView(const WidgetDesc& child);
+    struct ScrollViewProps {
+        ElementProps base{};
+        bool verticalEnabled{true};
+        bool horizontalEnabled{true};
+    };
+    WidgetDesc ScrollView(const WidgetDesc& child, const ScrollViewProps& props = {});
 
     // --- CheckBox widget ----------------------------------
     struct CheckBoxProps {
@@ -165,4 +171,35 @@ namespace tui::declarative {
         WidgetDesc second{nullptr};
     };
     WidgetDesc SplitView(const SplitViewProps& props);
+
+    // --- List widget -------------------------------------
+    template <typename T>
+    struct ListProps {
+        ElementProps base{};
+        std::vector<ListItem<T>> items;
+        int selectedIndex{-1};
+        ValueChanged<int> onSelectionChanged;
+    };
+    
+    template <typename T>
+    WidgetDesc List(const ListProps<T>& props) {
+        return [props](Application& app) -> Element* {
+            auto& list = app.Create<tui::List<T>>();
+            ElementSetup(list, props.base);
+            for (const auto& item : props.items) {
+                list.AddItem(item.data, item.label);
+            }
+            list.SetSelectedIndex(props.selectedIndex);
+            list.SetOnSelectionChanged(props.onSelectionChanged);
+            return &list;
+        };
+    }
+
+    struct BasicListProps {
+        ElementProps base{};
+        std::vector<std::string> items;
+        int selectedIndex{-1};
+        ValueChanged<int> onSelectionChanged;
+    };
+    WidgetDesc BasicList(const BasicListProps& props);
 }
