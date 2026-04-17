@@ -51,9 +51,9 @@ namespace tui {
 		Json style = GetStyle()["CheckBox"];
 		Json textStyle = GetStyle()["DefaultText"];
 
-		int boxSize = b.h;
+		int boxSize = style.value("size", b.h);
 		int boxX = b.x;
-		int boxY = b.y;
+		int boxY = b.y + (b.h - boxSize) / 2;
 
 		// Select state-based style
 		std::string boxState = "normal";
@@ -86,7 +86,9 @@ namespace tui {
 	}
 
 	Size CheckBox::GetPreferredSize() const {
-		return { m_bounds.w, m_bounds.h };
+		Json style = GetStyle()["CheckBox"];
+		int boxSize = style.value("size", m_bounds.h);
+		return { m_bounds.w, boxSize };
 	}
 
 	void CheckBox::SetChecked(bool checked) {

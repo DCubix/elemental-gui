@@ -17,7 +17,7 @@ namespace tui {
 	class Menu;
 	class Element : public Subscriber {
 		friend class Application;
-		friend class Panel;
+		friend class Container;
 		friend class ScrollView;
 		friend class Menu;
 	public:

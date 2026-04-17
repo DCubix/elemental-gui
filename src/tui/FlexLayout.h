@@ -17,6 +17,7 @@ namespace tui {
 				   FlexAlign align = FlexAlign::Stretch);
 
 		void Add(Element* element);
+		void Remove(Element* element);
 		void Apply(const Rectangle& bounds) override;
 		Size GetLaidOutSize() const override;
 

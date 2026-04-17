@@ -89,11 +89,19 @@ namespace tui::declarative {
     // --- CheckBox widget ----------------------------------
     struct CheckBoxProps {
         ElementProps base{};
-        std::string text{""};
         bool checked{false};
         ValueChanged<bool> onChanged;
     };
-    WidgetDesc CheckBox(const CheckBoxProps& props);
+    WidgetDesc CheckBox(const std::string& text, const CheckBoxProps& props);
+
+    // --- RadioButton widget --------------------------------
+    struct RadioButtonProps {
+        ElementProps base{};
+        std::string group{""};
+        bool checked{false};
+        ValueChanged<bool> onChanged;
+    };
+    WidgetDesc RadioButton(const std::string& text, const RadioButtonProps& props);
 
     // --- Switch widget ------------------------------------
     struct SwitchProps {
@@ -147,4 +155,14 @@ namespace tui::declarative {
             return &element;
         };
     }
+
+    // --- SplitView widget -------------------------------------
+    struct SplitViewProps {
+        ElementProps base{};
+        Direction direction{Direction::Horizontal};
+        int splitPosition{100}; // px
+        WidgetDesc first{nullptr};
+        WidgetDesc second{nullptr};
+    };
+    WidgetDesc SplitView(const SplitViewProps& props);
 }

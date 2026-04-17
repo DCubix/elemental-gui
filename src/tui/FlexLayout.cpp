@@ -13,7 +13,15 @@ namespace tui {
 		m_items.push_back(element);
 	}
 
-	void FlexLayout::Apply(const Rectangle& bounds) {
+    void FlexLayout::Remove(Element *element)
+    {
+        m_items.erase(
+			std::remove(m_items.begin(), m_items.end(), element),
+			m_items.end()
+		);
+    }
+
+    void FlexLayout::Apply(const Rectangle& bounds) {
 		if (m_items.empty()) return;
 
 		int mainPadding = (m_direction == FlexDirection::Row)

@@ -9,6 +9,8 @@
 #include "Switch.h"
 #include "CheckBox.h"
 #include "Menu.h"
+#include "RadioButton.h"
+#include "SplitView.h"
 
 namespace tui::declarative {
 
@@ -130,15 +132,28 @@ namespace tui::declarative {
         };
     }
     
-    WidgetDesc CheckBox(const CheckBoxProps &props)
+    WidgetDesc CheckBox(const std::string &text, const CheckBoxProps &props)
     {
-        return [props](Application& app) -> Element* {
+        return [props, text](Application& app) -> Element* {
             auto& cb = app.Create<tui::CheckBox>();
             ElementSetup(cb, props.base);
-            cb.SetText(props.text);
+            cb.SetText(text);
             cb.SetChecked(props.checked);
             cb.SetOnChanged(props.onChanged);
             return &cb;
+        };
+    }
+
+    WidgetDesc RadioButton(const std::string &text, const RadioButtonProps &props)
+    {
+        return [props, text](Application& app) -> Element* {
+            auto& rb = app.Create<tui::RadioButton>();
+            ElementSetup(rb, props.base);
+            rb.SetText(text);
+            rb.SetGroup(props.group);
+            rb.SetChecked(props.checked);
+            rb.SetOnChanged(props.onChanged);
+            return &rb;
         };
     }
 
@@ -211,6 +226,25 @@ namespace tui::declarative {
             }
 
             return &menu;
+        };
+    }
+    
+    WidgetDesc SplitView(const SplitViewProps &props)
+    {
+        return [props](Application& app) -> Element* {
+            auto& splitView = app.Create<tui::SplitView>();
+            ElementSetup(splitView, props.base);
+            splitView.SetDirection(props.direction);
+            splitView.SetSplitPosition(props.splitPosition);
+            if (props.first) {
+                Element* first = props.first(app);
+                splitView.Add(first);
+            }
+            if (props.second) {
+                Element* second = props.second(app);
+                splitView.Add(second);
+            }
+            return &splitView;
         };
     }
 }

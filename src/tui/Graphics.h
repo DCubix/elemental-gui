@@ -62,39 +62,6 @@ namespace tui {
         static Color FromHSL(float h, float s, float l);
     };
 
-	class LinearGradient {
-	public:
-		LinearGradient(const PointF& start, const PointF& end)
-			: m_start(start), m_end(end) {}
-
-		void AddStop(float offset, const Color& color);
-
-		PointF GetStart() const { return m_start; }
-		PointF GetEnd() const { return m_end; }
-		const std::vector<std::pair<float, Color>>& GetStops() const { return m_stops; }
-
-	private:
-		std::vector<std::pair<float, Color>> m_stops;
-		PointF m_start, m_end;
-	};
-
-	class RadialGradient {
-	public:
-		RadialGradient(const PointF& center, float radius)
-			: m_center(center), m_radius(radius) {}
-
-		void AddStop(float offset, const Color& color);
-
-		PointF GetCenter() const { return m_center; }
-		float GetRadius() const { return m_radius; }
-		const std::vector<std::pair<float, Color>>& GetStops() const { return m_stops; }
-
-	private:
-		std::vector<std::pair<float, Color>> m_stops;
-		PointF m_center;
-		float m_radius;
-	};
-
 	class Image {
 		friend class Graphics;
 	public:

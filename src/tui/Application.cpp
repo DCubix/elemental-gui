@@ -8,7 +8,7 @@
 namespace tui {
 
 	static const std::string DefaultStyleJson =
-		#include "generated/NeumorphismDark.h"
+		#include "generated/DefaultStyle.h"
 			;
 	Json Application::DefaultStyle = Json::parse(DefaultStyleJson);
 
@@ -201,8 +201,12 @@ namespace tui {
 	}
 
 	void Application::Redraw() {
-		//m_graphics.Clear();
 		m_graphics.Draw([&](Graphics& g) {
+			if (m_root) {
+				Json windowStyle = m_root->GetStyle()["Window"];
+				m_graphics.StyledRect(0, 0, m_width, m_height, windowStyle);
+			}
+
 			for (size_t i = 0; i < m_elements.size(); i++) {
 				if (m_elements[i]->GetParent() != nullptr) continue;
 				if (!m_elements[i]->IsVisible()) continue;

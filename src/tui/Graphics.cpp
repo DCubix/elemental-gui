@@ -168,16 +168,20 @@ namespace tui {
 	void Graphics::StyledPaint(Json style) {
 		if (style["background"].is_object()) {
 			auto pat = ApplyPaint(style["background"]);
-			Fill(true);
+			bool shouldPreserve =
+				style["border"].is_object() && style["border"].value("width", 0.0) > 0.0;
+			Fill(shouldPreserve);
 			if (pat) cairo_pattern_destroy(pat);
 		}
 		if (style["border"].is_object()) {
 			Json border = style["border"];
 			double width = border.value("width", 1.0);
-			auto pat = ApplyPaint(border);
-			cairo_set_line_width(m_context, width);
-			Stroke(false);
-			if (pat) cairo_pattern_destroy(pat);
+			if (width > 0.0) {
+				auto pat = ApplyPaint(border);
+				cairo_set_line_width(m_context, width);
+				Stroke(false);
+				if (pat) cairo_pattern_destroy(pat);
+			}
 		}
 	}
 
@@ -955,25 +959,4 @@ namespace tui {
         return Color::FromHSLA(h, s, l, 1.0f);
     }
     
-	void LinearGradient::AddStop(float offset, const Color &color)
-    {
-		m_stops.push_back({ offset, color });
-		std::sort(
-			m_stops.begin(), m_stops.end(),
-			[](const std::pair<float, Color> &a, const std::pair<float, Color> &b) {
-				return a.first < b.first;
-			}
-		);
-    }
-
-    void RadialGradient::AddStop(float offset, const Color &color)
-    {
-		m_stops.push_back({ offset, color });
-		std::sort(
-			m_stops.begin(), m_stops.end(),
-			[](const std::pair<float, Color> &a, const std::pair<float, Color> &b) {
-				return a.first < b.first;
-			}
-		);
-    }
 }

@@ -60,6 +60,17 @@ namespace tui {
 			return nullptr;
 		}
 
+		template <DerivedFromElement E>
+		E* FindElement(std::function<bool(E*)> predicate) {
+			for (auto&& el : m_elements) {
+				E* casted = dynamic_cast<E*>(el.get());
+				if (casted && predicate(casted)) {
+					return casted;
+				}
+			}
+			return nullptr;
+		}
+
 		Element& GetRoot() { return *m_root; }
 		void SetRoot(Element *root);
 

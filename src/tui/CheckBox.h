@@ -2,8 +2,6 @@
 
 #include "Element.h"
 
-#include <functional>
-
 namespace tui {
 	class CheckBox : public Element {
 	public:
@@ -20,7 +18,7 @@ namespace tui {
 		std::string GetText() const { return m_text; }
 		void SetText(const std::string& text) { m_text = text; Invalidate(); }
 
-		void SetOnChanged(std::function<void(bool)> cb) { m_onChanged = cb; }
+		void SetOnChanged(ValueChanged<bool> cb) { m_onChanged = cb; }
 
 	private:
 		std::string m_text;
@@ -28,6 +26,6 @@ namespace tui {
 		bool m_hovered{ false };
 		bool m_pressed{ false };
 
-		std::function<void(bool)> m_onChanged;
+		ValueChanged<bool> m_onChanged;
 	};
 }

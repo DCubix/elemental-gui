@@ -108,14 +108,10 @@ struct CubeViewProps {
 class App : public ApplicationAdapter {
 public:
 	void OnCreate(Application& app) {
-		auto gui = decl::Row({
-			.gap = 8,
-			.padding = EdgeInsets::All(8),
-			.align = FlexAlign::Stretch,
-			.justify = FlexJustify::Start,
-			.showBackground = true
-		}, {
-			decl::Column({
+		auto gui = decl::SplitView({
+			.direction = Direction::Vertical,
+			.splitPosition = 200,
+			.first = decl::Column({
 				.base = { .bounds = Rectangle::FromWidth(200) },
 				.gap = 8,
 				.padding = EdgeInsets::All(8),
@@ -134,8 +130,17 @@ public:
 					app.FindByTag<Slider>("rot_y")->SetValue(0.0f);
 					app.FindByTag<Slider>("rot_z")->SetValue(0.0f);
 				}}),
+				decl::RadioButton("Option 1", { .group = "options", .onChanged = [](bool checked) {
+					if (checked) printf("Option 1 selected\n");
+				}}),
+				decl::RadioButton("Option 2", { .group = "options", .onChanged = [](bool checked) {
+					if (checked) printf("Option 2 selected\n");
+				}}),
+				decl::CheckBox("Check me", { .onChanged = [](bool checked) {
+					printf("Checkbox is now %s\n", checked ? "checked" : "unchecked");
+				}})
 			}),
-			decl::Custom<CubeView, CubeViewProps>(CubeViewProps{
+			.second = decl::Custom<CubeView, CubeViewProps>(CubeViewProps{
 				.base = {
 					.flexGrow = 1.0f,
 					.bounds = Rectangle::FromSize(200, 200)
@@ -143,45 +148,6 @@ public:
 			}),
 		});
 		app.SetRoot(gui(app));
-
-		// --- Context Menu ---
-		auto ctxMenu = decl::Menu({
-			.base = { .tag = "contextMenu" },
-			.onDismiss = [&app]() {
-				auto* menu = app.FindByTag<tui::Menu>("contextMenu");
-				app.DismissPopup(menu);
-			}
-		}, {
-			decl::MenuItem({ .text = "Cut", .onClick = [&app]() {
-				app.FindByTag<Label>("title")->SetText("Cut!");
-			}}),
-			decl::MenuItem({ .text = "Copy", .onClick = [&app]() {
-				app.FindByTag<Label>("title")->SetText("Copy!");
-			}}),
-			decl::MenuItem({ .text = "Paste", .onClick = [&app]() {
-				app.FindByTag<Label>("title")->SetText("Paste!");
-			}}),
-			decl::MenuSeparator(),
-			decl::MenuItem({ .text = "Select All", .onClick = [&app]() {
-				app.FindByTag<Label>("title")->SetText("Select All!");
-			}}),
-			decl::MenuSeparator(),
-			decl::MenuItem({
-				.text = "Sub Menu",
-				.onClick = [&app]() {},
-				.subMenu = decl::Menu({
-					.onDismiss = []() {}
-				}, {
-					decl::MenuItem({ .text = "Option 1", .onClick = [&app]() {
-						app.FindByTag<Label>("title")->SetText("Option 1!");
-					}}),
-					decl::MenuItem({ .text = "Option 2", .onClick = [&app]() {
-						app.FindByTag<Label>("title")->SetText("Option 2!");
-					}})
-				})
-			})
-		});
-		ctxMenu(app);
 	}
 
 	void OnDestroy() {
