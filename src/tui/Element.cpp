@@ -64,7 +64,7 @@ namespace tui {
 			// Returns only the visible part of the element
 			// by intersecting it with the parent's intersected bounds
 			return m_parent->GetIntersectedBounds()
-				.Intersect(GetBounds()).value_or(GetBounds());
+				.Intersect(GetBounds()).value_or(Rectangle(0, 0, 0, 0));
 		}
 		return GetBounds();
 	}

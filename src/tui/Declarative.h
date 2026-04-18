@@ -87,8 +87,7 @@ namespace tui::declarative {
     // --- ScrollView widget ---------------------------------
     struct ScrollViewProps {
         ElementProps base{};
-        bool verticalEnabled{true};
-        bool horizontalEnabled{true};
+        Direction scrollDirection{Direction::Vertical};
     };
     WidgetDesc ScrollView(const WidgetDesc& child, const ScrollViewProps& props = {});
 

@@ -152,7 +152,7 @@ public:
 						printf("Selected index: %d\n", index);
 					}
 				})
-			}), { .verticalEnabled = true, .horizontalEnabled = false }),
+			})),
 			.second = decl::Custom<CubeView, CubeViewProps>(CubeViewProps{
 				.base = {
 					.flexGrow = 1.0f,

@@ -127,8 +127,7 @@ namespace tui::declarative {
         return [child, props](Application& app) -> Element* {
             auto& sv = app.Create<tui::ScrollView>();
             ElementSetup(sv, props.base);
-            sv.SetVerticalScrollEnabled(props.verticalEnabled);
-            sv.SetHorizontalScrollEnabled(props.horizontalEnabled);
+            sv.SetScrollDirection(props.scrollDirection);
             Element* content = child(app);
             sv.SetElement(content);
             return &sv;
