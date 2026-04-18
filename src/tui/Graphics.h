@@ -8,6 +8,7 @@
 #include <stack>
 #include <optional>
 #include <concepts>
+#include <vector>
 
 #define PI 3.141592654
 
@@ -119,6 +120,7 @@ namespace tui {
 		void Fill(bool preserve = false);
 
 		void DrawImage(Image* img, int x, int y, int w, int h);
+		void DrawShadow(float elevation, int x, int y, int w, int h, float radius);
 
 		void StyledPaint(Json style);
 		void StyledRect(int x, int y, int w, int h, Json style);
@@ -169,7 +171,9 @@ namespace tui {
 		// and sets it as the cairo source. Returns a pattern that must be destroyed
 		// by the caller, or nullptr for solid colors.
 		cairo_pattern_t* ApplyPaint(Json paint, int x = 0, int y = 0, int w = 0, int h = 0);
-
+		
 		void Draw(DrawFunction func);
+
+		cairo_pattern_t* CreateRoundShadowPattern(float elevation, int x, int y, int w, int h, float radius);
 	};
 }

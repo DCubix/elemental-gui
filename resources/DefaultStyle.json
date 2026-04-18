@@ -24,7 +24,9 @@
         }
     },
     "Panel": {
+        "elevation": 2.0,
         "border": {
+            "radius": 8.0,
             "color": "#FF333333",
             "width": 1.0
         },
@@ -38,6 +40,7 @@
             "vertical": 10.0
         },
         "normal": {
+            "elevation": 4.0,
             "border": {
                 "radius": 8.0,
                 "color": "#FF3859A6",
@@ -48,6 +51,7 @@
             }
         },
         "hover": {
+            "elevation": 4.0,
             "border": {
                 "radius": 8.0,
                 "color": "#FF4D73CC",
@@ -58,6 +62,7 @@
             }
         },
         "click": {
+            "elevation": 4.0,
             "border": {
                 "radius": 8.0,
                 "color": "#FF2E4780",
@@ -125,6 +130,7 @@
         },
         "thumb": {
             "normal": {
+                "elevation": 2.0,
                 "border": {
                     "radius": 999.0,
                     "color": "#FF3859A6",
@@ -135,6 +141,7 @@
                 }
             },
             "hover": {
+                "elevation": 2.0,
                 "border": {
                     "radius": 999.0,
                     "color": "#FF4D73CC",
@@ -145,6 +152,7 @@
                 }
             },
             "click": {
+                "elevation": 2.0,
                 "border": {
                     "radius": 999.0,
                     "color": "#FF2E4780",
@@ -383,6 +391,7 @@
         }
     },
     "Menu": {
+        "elevation": 8.0,
         "padding": {
             "horizontal": 0.0,
             "vertical": 8.0

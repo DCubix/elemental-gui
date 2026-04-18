@@ -6,8 +6,10 @@
 #include <sstream>
 #include <stdexcept>
 
-namespace tui {
+constexpr int SHAPE_SIZE = 64;
 
+namespace tui {
+	
 	Graphics::Graphics(SDL_Renderer* ren)
 		: m_renderer(ren), m_buffer(nullptr), m_surface(nullptr), m_context(nullptr)
 	{
@@ -165,7 +167,17 @@ namespace tui {
 		return pat;
 	}
 
-	void Graphics::StyledPaint(Json style) {
+    void Graphics::DrawShadow(float elevation, int x, int y, int w, int h, float radius)
+    {
+		cairo_pattern_t* pat = CreateRoundShadowPattern(elevation, x, y, w, h, radius);
+		if (pat) {
+			cairo_set_source(m_context, pat);
+			cairo_paint(m_context);
+			cairo_pattern_destroy(pat);
+		}
+    }
+
+    void Graphics::StyledPaint(Json style) {
 		if (style["background"].is_object()) {
 			auto pat = ApplyPaint(style["background"]);
 			bool shouldPreserve =
@@ -187,6 +199,18 @@ namespace tui {
 
 	void Graphics::StyledRect(int x, int y, int w, int h, Json style) {
 		cairo_save(m_context);
+
+		if (style["elevation"].is_number()) {
+			float elev = style["elevation"].get<float>();
+			float radius = style["border"].is_object()
+				? style["border"].value("radius", 0.0f) : 0.0f;
+
+			// bypass clipping
+			cairo_save(m_context);
+			cairo_reset_clip(m_context);
+			DrawShadow(elev, x, y, w, h, radius);
+			cairo_restore(m_context);
+		}
 
 		double borderRadius = 0.0;
 		if (style["border"].is_object()) {
@@ -728,7 +752,87 @@ namespace tui {
 		SDL_RenderPresent(m_renderer);
 	}
 
-	Image::~Image() {
+    cairo_pattern_t* Graphics::CreateRoundShadowPattern(float elevation, int x, int y, int w, int h, float radius)
+    {
+		float cornerR = std::clamp(radius, 1.0f, std::min(w, h) / 2.0f);
+		float offsetY = elevation * 0.3f;
+		float edgeThickness = elevation * 2.0f;
+		float shadowAlpha = std::clamp(0.6f - elevation * 0.1f, 0.15f, 0.5f);
+
+		float inR = cornerR;
+		float outR = cornerR + edgeThickness;
+
+		const float e = 0.5f;
+		const float th = std::acos(2.0f * std::pow((1.0f - e / cornerR), 2) - 1.0f);
+		const int stepsPerCorner = std::max(2, static_cast<int>(std::ceil((M_PI / 2) / th)));
+
+		// Corner centers: inset by cornerR so inner ring aligns with rect edges
+		struct Vec2 { float x, y; };
+		Vec2 centers[4] = {
+			{ (float)x + cornerR,       (float)y + cornerR + offsetY },
+			{ (float)(x + w) - cornerR, (float)y + cornerR + offsetY },
+			{ (float)(x + w) - cornerR, (float)(y + h) - cornerR + offsetY },
+			{ (float)x + cornerR,       (float)(y + h) - cornerR + offsetY }
+		};
+		float startAngles[4] = {
+			(float)M_PI,             // top-left: π → 3π/2
+			(float)(3 * M_PI / 2),   // top-right: 3π/2 → 2π
+			0.0f,                    // bottom-right: 0 → π/2
+			(float)(M_PI / 2)        // bottom-left: π/2 → π
+		};
+
+		// Generate inner and outer ring points
+		std::vector<Vec2> innerPts, outerPts;
+		for (int c = 0; c < 4; c++) {
+			for (int i = 0; i <= stepsPerCorner; i++) {
+				float t = (float)i / stepsPerCorner;
+				float angle = startAngles[c] + t * (float)(M_PI / 2);
+				float cs = std::cos(angle);
+				float sn = std::sin(angle);
+				innerPts.push_back({ centers[c].x + inR * cs, centers[c].y + inR * sn });
+				outerPts.push_back({ centers[c].x + outR * cs, centers[c].y + outR * sn });
+			}
+		}
+
+		cairo_pattern_t* pattern = cairo_pattern_create_mesh();
+		int n = (int)innerPts.size();
+
+		// Gradient ring: one quad patch per segment
+		for (int i = 0; i < n; i++) {
+			int j = (i + 1) % n;
+			cairo_mesh_pattern_begin_patch(pattern);
+			cairo_mesh_pattern_move_to(pattern, innerPts[i].x, innerPts[i].y);
+			cairo_mesh_pattern_line_to(pattern, innerPts[j].x, innerPts[j].y);
+			cairo_mesh_pattern_line_to(pattern, outerPts[j].x, outerPts[j].y);
+			cairo_mesh_pattern_line_to(pattern, outerPts[i].x, outerPts[i].y);
+			cairo_mesh_pattern_set_corner_color_rgba(pattern, 0, 0, 0, 0, shadowAlpha);
+			cairo_mesh_pattern_set_corner_color_rgba(pattern, 1, 0, 0, 0, shadowAlpha);
+			cairo_mesh_pattern_set_corner_color_rgba(pattern, 2, 0, 0, 0, 0.0f);
+			cairo_mesh_pattern_set_corner_color_rgba(pattern, 3, 0, 0, 0, 0.0f);
+			cairo_mesh_pattern_end_patch(pattern);
+		}
+
+		// Solid fill: triangle fan from center to inner ring
+		float cx = x + w * 0.5f;
+		float cy = y + h * 0.5f + offsetY;
+		for (int i = 0; i < n; i++) {
+			int j = (i + 1) % n;
+			cairo_mesh_pattern_begin_patch(pattern);
+			cairo_mesh_pattern_move_to(pattern, cx, cy);
+			cairo_mesh_pattern_line_to(pattern, innerPts[i].x, innerPts[i].y);
+			cairo_mesh_pattern_line_to(pattern, innerPts[j].x, innerPts[j].y);
+			cairo_mesh_pattern_line_to(pattern, cx, cy);
+			cairo_mesh_pattern_set_corner_color_rgba(pattern, 0, 0, 0, 0, shadowAlpha);
+			cairo_mesh_pattern_set_corner_color_rgba(pattern, 1, 0, 0, 0, shadowAlpha);
+			cairo_mesh_pattern_set_corner_color_rgba(pattern, 2, 0, 0, 0, shadowAlpha);
+			cairo_mesh_pattern_set_corner_color_rgba(pattern, 3, 0, 0, 0, shadowAlpha);
+			cairo_mesh_pattern_end_patch(pattern);
+		}
+
+		return pattern;
+    }
+
+    Image::~Image() {
 		if (m_surface) {
 			cairo_surface_destroy(m_surface);
 			m_surface = nullptr;

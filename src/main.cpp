@@ -111,7 +111,7 @@ public:
 		auto gui = decl::SplitView({
 			.direction = Direction::Vertical,
 			.splitPosition = 200,
-			.first = decl::ScrollView(decl::Column({
+			.first = decl::Column({
 				.base = { .bounds = Rectangle::FromWidth(200) },
 				.gap = 8,
 				.padding = EdgeInsets::All(8),
@@ -152,7 +152,7 @@ public:
 						printf("Selected index: %d\n", index);
 					}
 				})
-			})),
+			}),
 			.second = decl::Custom<CubeView, CubeViewProps>(CubeViewProps{
 				.base = {
 					.flexGrow = 1.0f,
