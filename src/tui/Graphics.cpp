@@ -84,9 +84,36 @@ namespace tui {
 	}
 
 	void Graphics::DrawImage(Image* img, int x, int y, int w, int h) {
+		if (!img->IsValid()) return;
+
+		if (img->GetType() == Image::Type::SVG) {
+			// get current cairo color
+			cairo_pattern_t* pat = cairo_get_source(m_context);
+			cairo_pattern_type_t patType = cairo_pattern_get_type(pat);
+			double r=0, g=0, b=0, a=1;
+			if (patType == CAIRO_PATTERN_TYPE_SOLID) {
+				cairo_pattern_get_rgba(pat, &r, &g, &b, &a);
+			} else if (patType == CAIRO_PATTERN_TYPE_LINEAR || patType == CAIRO_PATTERN_TYPE_RADIAL) {
+				double offset;
+				cairo_pattern_get_color_stop_rgba(pat, 0, &offset, &r, &g, &b, &a);
+			}
+
+			uint8_t ur = static_cast<uint8_t>(std::clamp(r * 255.0, 0.0, 255.0));
+			uint8_t ug = static_cast<uint8_t>(std::clamp(g * 255.0, 0.0, 255.0));
+			uint8_t ub = static_cast<uint8_t>(std::clamp(b * 255.0, 0.0, 255.0));
+			uint8_t ua = static_cast<uint8_t>(std::clamp(a * 255.0, 0.0, 255.0));
+			uint32_t colOverride =
+				(ua << 24) | (ub << 16) | (ug << 8) | ur;
+
+			img->RasterizeSVG(w, h, colOverride, colOverride);
+		}
+
 		cairo_save(m_context);
 		cairo_translate(m_context, x, y);
-		cairo_scale(m_context, double(w) / double(img->GetWidth()), double(h) / double(img->GetHeight()));
+		cairo_scale(m_context,
+			double(w) / double(img->GetWidth()),
+			double(h) / double(img->GetHeight())
+		);
 		cairo_set_source_surface(m_context, img->m_surface, 0, 0);
 		cairo_paint(m_context);
 		cairo_restore(m_context);
@@ -830,87 +857,6 @@ namespace tui {
 		}
 
 		return pattern;
-    }
-
-    Image::~Image() {
-		if (m_surface) {
-			cairo_surface_destroy(m_surface);
-			m_surface = nullptr;
-		}
-	}
-
-	Image::Image(Image&& other) noexcept
-		: m_width(other.m_width), m_height(other.m_height), m_surface(other.m_surface)
-	{
-		other.m_surface = nullptr;
-		other.m_width = 0;
-		other.m_height = 0;
-	}
-
-	Image& Image::operator=(Image&& other) noexcept {
-		if (this != &other) {
-			if (m_surface) {
-				cairo_surface_destroy(m_surface);
-			}
-			m_surface = other.m_surface;
-			m_width = other.m_width;
-			m_height = other.m_height;
-			other.m_surface = nullptr;
-			other.m_width = 0;
-			other.m_height = 0;
-		}
-		return *this;
-	}
-
-	Image::Image(const std::string& fileName) {
-		m_surface = cairo_image_surface_create_from_png(fileName.c_str());
-		m_width = cairo_image_surface_get_width(m_surface);
-		m_height = cairo_image_surface_get_height(m_surface);
-	}
-
-    Image::Image(int width, int height)
-    {
-		m_width = width;
-		m_height = height;
-		m_surface = cairo_image_surface_create(
-			CAIRO_FORMAT_ARGB32,
-			width, height
-		);
-    }
-
-    void Image::SetPixels(const unsigned char *data, int stride)
-    {
-		if (!m_surface) return;
-
-		cairo_surface_flush(m_surface);
-
-		unsigned char *surfaceData = cairo_image_surface_get_data(m_surface);
-		int surfaceStride = cairo_image_surface_get_stride(m_surface);
-
-		for (int y = 0; y < m_height; y++) {
-			std::memcpy(
-				surfaceData + y * surfaceStride,
-				data + y * stride,
-				std::min(surfaceStride, stride)
-			);
-		}
-		cairo_surface_mark_dirty(m_surface);
-    }
-
-    void Image::Resize(int w, int h)
-    {
-		if (m_surface) {
-			cairo_surface_destroy(m_surface);
-			m_surface = nullptr;
-		}
-
-		m_width = w;
-		m_height = h;
-
-		m_surface = cairo_image_surface_create(
-			CAIRO_FORMAT_ARGB32,
-			w, h
-		);
     }
 
     bool Rectangle::HasPoint(int x, int y) {

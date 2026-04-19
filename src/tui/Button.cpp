@@ -5,8 +5,7 @@
 
 namespace tui {
 
-	Button::Button()
-		: Label()
+	Button::Button() : Label()
 	{
 		SetLocalBounds(Rectangle(0, 0, 50, 22));
 		m_alignment = Alignment::MiddleCenter;

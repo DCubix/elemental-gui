@@ -201,4 +201,16 @@ namespace tui::declarative {
         ValueChanged<int> onSelectionChanged;
     };
     WidgetDesc BasicList(const BasicListProps& props);
+
+    // --- ToolButton widget -------------------------------------
+    struct ToolButtonProps {
+        ElementProps base{};
+        tui::Image* icon{nullptr};
+        bool toggled{false};
+        VoidCallback onClick;
+        std::string group{""}; // For radio behavior
+    };
+    WidgetDesc ToolButton(const std::string& text, const ToolButtonProps& props);
+    WidgetDesc ToolRadioButton(const std::string& text, const ToolButtonProps& props);
+    WidgetDesc ToolToggleButton(const std::string& text, const ToolButtonProps& props);
 }

@@ -44,6 +44,19 @@ if (nlohmann_json_ADDED)
   target_include_directories(nlohmann_json INTERFACE ${nlohmann_json_SOURCE_DIR}/include)
 endif()
 
+# nanosvg
+CPMAddPackage(
+  NAME nanosvg
+  GITHUB_REPOSITORY memononen/nanosvg
+  GIT_TAG master
+  DOWNLOAD_ONLY YES
+)
+
+if (nanosvg_ADDED)
+  add_library(nanosvg INTERFACE IMPORTED)
+  target_include_directories(nanosvg INTERFACE ${nanosvg_SOURCE_DIR}/src)
+endif()
+
 # Cairo (uses meson upstream, so CPM falls back to system find_package)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 CPMFindPackage(NAME Cairo)
@@ -70,7 +83,7 @@ file(GLOB_RECURSE TUI_SRC
 
 add_library(${PROJECT_NAME} ${TUI_SRC})
 target_include_directories(${PROJECT_NAME} PUBLIC ${CAIRO_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} PUBLIC SDL3::SDL3 ${CAIRO_LIBRARIES} nlohmann_json OpenGL::GL)
+target_link_libraries(${PROJECT_NAME} PUBLIC SDL3::SDL3 ${CAIRO_LIBRARIES} nlohmann_json nanosvg OpenGL::GL)
 
 # Re-embed resources before each build
 add_custom_target(embed_resources ALL

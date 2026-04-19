@@ -4,6 +4,8 @@
 #include "cairo/cairo.h"
 #include <nlohmann/json.hpp>
 
+#include "Image.h"
+
 #include <functional>
 #include <stack>
 #include <optional>
@@ -62,32 +64,6 @@ namespace tui {
         static Color FromHSLA(float h, float s, float l, float a = 1.0f);
         static Color FromHSL(float h, float s, float l);
     };
-
-	class Image {
-		friend class Graphics;
-	public:
-		Image() = default;
-		~Image();
-
-		Image(const Image&) = delete;
-		Image& operator=(const Image&) = delete;
-
-		Image(Image&& other) noexcept;
-		Image& operator=(Image&& other) noexcept;
-
-		Image(const std::string& fileName);
-		Image(int width, int height);
-
-		int GetWidth() const { return m_width; }
-		int GetHeight() const { return m_height; }
-
-		void SetPixels(const unsigned char* data, int stride);
-		void Resize(int w, int h);
-
-	private:
-		int m_width{0}, m_height{0};
-		cairo_surface_t *m_surface{nullptr};
-	};
 
 	enum class FontStyle {
 		Normal = 0,

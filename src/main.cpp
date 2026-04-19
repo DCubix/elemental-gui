@@ -107,7 +107,14 @@ struct CubeViewProps {
 
 class App : public ApplicationAdapter {
 public:
+	tui::Image icPen, icSave, icCopy, icSettings;
+
 	void OnCreate(Application& app) {
+		icPen = tui::Image("pen.svg");
+		icSave = tui::Image("save.svg");
+		icCopy = tui::Image("copy.svg");
+		icSettings = tui::Image("settings.svg");
+
 		auto gui = decl::SplitView({
 			.direction = Direction::Vertical,
 			.splitPosition = 200,
@@ -130,6 +137,25 @@ public:
 					app.FindByTag<Slider>("rot_y")->SetValue(0.0f);
 					app.FindByTag<Slider>("rot_z")->SetValue(0.0f);
 				}}),
+				decl::Row({
+					.base = { .autoSize = true },
+					.gap = 4,
+					.align = FlexAlign::Start,
+					.justify = FlexJustify::Start
+				}, {
+					decl::ToolButton("", { .base = { .flexGrow = 1.0f, .bounds = Rectangle::FromHeight(32) }, .icon = &icPen, .onClick = []() {
+						printf("Pen clicked\n");
+					}}),
+					decl::ToolButton("", { .base = { .flexGrow = 1.0f, .bounds = Rectangle::FromHeight(32) }, .icon = &icCopy, .onClick = []() {
+						printf("Copy clicked\n");
+					}}),
+					decl::ToolButton("", { .base = { .flexGrow = 1.0f, .bounds = Rectangle::FromHeight(32) }, .icon = &icSave, .onClick = []() {
+						printf("Save clicked\n");
+					}}),
+					decl::ToolButton("", { .base = { .flexGrow = 1.0f, .bounds = Rectangle::FromHeight(32) }, .icon = &icSettings, .onClick = []() {
+						printf("Settings clicked\n");
+					}}),
+				}),
 				decl::RadioButton("Option 1", { .group = "options", .onChanged = [](bool checked) {
 					if (checked) printf("Option 1 selected\n");
 				}}),

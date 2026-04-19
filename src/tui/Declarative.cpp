@@ -11,6 +11,7 @@
 #include "Menu.h"
 #include "RadioButton.h"
 #include "SplitView.h"
+#include "ToolButton.h"
 
 namespace tui::declarative {
 
@@ -261,6 +262,49 @@ namespace tui::declarative {
             list.SetSelectedIndex(props.selectedIndex);
             list.SetOnSelectionChanged(props.onSelectionChanged);
             return &list;
+        };
+    }
+    
+    WidgetDesc ToolButton(const std::string &text, const ToolButtonProps &props)
+    {
+        return [text, props](Application& app) -> Element* {
+            auto& button = app.Create<tui::ToolButton>();
+            ElementSetup(button, props.base);
+            button.SetText(text);
+            button.SetIcon(props.icon);
+            button.SetMode(tui::ToolButton::Mode::Normal);
+            button.SetGroup(props.group);
+            button.SetOnClick(props.onClick);
+            return &button;
+        };
+    }
+
+    WidgetDesc ToolRadioButton(const std::string &text, const ToolButtonProps &props)
+    {
+        return [text, props](Application& app) -> Element* {
+            auto& button = app.Create<tui::ToolButton>();
+            ElementSetup(button, props.base);
+            button.SetText(text);
+            button.SetIcon(props.icon);
+            button.SetMode(tui::ToolButton::Mode::Radio);
+            button.SetGroup(props.group);
+            button.SetToggled(props.toggled);
+            button.SetOnClick(props.onClick);
+            return &button;
+        };
+    }
+
+    WidgetDesc ToolToggleButton(const std::string &text, const ToolButtonProps &props)
+    {
+        return [text, props](Application& app) -> Element* {
+            auto& button = app.Create<tui::ToolButton>();
+            ElementSetup(button, props.base);
+            button.SetText(text);
+            button.SetIcon(props.icon);
+            button.SetMode(tui::ToolButton::Mode::Toggle);
+            button.SetToggled(props.toggled);
+            button.SetOnClick(props.onClick);
+            return &button;
         };
     }
 }

@@ -473,5 +473,26 @@
                 "fontWeight": "bold"
             }
         }
+    },
+    "ToolButton": {
+        "padding": {
+            "horizontal": 8.0,
+            "vertical": 8.0
+        },
+        "hover": {
+            "background": {
+                "color": "#FF24242B"
+            }
+        },
+        "click": {
+            "border": {
+                "radius": 6.0,
+                "color": "#FF2E4780",
+                "width": 1.0
+            },
+            "background": {
+                "color": "#FF121217"
+            }
+        }
     }
 }
