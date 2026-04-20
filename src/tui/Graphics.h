@@ -109,8 +109,12 @@ namespace tui {
 
 		void DrawSVG(Json svgStyle, int x, int y, int w, int h);
 
-		void ClipPush(int x, int y, int w, int h);
+		void ClipPushRect(int x, int y, int w, int h);
+		void ClipPushRoundRect(int x, int y, int w, int h, float radius);
+		void ClipPushPath(std::function<void()> pathFunc);
 		void ClipPop();
+
+		void GetStyledPath(Json style, int x, int y, int w, int h);
 
 		void BeginPath();
 		void AddPathRect(int x, int y, int w, int h);
@@ -140,7 +144,7 @@ namespace tui {
 
 		cairo_t* Ctx() const { return m_context ? m_context : m_measureContext; }
 
-		std::stack<Rectangle> m_clipRects;
+		uint32_t m_clipDepth{0};
 		std::vector<PointI> m_pathPoints;
 
 		// Parses a JSON paint object ({"color": [...]} or {"gradient": {...}})

@@ -25,7 +25,7 @@ namespace tui {
             b.w - (int)pad.GetHorizontal(),
             b.h - (int)pad.GetVertical()
         };
-        g.ClipPush(padded.x, padded.y, padded.w, padded.h);
+        g.ClipPushRect(padded.x, padded.y, padded.w, padded.h);
         for (auto* item : m_items) {
             if (item == nullptr) continue;
             if (item->IsSeparator()) {

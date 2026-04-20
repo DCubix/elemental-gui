@@ -12,6 +12,7 @@
 #include "RadioButton.h"
 #include "SplitView.h"
 #include "ToolButton.h"
+#include "ProgressBar.h"
 
 namespace tui::declarative {
 
@@ -305,6 +306,19 @@ namespace tui::declarative {
             button.SetToggled(props.toggled);
             button.SetOnClick(props.onClick);
             return &button;
+        };
+    }
+    
+    WidgetDesc ProgressBar(const ProgressBarProps &props)
+    {
+        return [props](Application& app) -> Element* {
+            auto& progressBar = app.Create<tui::ProgressBar>();
+            ElementSetup(progressBar, props.base);
+            progressBar.SetRange(props.range.minimum, props.range.maximum);
+            progressBar.SetValue(props.value);
+            progressBar.SetIndeterminate(props.indeterminate);
+            progressBar.SetDirection(props.direction);
+            return &progressBar;
         };
     }
 }

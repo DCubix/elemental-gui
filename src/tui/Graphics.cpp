@@ -119,6 +119,28 @@ namespace tui {
 		cairo_restore(m_context);
 	}
 
+	static void ParseColor(Json style, double& r, double& g, double& b, double& a) {
+		if (style.is_array()) {
+			r = style[0].get<double>();
+			g = style[1].get<double>();
+			b = style[2].get<double>();
+			if (style.size() > 3)
+				a = style[3].get<double>();
+			else
+				a = 1.0;
+		} else if (style.is_string()) {
+			std::string hex = style.get<std::string>();
+			tui::Color col = Color::FromHex(hex);
+			r = col.r;
+			g = col.g;
+			b = col.b;
+			a = col.a;
+		} else {
+			r = g = b = 0.0;
+			a = 1.0;
+		}
+	}
+
 	cairo_pattern_t* Graphics::ApplyPaint(Json paint, int x, int y, int w, int h) {
 		cairo_pattern_t *pat = nullptr;
 		if (paint["color"].is_array()) {
@@ -131,9 +153,9 @@ namespace tui {
 					col[3].get<double>()
 			);
 		} else if (paint["color"].is_string()) {
-			std::string hex = paint["color"].get<std::string>();
-			tui::Color col = Color::FromHex(hex);
-			cairo_set_source_rgba(m_context, col.r, col.g, col.b, col.a);
+			double r, g, b, a;
+			ParseColor(paint["color"], r, g, b, a);
+			cairo_set_source_rgba(m_context, r, g, b, a);
 		} else if (paint["linearGradient"].is_object()) {
 			Json grad = paint["linearGradient"];
 			Json startPos = grad.value("start", Json::array({ 0.0, 0.0 }));
@@ -146,20 +168,34 @@ namespace tui {
 					endPos[1].get<double>() * h + y
 			);
 
+			std::vector<std::tuple<double, double, double, double>> colors;
+			std::vector<double> stops;
+
 			if (grad["colors"].is_array()) {
 				for (auto&& col : grad["colors"]) {
-					Json color = col.value("color", Json::array({ 0.0, 0.0, 0.0, 1.0 }));
-					Json offset = col.value("offset", 0.0);
+					double r, g, b, a;
+					ParseColor(col, r, g, b, a);
+					colors.emplace_back(r, g, b, a);
+				}
+			}
+
+			if (grad["stops"].is_array()) {
+				for (auto&& stop : grad["stops"]) {
+					stops.push_back(stop.get<double>());
+				}
+			}
+
+			if (colors.size() == stops.size() && !colors.empty()) {
+				for (size_t i = 0; i < colors.size(); ++i) {
+					const auto& [r, g, b, a] = colors[i];
 					cairo_pattern_add_color_stop_rgba(
 							pat,
-							offset.get<double>(),
-							color[0].get<double>(),
-							color[1].get<double>(),
-							color[2].get<double>(),
-							color[3].get<double>()
+							stops[i],
+							r, g, b, a
 					);
 				}
 			}
+
 			cairo_set_source(m_context, pat);
 		} else if (paint["radialGradient"].is_object()) {
 			Json grad = paint["radialGradient"];
@@ -175,20 +211,34 @@ namespace tui {
 					radius * std::max(w, h)
 			);
 
+			std::vector<std::tuple<double, double, double, double>> colors;
+			std::vector<double> stops;
+
 			if (grad["colors"].is_array()) {
 				for (auto&& col : grad["colors"]) {
-					Json color = col.value("color", Json::array({ 0.0, 0.0, 0.0, 1.0 }));
-					Json offset = col.value("offset", 0.0);
+					double r, g, b, a;
+					ParseColor(col, r, g, b, a);
+					colors.emplace_back(r, g, b, a);
+				}
+			}
+
+			if (grad["stops"].is_array()) {
+				for (auto&& stop : grad["stops"]) {
+					stops.push_back(stop.get<double>());
+				}
+			}
+
+			if (colors.size() == stops.size() && !colors.empty()) {
+				for (size_t i = 0; i < colors.size(); ++i) {
+					const auto& [r, g, b, a] = colors[i];
 					cairo_pattern_add_color_stop_rgba(
 							pat,
-							offset.get<double>(),
-							color[0].get<double>(),
-							color[1].get<double>(),
-							color[2].get<double>(),
-							color[3].get<double>()
+							stops[i],
+							r, g, b, a
 					);
 				}
 			}
+
 			cairo_set_source(m_context, pat);
 		}
 		return pat;
@@ -682,26 +732,41 @@ namespace tui {
 		cairo_restore(m_context);
 	}
 
-    void Graphics::ClipPush(int x, int y, int w, int h) {
-		cairo_save(m_context);
-		cairo_rectangle(m_context, x, y, w, h);
-		cairo_clip(m_context);
-		m_clipRects.push(Rectangle(x, y, w, h));
+    void Graphics::ClipPushRect(int x, int y, int w, int h) {
+		ClipPushPath([&]() { cairo_rectangle(m_context, x, y, w, h); });
 	}
 
-	void Graphics::ClipPop() {
-		if (!m_clipRects.empty()) {
-			Rectangle b = m_clipRects.top();
-			m_clipRects.pop();
-			cairo_rectangle(m_context, b.x, b.y, b.w, b.h);
-			cairo_clip(m_context);
-		} else {
-			cairo_reset_clip(m_context);
-		}
+    void Graphics::ClipPushRoundRect(int x, int y, int w, int h, float radius)
+    {
+		ClipPushPath([&]() { RoundRect(x, y, w, h, radius); });
+    }
+
+    void Graphics::ClipPushPath(std::function<void()> pathFunc)
+    {
+		if (!m_context || !pathFunc) return;
+		cairo_save(m_context);
+		pathFunc();
+		cairo_clip(m_context);
+		m_clipDepth++;
+    }
+
+    void Graphics::ClipPop() {
+		if (m_clipDepth == 0) return;
+		m_clipDepth--;
 		cairo_restore(m_context);
 	}
 
-	void Graphics::BeginPath() {
+    void Graphics::GetStyledPath(Json style, int x, int y, int w, int h)
+    {
+		double borderRadius = 0.0;
+		if (style["border"].is_object()) {
+			Json border = style["border"];
+			borderRadius = border.value("radius", 0.0);
+		}
+		RoundRect(x, y, w-1, h-1, borderRadius);
+    }
+
+    void Graphics::BeginPath() {
 		m_pathPoints.clear();
 	}
 

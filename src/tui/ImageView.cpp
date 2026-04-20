@@ -47,7 +47,7 @@ namespace tui {
 			}
 		}
 
-		g.ClipPush(c.x, c.y, c.w, c.h);
+		g.ClipPushRect(c.x, c.y, c.w, c.h);
 		g.DrawImage(m_image.get(), imgRect.x, imgRect.y, imgRect.w, imgRect.h);
 		g.ClipPop();
 	}

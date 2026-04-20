@@ -71,7 +71,7 @@ namespace tui {
 				SolveScrollHorizontal();
 			}
 
-			g.ClipPush(c.x, c.y, c.w, c.h);
+			g.ClipPushRect(c.x, c.y, c.w, c.h);
 			m_element->OnDraw(g);
 			g.ClipPop();
 		}

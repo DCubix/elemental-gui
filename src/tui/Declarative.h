@@ -213,4 +213,14 @@ namespace tui::declarative {
     WidgetDesc ToolButton(const std::string& text, const ToolButtonProps& props);
     WidgetDesc ToolRadioButton(const std::string& text, const ToolButtonProps& props);
     WidgetDesc ToolToggleButton(const std::string& text, const ToolButtonProps& props);
+
+    // --- ProgressBar widget -------------------------------------
+    struct ProgressBarProps {
+        ElementProps base{};
+        Range range{0.0f, 1.0f};
+        float value{0.0f};
+        bool indeterminate{false};
+        Direction direction{Direction::Horizontal};
+    };
+    WidgetDesc ProgressBar(const ProgressBarProps& props);
 }

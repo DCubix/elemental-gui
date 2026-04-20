@@ -143,19 +143,21 @@ public:
 					.align = FlexAlign::Start,
 					.justify = FlexJustify::Start
 				}, {
-					decl::ToolButton("", { .base = { .flexGrow = 1.0f, .bounds = Rectangle::FromHeight(32) }, .icon = &icPen, .onClick = []() {
+					decl::ToolRadioButton("", { .base = { .flexGrow = 1.0f, .bounds = Rectangle::FromHeight(32) }, .icon = &icPen, .onClick = []() {
 						printf("Pen clicked\n");
 					}}),
-					decl::ToolButton("", { .base = { .flexGrow = 1.0f, .bounds = Rectangle::FromHeight(32) }, .icon = &icCopy, .onClick = []() {
+					decl::ToolRadioButton("", { .base = { .flexGrow = 1.0f, .bounds = Rectangle::FromHeight(32) }, .icon = &icCopy, .onClick = []() {
 						printf("Copy clicked\n");
 					}}),
-					decl::ToolButton("", { .base = { .flexGrow = 1.0f, .bounds = Rectangle::FromHeight(32) }, .icon = &icSave, .onClick = []() {
+					decl::ToolRadioButton("", { .base = { .flexGrow = 1.0f, .bounds = Rectangle::FromHeight(32) }, .icon = &icSave, .onClick = []() {
 						printf("Save clicked\n");
 					}}),
-					decl::ToolButton("", { .base = { .flexGrow = 1.0f, .bounds = Rectangle::FromHeight(32) }, .icon = &icSettings, .onClick = []() {
+					decl::ToolRadioButton("", { .base = { .flexGrow = 1.0f, .bounds = Rectangle::FromHeight(32) }, .icon = &icSettings, .onClick = []() {
 						printf("Settings clicked\n");
 					}}),
 				}),
+				decl::ProgressBar({ .base = { .bounds = Rectangle(0, 0, 0, 20) }, .range = { 0.0f, 100.0f }, .value = 50.0f, .indeterminate = false }),
+				decl::ProgressBar({ .base = { .bounds = Rectangle(0, 0, 0, 20) }, .indeterminate = true }),
 				decl::RadioButton("Option 1", { .group = "options", .onChanged = [](bool checked) {
 					if (checked) printf("Option 1 selected\n");
 				}}),

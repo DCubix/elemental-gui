@@ -22,7 +22,7 @@ namespace tui {
 
 		g.Save();
 		g.StyledTextBegin(textStyle);
-		g.ClipPush(c.x, c.y, c.w, c.h);
+		g.ClipPushRect(c.x, c.y, c.w, c.h);
 
 		int iconW = m_icon ? m_icon->GetWidth() : 0;
 		int iconH = m_icon ? m_icon->GetHeight() : 0;

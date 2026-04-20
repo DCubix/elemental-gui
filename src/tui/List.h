@@ -60,7 +60,7 @@ namespace tui {
 
             int scrollOffset = static_cast<int>(m_scrollbar->GetValue());
 
-            g.ClipPush(padB.x, padB.y, contentWidth, padB.h);
+            g.ClipPushRect(padB.x, padB.y, contentWidth, padB.h);
 
             // Draw items
             for (size_t i = 0; i < m_items.size(); i++) {

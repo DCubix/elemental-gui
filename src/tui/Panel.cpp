@@ -46,7 +46,7 @@ namespace tui {
 			c.w - pad.GetHorizontal(),
 			c.h - pad.GetVertical()
 		};
-		g.ClipPush(padded.x, padded.y, padded.w, padded.h);
+		g.ClipPushRect(padded.x, padded.y, padded.w, padded.h);
 		Container::OnDraw(g);
 		g.ClipPop();
 	}

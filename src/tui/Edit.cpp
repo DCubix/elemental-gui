@@ -73,7 +73,7 @@ namespace tui {
 
 		m_charRects.clear();
 
-		g.ClipPush(c.x+4, c.y+4, c.w-8, c.h-8);
+		g.ClipPushRect(c.x+4, c.y+4, c.w-8, c.h-8);
 		int index = 0;
 		for (Char c : m_text) {
 			if (c.c == '\n') {
