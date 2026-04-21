@@ -41,10 +41,10 @@ namespace tui {
 		EdgeInsets pad = m_layout ? m_layout->GetPadding() : EdgeInsets();
 		Rectangle c = GetIntersectedBounds();
 		Rectangle padded{
-			c.x + pad.left,
-			c.y + pad.top,
-			c.w - pad.GetHorizontal(),
-			c.h - pad.GetVertical()
+			static_cast<int>(c.x + pad.left),
+			static_cast<int>(c.y + pad.top),
+			static_cast<int>(c.w - pad.GetHorizontal()),
+			static_cast<int>(c.h - pad.GetVertical())
 		};
 		g.ClipPushRect(padded.x, padded.y, padded.w, padded.h);
 		Container::OnDraw(g);

@@ -8,6 +8,8 @@ struct NSVGimage;
 struct NSVGrasterizer;
 
 namespace tui {
+    struct Color;
+    class Graphics;
 
     class Image {
 		friend class Graphics;
@@ -32,6 +34,9 @@ namespace tui {
 		int GetWidth() const { return m_width; }
 		int GetHeight() const { return m_height; }
         Type GetType() const { return m_type; }
+
+        Color GetPixel(int x, int y) const;
+        void SetPixel(int x, int y, const Color& color);
 
 		void SetPixels(const unsigned char* data, int stride);
 		void Resize(int w, int h);

@@ -5,10 +5,10 @@ namespace tui {
 
     Rectangle EdgeInsets::Apply(const Rectangle& rect) const {
     	return Rectangle{
-    		rect.x + left,
-    		rect.y + top,
-    		rect.w - GetHorizontal(),
-    		rect.h - GetVertical()
+    		static_cast<int>(rect.x + left),
+    		static_cast<int>(rect.y + top),
+    		static_cast<int>(rect.w - GetHorizontal()),
+    		static_cast<int>(rect.h - GetVertical())
     	};
     }
 

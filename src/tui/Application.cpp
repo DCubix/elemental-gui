@@ -1,6 +1,5 @@
 #include "Application.h"
 
-#include "Panel.h"
 #include "FlexLayout.h"
 
 #include <algorithm>
@@ -55,7 +54,7 @@ namespace tui {
 			return 1;
 		}
 
-		m_graphics = Graphics();
+		m_graphics = Graphics::CreateGraphics();
 		
 		ResizeScreenBuffer();
 
@@ -202,7 +201,7 @@ namespace tui {
 	}
 
 	void Application::Redraw() {
-		m_graphics.BeginDrawing(m_width, m_height);
+		m_graphics.SetupDrawing(m_width, m_height);
 
 		if (m_root) {
 			Json windowStyle = m_root->GetStyle()["Window"];
@@ -231,8 +230,6 @@ namespace tui {
 		SDL_UpdateTexture(m_buffer, nullptr, data, stride);
 		SDL_RenderTexture(m_renderer, m_buffer, nullptr, nullptr);
 		SDL_RenderPresent(m_renderer);
-
-		m_graphics.EndDrawing();
 	}
 
 	void Application::RequestRedrawAll() {

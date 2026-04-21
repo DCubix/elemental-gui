@@ -1,18 +1,13 @@
 #pragma once
 
+#include <SDL3/SDL.h>
 #include <string>
-#include <cstdint>
 #include <vector>
 #include <memory>
-
-#include "SDL3/SDL.h"
 
 #include "Graphics.h"
 #include "EventSystem.h"
 #include "Element.h"
-
-#include "Utils.h"
-using namespace tui::utils;
 
 namespace tui {
 	using ElementPtr = std::unique_ptr<Element>;

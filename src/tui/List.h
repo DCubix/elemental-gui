@@ -31,7 +31,7 @@ namespace tui {
 
             // Lazy-init the scrollbar
             if (m_scrollbar == nullptr) {
-                m_scrollbar = &GetApp()->Create<Scrollbar>();
+                m_scrollbar = &GetApp()->template Create<Scrollbar>();
                 m_scrollbar->m_parent = this;
                 m_scrollbar->SetDirection(Direction::Vertical);
                 m_scrollbar->SetStep(1);
@@ -209,9 +209,9 @@ namespace tui {
 
             return {
                 padB.x,
-                padB.y + index * (itemHeight + itemPad.GetVertical()) - scrollOffset,
+                static_cast<int>(padB.y + index * (itemHeight + itemPad.GetVertical()) - scrollOffset),
                 contentWidth,
-                itemHeight + itemPad.GetVertical()
+                static_cast<int>(itemHeight + itemPad.GetVertical())
             };
         }
     };

@@ -802,13 +802,29 @@ namespace tui {
 		cairo_restore(Ctx());
 	}
 
-    void Graphics::BeginDrawing(uint width, uint height)
+    void Graphics::SetupDrawing(uint width, uint height)
     {
-		m_surface = cairo_image_surface_create(
-			CAIRO_FORMAT_ARGB32,
-			width, height
-		);
-		m_context = cairo_create(m_surface);
+		if (m_isImageGraphics) {
+			return;
+		}
+		
+		if (!m_surface) {
+			m_surface = cairo_image_surface_create(
+				CAIRO_FORMAT_ARGB32,
+				width, height
+			);
+			m_context = cairo_create(m_surface);
+		} else if (
+			cairo_image_surface_get_width(m_surface) != width ||
+			cairo_image_surface_get_height(m_surface) != height
+		) {
+			cairo_surface_destroy(m_surface);
+			m_surface = cairo_image_surface_create(
+				CAIRO_FORMAT_ARGB32,
+				width, height
+			);
+			m_context = cairo_create(m_surface);
+		}
     }
 
     void Graphics::Flush()
@@ -816,12 +832,24 @@ namespace tui {
 		cairo_surface_flush(m_surface);
     }
 
-    void Graphics::EndDrawing()
-    {
-		cairo_destroy(m_context);
-		cairo_surface_destroy(m_surface);
-		m_context = nullptr;
-		m_surface = nullptr;
+    Graphics Graphics::CreateGraphics()
+	{
+		Graphics graphics{};
+		graphics.SetupDrawing(1, 1);
+		graphics.Flush();
+		return graphics;
+    }
+
+    Graphics Graphics::CreateGraphics(Image& image)
+	{
+		if (!image.m_surface) {
+			return Graphics{};
+		}
+		Graphics graphics;
+		graphics.m_isImageGraphics = true;
+		graphics.m_surface = image.m_surface;
+		graphics.m_context = cairo_create(graphics.m_surface);
+		return graphics;
     }
 
     cairo_pattern_t* Graphics::CreateRoundShadowPattern(float elevation, int x, int y, int w, int h, float radius)

@@ -6,9 +6,7 @@
 #include "Image.h"
 
 #include <functional>
-#include <stack>
 #include <optional>
-#include <concepts>
 #include <vector>
 
 #define PI 3.141592654
@@ -77,8 +75,6 @@ namespace tui {
 	class Graphics {
 		friend class Application;
 	public:
-		Graphics();
-
 		void Clear(float r, float g, float b, float a = 1.0f);
 
 		void LineWidth(float w = 1.0f);
@@ -127,16 +123,21 @@ namespace tui {
 		cairo_t* GetCairoContext() const { return Ctx(); }
 		cairo_surface_t* GetCairoSurface() const { return m_surface; }
 
-		void BeginDrawing(uint width, uint height);
+		void SetupDrawing(uint width, uint height);
 		void Flush();
-		void EndDrawing();
+
+		static Graphics CreateGraphics();
+		static Graphics CreateGraphics(Image& image);
 
 	private:
-		cairo_surface_t *m_surface;
-		cairo_t *m_context;
+		Graphics();
 
-		cairo_surface_t *m_measureSurface;
-		cairo_t *m_measureContext;
+		cairo_surface_t *m_surface{nullptr};
+		cairo_t *m_context{nullptr};
+		bool m_isImageGraphics{false};
+
+		cairo_surface_t *m_measureSurface{nullptr};
+		cairo_t *m_measureContext{nullptr};
 
 		cairo_t* Ctx() const { return m_context ? m_context : m_measureContext; }
 

@@ -7,6 +7,8 @@
 #include "nanosvg.h"
 #include "nanosvgrast.h"
 
+#include "Graphics.h"
+
 namespace tui {
     Image::~Image() {
 		if (m_surface) {
@@ -105,6 +107,34 @@ namespace tui {
 			CAIRO_FORMAT_ARGB32,
 			width, height
 		);
+    }
+
+    Color Image::GetPixel(int x, int y) const
+    {
+        cairo_surface_flush(m_surface);
+        unsigned char* data = cairo_image_surface_get_data(m_surface);
+        int stride = cairo_image_surface_get_stride(m_surface);
+        // Assuming ARGB format (4 bytes per pixel)
+        unsigned char* pixel = data + y * stride + x * 4;
+        float b = pixel[0] / 255.0f;
+        float g = pixel[1] / 255.0f;
+        float r = pixel[2] / 255.0f;
+        float a = pixel[3] / 255.0f;
+        return Color(r, g, b, a);
+    }
+
+    void Image::SetPixel(int x, int y, const Color& color)
+    {
+        cairo_surface_flush(m_surface);
+        unsigned char* data = cairo_image_surface_get_data(m_surface);
+        int stride = cairo_image_surface_get_stride(m_surface);
+        // Assuming ARGB format (4 bytes per pixel)
+        unsigned char* pixel = data + y * stride + x * 4;
+        pixel[0] = static_cast<unsigned char>(color.b * 255.0f);
+        pixel[1] = static_cast<unsigned char>(color.g * 255.0f);
+        pixel[2] = static_cast<unsigned char>(color.r * 255.0f);
+        pixel[3] = static_cast<unsigned char>(color.a * 255.0f);
+        cairo_surface_mark_dirty(m_surface);
     }
 
     void Image::SetPixels(const unsigned char *data, int stride)
