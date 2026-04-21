@@ -1,5 +1,7 @@
 #include "Graphics.h"
 
+#include <cairo/cairo.h>
+
 #include <cctype>
 #include <cmath>
 #include <algorithm>
@@ -151,6 +153,7 @@ namespace tui {
 					endPos[0].get<double>() * w + x,
 					endPos[1].get<double>() * h + y
 			);
+			cairo_pattern_set_dither(pat, CAIRO_DITHER_BEST);
 
 			std::vector<std::tuple<double, double, double, double>> colors;
 			std::vector<double> stops;
@@ -194,6 +197,7 @@ namespace tui {
 					center[1].get<double>() * h + y,
 					radius * std::max(w, h)
 			);
+			cairo_pattern_set_dither(pat, CAIRO_DITHER_BEST);
 
 			std::vector<std::tuple<double, double, double, double>> colors;
 			std::vector<double> stops;
