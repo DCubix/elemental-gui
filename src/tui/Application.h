@@ -97,6 +97,7 @@ namespace tui {
 	private:
 		SDL_Window *m_window;
 		SDL_Renderer *m_renderer;
+		SDL_Texture *m_buffer;
 
 		Graphics m_graphics;
 		EventSystem m_eventSystem;
@@ -112,6 +113,8 @@ namespace tui {
 
 		void Redraw();
 		void RequestRedrawAll();
+
+		void ResizeScreenBuffer();
 
 		template <DerivedFromEvent E, typename... Args>
 		void DispatchEvent(Args&&... args) {

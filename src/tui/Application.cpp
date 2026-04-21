@@ -55,8 +55,9 @@ namespace tui {
 			return 1;
 		}
 
-		m_graphics = Graphics(m_renderer);
-		m_graphics.SetViewport(m_width, m_height);
+		m_graphics = Graphics();
+		
+		ResizeScreenBuffer();
 
 		adapter->OnCreate(*this);
 
@@ -78,7 +79,7 @@ namespace tui {
 							m_width = uint(w);
 							m_height = uint(h);
 							RequestRedrawAll();
-							m_graphics.SetViewport(m_width, m_height);
+							ResizeScreenBuffer();
 					} break;
 					case SDL_EVENT_MOUSE_BUTTON_DOWN: {
 						DispatchEvent<MouseEvent>(
@@ -201,27 +202,37 @@ namespace tui {
 	}
 
 	void Application::Redraw() {
-		m_graphics.Draw([&](Graphics& g) {
-			if (m_root) {
-				Json windowStyle = m_root->GetStyle()["Window"];
-				m_graphics.StyledRect(0, 0, m_width, m_height, windowStyle);
-			}
+		m_graphics.BeginDrawing(m_width, m_height);
 
-			for (size_t i = 0; i < m_elements.size(); i++) {
-				if (m_elements[i]->GetParent() != nullptr) continue;
-				if (!m_elements[i]->IsVisible()) continue;
-				if (m_elements[i]->IsDirty()) {
-					m_elements[i]->OnDraw(g);
-					m_elements[i]->m_dirty = false;
-				}
+		if (m_root) {
+			Json windowStyle = m_root->GetStyle()["Window"];
+			m_graphics.StyledRect(0, 0, m_width, m_height, windowStyle);
+		}
+
+		for (size_t i = 0; i < m_elements.size(); i++) {
+			if (m_elements[i]->GetParent() != nullptr) continue;
+			if (!m_elements[i]->IsVisible()) continue;
+			if (m_elements[i]->IsDirty()) {
+				m_elements[i]->OnDraw(m_graphics);
+				m_elements[i]->m_dirty = false;
 			}
-			// Draw popups on top
-			for (auto* popup : m_popups) {
-				if (!popup->IsVisible()) continue;
-				popup->OnDraw(g);
-				popup->m_dirty = false;
-			}
-		});
+		}
+		// Draw popups on top
+		for (auto* popup : m_popups) {
+			if (!popup->IsVisible()) continue;
+			popup->OnDraw(m_graphics);
+			popup->m_dirty = false;
+		}
+		m_graphics.Flush();
+
+		unsigned char* data = cairo_image_surface_get_data(m_graphics.GetCairoSurface());
+		int stride = cairo_image_surface_get_stride(m_graphics.GetCairoSurface());
+
+		SDL_UpdateTexture(m_buffer, nullptr, data, stride);
+		SDL_RenderTexture(m_renderer, m_buffer, nullptr, nullptr);
+		SDL_RenderPresent(m_renderer);
+
+		m_graphics.EndDrawing();
 	}
 
 	void Application::RequestRedrawAll() {
@@ -230,7 +241,21 @@ namespace tui {
 		}
 	}
 
-	void Application::ShowPopup(Element *popup) {
+    void Application::ResizeScreenBuffer()
+    {
+		if (m_buffer != nullptr) {
+			SDL_DestroyTexture(m_buffer);
+		}
+		m_buffer = SDL_CreateTexture(
+					m_renderer,
+					SDL_PIXELFORMAT_ARGB8888,
+					SDL_TEXTUREACCESS_STREAMING,
+					m_width, m_height
+		);
+		SDL_SetTextureScaleMode(m_buffer, SDL_SCALEMODE_NEAREST);
+    }
+
+    void Application::ShowPopup(Element *popup) {
 		// Avoid duplicates
 		for (auto* p : m_popups) {
 			if (p == popup) return;

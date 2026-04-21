@@ -1,6 +1,5 @@
 #pragma once
 
-#include "SDL3/SDL.h"
 #include "cairo/cairo.h"
 #include <nlohmann/json.hpp>
 
@@ -78,13 +77,9 @@ namespace tui {
 	class Graphics {
 		friend class Application;
 	public:
-		Graphics() = default;
-		Graphics(SDL_Renderer* ren);
+		Graphics();
 
-		void SetViewport(int w, int h);
-		int GetWidth() const { return m_width; }
-		int GetHeight() const { return m_height; }
-		void Clear(int r = 0, int g = 0, int b = 0);
+		void Clear(float r, float g, float b, float a = 1.0f);
 
 		void LineWidth(float w = 1.0f);
 		void Color(float r, float g, float b, float a = 1.0f);
@@ -130,14 +125,15 @@ namespace tui {
 		void Restore();
 
 		cairo_t* GetCairoContext() const { return Ctx(); }
+		cairo_surface_t* GetCairoSurface() const { return m_surface; }
+
+		void BeginDrawing(uint width, uint height);
+		void Flush();
+		void EndDrawing();
 
 	private:
-		SDL_Renderer *m_renderer;
-
-		SDL_Texture *m_buffer;
 		cairo_surface_t *m_surface;
 		cairo_t *m_context;
-		int m_width, m_height;
 
 		cairo_surface_t *m_measureSurface;
 		cairo_t *m_measureContext;
@@ -151,9 +147,6 @@ namespace tui {
 		// and sets it as the cairo source. Returns a pattern that must be destroyed
 		// by the caller, or nullptr for solid colors.
 		cairo_pattern_t* ApplyPaint(Json paint, int x = 0, int y = 0, int w = 0, int h = 0);
-		
-		void Draw(DrawFunction func);
-
 		cairo_pattern_t* CreateRoundShadowPattern(float elevation, int x, int y, int w, int h, float radius);
 	};
 }

@@ -10,31 +10,15 @@ constexpr int SHAPE_SIZE = 64;
 
 namespace tui {
 	
-	Graphics::Graphics(SDL_Renderer* ren)
-		: m_renderer(ren), m_buffer(nullptr), m_surface(nullptr), m_context(nullptr)
+	Graphics::Graphics()
 	{
 		m_measureSurface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 1, 1);
 		m_measureContext = cairo_create(m_measureSurface);
 	}
 
-    void Graphics::SetViewport(int w, int h) {
-		if (m_buffer != nullptr) {
-			SDL_DestroyTexture(m_buffer);
-		}
-		m_buffer = SDL_CreateTexture(
-					m_renderer,
-					SDL_PIXELFORMAT_ARGB8888,
-					SDL_TEXTUREACCESS_STREAMING,
-					w, h
-		);
-		SDL_SetTextureScaleMode(m_buffer, SDL_SCALEMODE_NEAREST);
-		m_width = w;
-		m_height = h;
-	}
-
-	void Graphics::Clear(int r, int g, int b) {
-		SDL_SetRenderDrawColor(m_renderer, r, g, b, 255);
-		SDL_RenderClear(m_renderer);
+	void Graphics::Clear(float r, float g, float b, float a) {
+		cairo_set_source_rgba(m_context, r, g, b, a);
+		cairo_paint(m_context);
 	}
 
 	void Graphics::LineWidth(float w) {
@@ -814,35 +798,27 @@ namespace tui {
 		cairo_restore(Ctx());
 	}
 
-	void Graphics::Draw(DrawFunction func) {
-		if (func == nullptr) return;
-
-		const SDL_FRect dst = { 0, 0, (float)m_width, (float)m_height };
-
-		Uint8 *pixels;
-		int pitch;
-		SDL_LockTexture(m_buffer, nullptr, (void**)&pixels, &pitch);
-		m_surface = cairo_image_surface_create_for_data(
-					pixels,
-					CAIRO_FORMAT_ARGB32,
-					m_width, m_height,
-					pitch
+    void Graphics::BeginDrawing(uint width, uint height)
+    {
+		m_surface = cairo_image_surface_create(
+			CAIRO_FORMAT_ARGB32,
+			width, height
 		);
 		m_context = cairo_create(m_surface);
+    }
 
-		func(*this);
-
+    void Graphics::Flush()
+    {
 		cairo_surface_flush(m_surface);
+    }
+
+    void Graphics::EndDrawing()
+    {
 		cairo_destroy(m_context);
 		cairo_surface_destroy(m_surface);
 		m_context = nullptr;
 		m_surface = nullptr;
-
-		SDL_UnlockTexture(m_buffer);
-
-		SDL_RenderTexture(m_renderer, m_buffer, nullptr, &dst);
-		SDL_RenderPresent(m_renderer);
-	}
+    }
 
     cairo_pattern_t* Graphics::CreateRoundShadowPattern(float elevation, int x, int y, int w, int h, float radius)
     {
