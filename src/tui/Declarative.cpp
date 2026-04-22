@@ -273,6 +273,7 @@ namespace tui::declarative {
             ElementSetup(button, props.base);
             button.SetText(text);
             button.SetIcon(props.icon);
+            button.SetIconSize(props.iconSize);
             button.SetMode(tui::ToolButton::Mode::Normal);
             button.SetGroup(props.group);
             button.SetOnClick(props.onClick);
@@ -287,6 +288,7 @@ namespace tui::declarative {
             ElementSetup(button, props.base);
             button.SetText(text);
             button.SetIcon(props.icon);
+            button.SetIconSize(props.iconSize);
             button.SetMode(tui::ToolButton::Mode::Radio);
             button.SetGroup(props.group);
             button.SetToggled(props.toggled);
@@ -302,6 +304,7 @@ namespace tui::declarative {
             ElementSetup(button, props.base);
             button.SetText(text);
             button.SetIcon(props.icon);
+            button.SetIconSize(props.iconSize);
             button.SetMode(tui::ToolButton::Mode::Toggle);
             button.SetToggled(props.toggled);
             button.SetOnClick(props.onClick);

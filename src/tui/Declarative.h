@@ -206,6 +206,7 @@ namespace tui::declarative {
     struct ToolButtonProps {
         ElementProps base{};
         tui::Image* icon{nullptr};
+        uint iconSize{16};
         bool toggled{false};
         VoidCallback onClick;
         std::string group{""}; // For radio behavior

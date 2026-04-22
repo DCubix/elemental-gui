@@ -20,6 +20,26 @@ namespace tui {
 	template <IsNumber T>
 	struct Point {
 		T x{}, y{};
+
+		T DistanceTo(const Point<T>& other) const {
+			return std::sqrt((x - other.x) * (x - other.x) + (y - other.y) * (y - other.y));
+		}
+
+		Point<T> operator+(const Point<T>& other) const {
+			return Point<T>(x + other.x, y + other.y);
+		}
+
+		Point<T> operator-(const Point<T>& other) const {
+			return Point<T>(x - other.x, y - other.y);
+		}
+
+		Point<T> operator*(T scalar) const {
+			return Point<T>(x * scalar, y * scalar);
+		}
+
+		Point<T> operator/(T scalar) const {
+			return Point<T>(x / scalar, y / scalar);
+		}
 	};
 
 	using PointF = Point<float>;
@@ -69,6 +89,18 @@ namespace tui {
 		BoldItalic
 	};
 
+	enum class LineCap {
+		Butt = 0,
+		Round,
+		Square
+	};
+
+	enum class LineJoin {
+		Miter = 0,
+		Round,
+		Bevel
+	};
+
 	class Graphics;
 	using DrawFunction = std::function<void(Graphics&)>;
 
@@ -78,9 +110,12 @@ namespace tui {
 		void Clear(float r, float g, float b, float a = 1.0f);
 
 		void LineWidth(float w = 1.0f);
+		void SetLineCap(LineCap cap);
+		void SetLineJoin(LineJoin join);
 		void Color(float r, float g, float b, float a = 1.0f);
 		void Rect(int x, int y, int w, int h);
 		void RoundRect(int x, int y, int w, int h, float radius = 0.0f);
+		void Arc(int x, int y, float radius, float startAngle, float endAngle);
 		void Line(int x1, int y1, int x2, int y2);
 
 		void Stroke(bool preserve = false);

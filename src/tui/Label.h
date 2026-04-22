@@ -21,9 +21,13 @@ namespace tui {
 		Image* GetIcon() { return m_icon; }
 		void SetIcon(Image* image) { m_icon = image; Invalidate(); }
 
+		uint GetIconSize() const { return m_iconSize; }
+		void SetIconSize(uint size) { m_iconSize = size; Invalidate(); }
+
 	protected:
 		std::string m_text;
 		Alignment m_alignment;
 		Image* m_icon;
+		uint m_iconSize{ 16 };
 	};
 }

@@ -2,7 +2,6 @@
 
 #include "Application.h"
 
-#include <vector>
 #include <algorithm>
 
 namespace tui {
@@ -24,13 +23,12 @@ namespace tui {
 		g.StyledTextBegin(textStyle);
 		g.ClipPushRect(c.x, c.y, c.w, c.h);
 
-		int iconW = m_icon ? m_icon->GetWidth() : 0;
-		int iconH = m_icon ? m_icon->GetHeight() : 0;
+		int iconSz = m_icon ? m_iconSize : 0;
 		bool hasText = !m_text.empty();
 
 		// Icon-only: always center+middle
 		if (m_icon && !hasText) {
-			g.DrawImage(m_icon, b.x + b.w / 2 - iconW / 2, b.y + b.h / 2 - iconH / 2, iconW, iconH);
+			g.DrawImage(m_icon, b.x + b.w / 2 - iconSz / 2, b.y + b.h / 2 - iconSz / 2, iconSz, iconSz);
 			g.ClipPop();
 			g.Restore();
 			return;
@@ -45,8 +43,8 @@ namespace tui {
 		}
 
 		int gap = m_icon ? 4 : 0;
-		int totalW = iconW + gap + maxW;
-		int totalH = std::max(iconH, maxH);
+		int totalW = iconSz + gap + maxW;
+		int totalH = std::max(iconSz, maxH);
 
 		// Content block origin based on alignment
 		int cx = b.x, cy = b.y;
@@ -74,10 +72,10 @@ namespace tui {
 		}
 
 		if (m_icon) {
-			g.DrawImage(m_icon, cx, cy + totalH / 2 - iconH / 2, iconW, iconH);
+			g.DrawImage(m_icon, cx, cy + totalH / 2 - iconSz / 2, iconSz, iconSz);
 		}
 
-		int textX = cx + iconW + gap;
+		int textX = cx + iconSz + gap;
 		int textY = cy + totalH / 2 - maxH / 2;
 		for (auto&& text : lines) {
 			auto&& ex = g.MeasureText(text);
@@ -104,11 +102,10 @@ namespace tui {
     Size Label::GetPreferredSize() const
     {
 		if (IsAutoSize()) {
-			int iconW = m_icon ? m_icon->GetWidth() : 0;
-			int iconH = m_icon ? m_icon->GetHeight() : 0;
+			int iconSz = m_icon ? m_iconSize : 0;
 
 			if (m_text.empty()) {
-				return { iconW, iconH };
+				return { iconSz, iconSz };
 			}
 
 			const auto textStyle = GetStyle()["DefaultText"];
@@ -129,7 +126,7 @@ namespace tui {
 			g.Restore();
 
 			int gap = m_icon ? 4 : 0;
-        	return { iconW + gap + maxW, std::max(iconH, maxH) };
+        	return { iconSz + gap + maxW, std::max(iconSz, maxH) };
 		}
 		return Element::GetPreferredSize();
     }

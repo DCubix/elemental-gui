@@ -27,6 +27,26 @@ namespace tui {
 		cairo_set_line_width(m_context, w);
 	}
 
+	void Graphics::SetLineCap(LineCap cap) {
+		cairo_line_cap_t cairoCap = CAIRO_LINE_CAP_BUTT;
+		switch (cap) {
+			case LineCap::Butt:   cairoCap = CAIRO_LINE_CAP_BUTT; break;
+			case LineCap::Round:  cairoCap = CAIRO_LINE_CAP_ROUND; break;
+			case LineCap::Square: cairoCap = CAIRO_LINE_CAP_SQUARE; break;
+		}
+		cairo_set_line_cap(m_context, cairoCap);
+	}
+
+	void Graphics::SetLineJoin(LineJoin join) {
+		cairo_line_join_t cairoJoin = CAIRO_LINE_JOIN_MITER;
+		switch (join) {
+			case LineJoin::Miter: cairoJoin = CAIRO_LINE_JOIN_MITER; break;
+			case LineJoin::Round: cairoJoin = CAIRO_LINE_JOIN_ROUND; break;
+			case LineJoin::Bevel: cairoJoin = CAIRO_LINE_JOIN_BEVEL; break;
+		}
+		cairo_set_line_join(m_context, cairoJoin);
+	}
+
 	void Graphics::Color(float r, float g, float b, float a) {
 		cairo_set_source_rgba(m_context, r, g, b, a);
 	}
@@ -52,6 +72,11 @@ namespace tui {
 		cairo_arc(m_context, _x + radius, _y + h - radius, radius, 90 * degrees, 180 * degrees);
 		cairo_arc(m_context, _x + radius, _y + radius, radius, 180 * degrees, 270 * degrees);
 		cairo_close_path(m_context);
+	}
+
+	void Graphics::Arc(int x, int y, float radius, float startAngle, float endAngle)
+	{
+		cairo_arc(m_context, x, y, radius, startAngle, endAngle);
 	}
 
 	void Graphics::Line(int x1, int y1, int x2, int y2) {
