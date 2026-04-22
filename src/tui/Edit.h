@@ -10,7 +10,14 @@ namespace tui {
 		Edit();
 
 		void OnDraw(Graphics& g) override;
-		EventStatus OnEvent(Event *event) override;
+
+		void OnMouseDown(MouseEvent e) override;
+		void OnMouseUp(MouseEvent e) override;
+		void OnMouseMove(MotionEvent e) override;
+		void OnKeyDown(KeyEvent e) override;
+		void OnTextInput(TextInputEvent e) override;
+		void OnFocus(FocusEvent e) override;
+		void OnBlur(BlurEvent e) override;
 
 		Size GetPreferredSize() const override;
 

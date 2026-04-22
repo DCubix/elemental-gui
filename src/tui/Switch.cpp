@@ -8,45 +8,30 @@ namespace tui {
         SetLocalBounds(Rectangle(0, 0, 40, 22));
     }
 
-    EventStatus Switch::OnEvent(Event *event)
-    {
-        EventStatus status = Element::OnEvent(event);
-        if (event->Type() == EventType::MouseButton) {
-            Rectangle b = GetIntersectedBounds();
-            MouseEvent* e = dynamic_cast<MouseEvent*>(event);
-            if (b.HasPoint(e->x, e->y)) {
-                if (e->pressed && e->button == 1) {
-                    m_pressed = true;
-                    status = EventStatus::Consumed;
-                    Invalidate();
-                } else if (!e->pressed && e->button == 1 && m_pressed) {
-                    m_pressed = false;
-                    bool newChecked = (m_state != State::Checked);
-                    m_state = newChecked ? State::Checked : State::Unchecked;
-                    if (m_onChanged) m_onChanged(newChecked);
-                    status = EventStatus::Consumed;
-                    Invalidate();
-                }
-            } else {
-                if (m_pressed) {
-                    m_pressed = false;
-                    Invalidate();
-                }
-            }
-        } else if (event->Type() == EventType::MouseMotion) {
-            Rectangle b = GetIntersectedBounds();
-            MotionEvent* e = dynamic_cast<MotionEvent*>(event);
-            bool inside = b.HasPoint(e->x, e->y);
-            if (inside != m_hovered) {
-                m_hovered = inside;
-                Invalidate();
-            }
-            if (inside) {
-                status = EventStatus::Consumed;
-            }
-        }
-        return status;
+    void Switch::OnMouseDown(MouseEvent e) {
+		if (e.button != 1) return;
+		m_pressed = true;
+		Invalidate();
     }
+
+	void Switch::OnMouseUp(MouseEvent e) {
+		if (e.button != 1) return;
+		if (m_pressed) {
+			m_pressed = false;
+			bool newChecked = (m_state != State::Checked);
+			m_state = newChecked ? State::Checked : State::Unchecked;
+			if (m_onChanged) m_onChanged(newChecked);
+			Invalidate();
+		}
+	}
+
+	void Switch::OnMouseEnter() {
+		Invalidate();
+	}
+
+	void Switch::OnMouseLeave() {
+		Invalidate();
+	}
 
     void Switch::OnDraw(Graphics &g)
     {

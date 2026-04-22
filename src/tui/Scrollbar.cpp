@@ -41,77 +41,59 @@ namespace tui {
 		}
 	}
 
-	EventStatus Scrollbar::OnEvent(Event* event) {
-		EventStatus status = Element::OnEvent(event);
-		if (event->Type() == EventType::MouseButton) {
-			Rectangle b = GetIntersectedBounds();
-			Rectangle c = GetBounds();
-			MouseEvent* e = dynamic_cast<MouseEvent*>(event);
-			int p = (m_direction == Direction::Horizontal ? e->x - c.x : e->y - c.y);
-			int btn = GetButtonSize();
-			switch (m_state) {
-				case ButtonState::Hover: {
-					if (e->pressed && e->button == 1) {
-						m_state = ButtonState::Click;
-						// If clicking on the thumb, track offset; otherwise center thumb on click
-						if (p >= m_buttonPos && p < m_buttonPos + btn) {
-							m_dragOffset = p - m_buttonPos - btn / 2;
-						} else {
-							m_dragOffset = 0;
-							UpdateValue(p);
-						}
-						status = EventStatus::Consumed;
-						Invalidate();
-					}
-				} break;
-				case ButtonState::Click: {
-					if (!e->pressed && e->button == 1) {
-						m_state = b.HasPoint(e->x, e->y) ? ButtonState::Hover : ButtonState::Normal;
-						status = EventStatus::Consumed;
-						Invalidate();
-					} else {
-						UpdateValue(p - m_dragOffset);
-						status = EventStatus::Consumed;
-					}
-				} break;
-				default: break;
+	void Scrollbar::OnMouseDown(MouseEvent e) {
+		if (e.button != 1) return;
+		Rectangle c = GetLocalBounds();
+		int p = (m_direction == Direction::Horizontal ? e.x : e.y);
+		int btn = GetButtonSize();
+
+		if (m_state == ButtonState::Hover) {
+			m_state = ButtonState::Click;
+			// If clicking on the thumb, track offset; otherwise center thumb on click
+			if (p >= m_buttonPos && p < m_buttonPos + btn) {
+				m_dragOffset = p - m_buttonPos - btn / 2;
+			} else {
+				m_dragOffset = 0;
+				UpdateValue(p);
 			}
-		} else if (event->Type() == EventType::MouseMotion) {
-			Rectangle b = GetIntersectedBounds();
-			Rectangle c = GetBounds();
-			MotionEvent* e = dynamic_cast<MotionEvent*>(event);
-			int p = (m_direction == Direction::Horizontal ? e->x - c.x : e->y - c.y);
-			switch (m_state) {
-				case ButtonState::Normal: {
-					if (b.HasPoint(e->x, e->y)) {
-						m_state = ButtonState::Hover;
-						status = EventStatus::Consumed;
-						Invalidate();
-					}
-				} break;
-				case ButtonState::Hover: {
-					if (!b.HasPoint(e->x, e->y)) {
-						m_state = ButtonState::Normal;
-						Invalidate();
-					} else {
-						status = EventStatus::Consumed;
-					}
-				} break;
-				case ButtonState::Click: {
-					UpdateValue(p - m_dragOffset);
-					status = EventStatus::Consumed;
-				} break;
-			}
-		} else if (event->Type() == EventType::Scroll) {
-			Rectangle b = GetIntersectedBounds();
-			ScrollEvent* e = dynamic_cast<ScrollEvent*>(event);
-			if (b.HasPoint(e->mouseX, e->mouseY)) {
-				float delta = (m_direction == Direction::Horizontal ? e->scrollY : -e->scrollY);
-				SetValue(m_range.Constrain(m_value + delta * m_step));
-				status = EventStatus::Consumed;
-			}
+			Invalidate();
 		}
-		return status;
+	}
+
+	void Scrollbar::OnMouseUp(MouseEvent e) {
+		if (e.button != 1) return;
+		if (m_state == ButtonState::Click) {
+			Rectangle b = GetLocalBounds();
+			m_state = b.HasPoint(e.x, e.y) ? ButtonState::Hover : ButtonState::Normal;
+			Invalidate();
+		}
+	}
+
+	void Scrollbar::OnMouseEnter() {
+		if (m_state == ButtonState::Normal) {
+			m_state = ButtonState::Hover;
+			Invalidate();
+		}
+	}
+
+	void Scrollbar::OnMouseLeave() {
+		if (m_state == ButtonState::Hover) {
+			m_state = ButtonState::Normal;
+			Invalidate();
+		}
+	}
+
+	void Scrollbar::OnScroll(ScrollEvent e) {
+		float delta = (m_direction == Direction::Horizontal ? e.scrollY : -e.scrollY);
+		SetValue(m_range.Constrain(m_value + delta * m_step));
+	}
+
+	void Scrollbar::OnMouseMove(MotionEvent e) {
+		// Only handle dragging during Click state - hover is handled by OnMouseEnter/OnMouseLeave
+		if (m_state == ButtonState::Click) {
+			int p = (m_direction == Direction::Horizontal ? e.x : e.y);
+			UpdateValue(p - m_dragOffset);
+		}
 	}
 
 	void Scrollbar::SetRange(float min, float max) {

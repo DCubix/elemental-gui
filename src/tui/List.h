@@ -105,6 +105,30 @@ namespace tui {
             }
         }
 
+        void OnScroll(ScrollEvent e) override {
+            if (m_scrollbar == nullptr || !m_scrollbar->IsEnabled()) return;
+            const float scrollSpeed = 30.0f;
+            float newVal = m_scrollbar->GetValue() - e.scrollY * scrollSpeed;
+            newVal = std::max(m_scrollbar->GetRange().minimum,
+                             std::min(newVal, m_scrollbar->GetRange().maximum));
+            m_scrollbar->SetValue(newVal);
+        }
+
+        void OnMouseDown(MouseEvent e) override {
+            if (e.button != 1) return;
+            Rectangle b = GetLocalBounds();
+            int scrollOffset = m_scrollbar ? static_cast<int>(m_scrollbar->GetValue()) : 0;
+            int contentWidth = GetContentWidth();
+
+            for (size_t i = 0; i < m_items.size(); i++) {
+                auto rect = GetItemRect(static_cast<int>(i), scrollOffset, contentWidth);
+                if (rect.HasPoint(e.x, e.y) && rect.Intersects(b)) {
+                    SetSelectedIndex(static_cast<int>(i));
+                    break;
+                }
+            }
+        }
+
         EventStatus OnEvent(Event *event) override {
             // Let scrollbar handle events first
             if (m_scrollbar != nullptr && m_scrollbar->IsVisible()) {
@@ -112,36 +136,16 @@ namespace tui {
                     return EventStatus::Consumed;
             }
 
-            // Handle scroll wheel on the list area
-            if (event->Type() == EventType::Scroll && m_scrollbar != nullptr && m_scrollbar->IsEnabled()) {
-                ScrollEvent* e = dynamic_cast<ScrollEvent*>(event);
-                Rectangle b = GetIntersectedBounds();
-                if (b.HasPoint(e->mouseX, e->mouseY)) {
-                    const float scrollSpeed = 30.0f;
-                    float newVal = m_scrollbar->GetValue() - e->scrollY * scrollSpeed;
-                    newVal = std::max(m_scrollbar->GetRange().minimum,
-                             std::min(newVal, m_scrollbar->GetRange().maximum));
-                    m_scrollbar->SetValue(newVal);
-                    return EventStatus::Consumed;
-                }
+            // Let base Element handle scroll events (calls OnScroll after bounds check)
+            if (event->Type() == EventType::Scroll) {
+                return Element::OnEvent(event);
             }
 
+            // Let base Element handle mouse events (calls OnMouseDown after bounds check)
             if (event->Type() == EventType::MouseButton) {
-                auto me = static_cast<MouseEvent*>(event);
-                Rectangle b = GetBounds();
-                int scrollOffset = m_scrollbar ? static_cast<int>(m_scrollbar->GetValue()) : 0;
-                int contentWidth = GetContentWidth();
-
-                if (me->button == 1 && me->pressed) {
-                    for (size_t i = 0; i < m_items.size(); i++) {
-                        auto rect = GetItemRect(static_cast<int>(i), scrollOffset, contentWidth);
-                        if (rect.HasPoint(me->x, me->y) && rect.Intersects(b)) {
-                            SetSelectedIndex(static_cast<int>(i));
-                            return EventStatus::Consumed;
-                        }
-                    }
-                }
+                return Element::OnEvent(event);
             }
+
             return EventStatus::Active;
         }
 

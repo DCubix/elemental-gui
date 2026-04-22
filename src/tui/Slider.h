@@ -9,8 +9,14 @@ namespace tui {
 	public:
 		Slider();
 
-		virtual void OnDraw(Graphics& g) override;
-		virtual EventStatus OnEvent(Event *event) override;
+		void OnDraw(Graphics& g) override;
+
+		void OnMouseDown(MouseEvent e) override;
+		void OnMouseUp(MouseEvent e) override;
+		void OnMouseEnter() override;
+		void OnMouseLeave() override;
+		void OnMouseMove(MotionEvent e) override;
+		void OnScroll(ScrollEvent e) override;
 
 		const Range& GetRange() const { return m_range; }
 		void SetRange(float min, float max);

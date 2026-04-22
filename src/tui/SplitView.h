@@ -10,7 +10,11 @@ namespace tui {
         void Add(Element *element) override;
 
         void OnDraw(Graphics& g) override;
-        EventStatus OnEvent(Event *event) override;
+
+        void OnMouseDown(MouseEvent e) override;
+        void OnMouseUp(MouseEvent e) override;
+        void OnMouseMove(MotionEvent e) override;
+
         Size GetPreferredSize() const override;
 
         Direction GetDirection() const { return m_direction; }

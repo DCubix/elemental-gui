@@ -1,6 +1,5 @@
 #include "Button.h"
 
-#include "Application.h"
 #include "Layout.h"
 
 namespace tui {
@@ -35,65 +34,39 @@ namespace tui {
 		Label::OnDraw(g);
 	}
 
-	EventStatus Button::OnEvent(Event* event) {
-		EventStatus status = Element::OnEvent(event);
-		if (event->Type() == EventType::MouseButton) {
-			Rectangle b = GetIntersectedBounds();
-			MouseEvent* e = dynamic_cast<MouseEvent*>(event);
-			switch (m_state) {
-				case ButtonState::Hover: {
-					if (e->pressed && e->button == 1) {
-						m_state = ButtonState::Click;
-						status = EventStatus::Consumed;
-						Invalidate();
-					}
-				} break;
-				case ButtonState::Click: {
-					if (!b.HasPoint(e->x, e->y)) {
-						m_state = ButtonState::Normal;
-						status = EventStatus::Consumed;
-						Invalidate();
-					}
-					if (!e->pressed && e->button == 1) {
-						if (m_onClick)
-							m_onClick();
-						m_state = ButtonState::Hover;
-						status = EventStatus::Consumed;
-						Invalidate();
-					}
-				} break;
-				default: break;
-			}
-		} else if (event->Type() == EventType::MouseMotion) {
-			Rectangle b = GetIntersectedBounds();
-			MotionEvent* e = dynamic_cast<MotionEvent*>(event);
-			switch (m_state) {
-				case ButtonState::Normal: {
-					if (b.HasPoint(e->x, e->y)) {
-						m_state = ButtonState::Hover;
-						Invalidate();
-						status = EventStatus::Consumed;
-					}
-				} break;
-				case ButtonState::Hover: {
-					if (!b.HasPoint(e->x, e->y)) {
-						m_state = ButtonState::Normal;
-						Invalidate();
-					} else {
-						status = EventStatus::Consumed;
-					}
-				} break;
-				case ButtonState::Click: {
-					if (!b.HasPoint(e->x, e->y)) {
-						m_state = ButtonState::Normal;
-						Invalidate();
-					} else {
-						status = EventStatus::Consumed;
-					}
-				} break;
-			}
+	void Button::OnMouseDown(MouseEvent e) {
+		if (e.button != 1) return;
+		if (m_state == ButtonState::Hover) {
+			m_state = ButtonState::Click;
+			Invalidate();
 		}
-		return status;
+	}
+
+	void Button::OnMouseUp(MouseEvent e) {
+		if (e.button != 1) return;
+		if (m_state == ButtonState::Click) {
+			if (m_onClick)
+				m_onClick();
+			m_state = ButtonState::Hover;
+			Invalidate();
+		}
+	}
+
+	void Button::OnMouseEnter() {
+		if (m_state == ButtonState::Normal) {
+			m_state = ButtonState::Hover;
+			Invalidate();
+		}
+	}
+
+	void Button::OnMouseLeave() {
+		if (m_state == ButtonState::Hover) {
+			m_state = ButtonState::Normal;
+			Invalidate();
+		} else if (m_state == ButtonState::Click) {
+			m_state = ButtonState::Normal;
+			Invalidate();
+		}
 	}
 
     Size Button::GetPreferredSize() const

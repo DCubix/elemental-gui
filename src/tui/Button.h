@@ -8,8 +8,12 @@ namespace tui {
 		Button();
 
 		void OnDraw(Graphics& g) override;
-		EventStatus OnEvent(Event *event) override;
-		
+
+		void OnMouseDown(MouseEvent e) override;
+		void OnMouseUp(MouseEvent e) override;
+		void OnMouseEnter() override;
+		void OnMouseLeave() override;
+
 		Size GetPreferredSize() const override;
 
 		void SetOnClick(const VoidCallback& cb) { m_onClick = cb; }

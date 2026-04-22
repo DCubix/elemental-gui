@@ -7,7 +7,10 @@ namespace tui {
     public:
         RadioButton();
 
-        EventStatus OnEvent(Event *event) override;
+        void OnMouseDown(MouseEvent e) override;
+        void OnMouseUp(MouseEvent e) override;
+        void OnMouseEnter() override;
+        void OnMouseLeave() override;
         void OnDraw(Graphics& g) override;
 
         Size GetPreferredSize() const override;
@@ -25,8 +28,7 @@ namespace tui {
     private:
         std::string m_group{""}, m_text;
         bool m_checked{false};
-        bool m_hovered{ false };
-		bool m_pressed{ false };
+        bool m_pressed{ false };
 
 		ValueChanged<bool> m_onChanged;
     };

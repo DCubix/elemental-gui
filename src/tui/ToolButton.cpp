@@ -43,83 +43,56 @@ namespace tui {
 		Label::OnDraw(g);
     }
     
-    EventStatus ToolButton::OnEvent(Event *event)
-    {
-        EventStatus status = Element::OnEvent(event);
-		if (event->Type() == EventType::MouseButton) {
-			Rectangle b = GetIntersectedBounds();
-			MouseEvent* e = dynamic_cast<MouseEvent*>(event);
-			switch (m_state) {
-				case ButtonState::Hover: {
-					if (e->pressed && e->button == 1) {
-						m_state = ButtonState::Click;
-						status = EventStatus::Consumed;
-                        if (m_mode == Mode::Toggle) {
-                            m_toggled = !m_toggled;
-                        } else if (m_mode == Mode::Radio) {
-                            m_toggled = true;
-                        }
-						Invalidate();
-					}
-				} break;
-				case ButtonState::Click: {
-					if (!b.HasPoint(e->x, e->y)) {
-						m_state = ButtonState::Normal;
-						status = EventStatus::Consumed;
-						Invalidate();
-					}
-					if (!e->pressed && e->button == 1) {
-						if (m_onClick)
-							m_onClick();
-						if (m_mode == Mode::Radio) {
-							auto* prev = GetApp()->FindElement<ToolButton>([this](ToolButton* tb) {
-                                return tb != this &&
-                                    tb->GetGroup() == GetGroup() &&
-                                    tb->GetMode() == Mode::Radio &&
-                                    tb->IsToggled();
-                            });
-                            if (prev) {
-                                prev->SetToggled(false);
-                            }
-						}
-						m_state = ButtonState::Hover;
-						status = EventStatus::Consumed;
-						Invalidate();
-					}
-				} break;
-				default: break;
+    void ToolButton::OnMouseDown(MouseEvent e) {
+		if (e.button != 1) return;
+		if (m_state == ButtonState::Hover) {
+			m_state = ButtonState::Click;
+			if (m_mode == Mode::Toggle) {
+				m_toggled = !m_toggled;
+			} else if (m_mode == Mode::Radio) {
+				m_toggled = true;
 			}
-		} else if (event->Type() == EventType::MouseMotion) {
-			Rectangle b = GetIntersectedBounds();
-			MotionEvent* e = dynamic_cast<MotionEvent*>(event);
-			switch (m_state) {
-				case ButtonState::Normal: {
-					if (b.HasPoint(e->x, e->y)) {
-						m_state = ButtonState::Hover;
-						Invalidate();
-						status = EventStatus::Consumed;
-					}
-				} break;
-				case ButtonState::Hover: {
-					if (!b.HasPoint(e->x, e->y)) {
-						m_state = ButtonState::Normal;
-						Invalidate();
-					} else {
-						status = EventStatus::Consumed;
-					}
-				} break;
-				case ButtonState::Click: {
-					if (!b.HasPoint(e->x, e->y)) {
-						m_state = ButtonState::Normal;
-						Invalidate();
-					} else {
-						status = EventStatus::Consumed;
-					}
-				} break;
-			}
+			Invalidate();
 		}
-		return status;
     }
+
+	void ToolButton::OnMouseUp(MouseEvent e) {
+		if (e.button != 1) return;
+		if (m_state == ButtonState::Click) {
+			if (m_onClick)
+				m_onClick();
+			if (m_mode == Mode::Radio) {
+				auto* prev = GetApp()->FindElement<ToolButton>([this](ToolButton* tb) {
+					return tb != this &&
+						tb->GetGroup() == GetGroup() &&
+						tb->GetMode() == Mode::Radio &&
+						tb->IsToggled();
+				});
+				if (prev) {
+					prev->SetToggled(false);
+				}
+			}
+			m_state = ButtonState::Hover;
+			Invalidate();
+		}
+	}
+
+	void ToolButton::OnMouseEnter() {
+		if (m_state == ButtonState::Normal) {
+			m_state = ButtonState::Hover;
+			Invalidate();
+		}
+	}
+
+	void ToolButton::OnMouseLeave() {
+		if (m_state == ButtonState::Hover) {
+			m_state = ButtonState::Normal;
+			Invalidate();
+		} else if (m_state == ButtonState::Click) {
+			m_state = ButtonState::Normal;
+			Invalidate();
+		}
+	}
     
     Size ToolButton::GetPreferredSize() const
     {

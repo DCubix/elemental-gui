@@ -8,8 +8,10 @@ namespace tui {
 	public:
 		ScrollView();
 
-		EventStatus OnEvent(Event *event) override;
+		void OnScroll(ScrollEvent e) override;
 		void OnDraw(Graphics& g) override;
+
+		EventStatus OnEvent(Event *event) override;
 
 		void SetElement(Element *e);
 		Element* GetElement() { return m_element; }

@@ -10,7 +10,10 @@ namespace tui {
         MenuItem(const std::string& text = "");
 
         void OnDraw(Graphics& g) override;
-        EventStatus OnEvent(Event *event) override;
+
+        void OnMouseDown(MouseEvent e) override;
+        void OnMouseUp(MouseEvent e) override;
+        void OnMouseMove(MotionEvent e) override;
 
         Size GetPreferredSize() const override;
 

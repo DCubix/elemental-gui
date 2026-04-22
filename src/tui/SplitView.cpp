@@ -40,34 +40,26 @@ namespace tui {
         g.Fill();
     }
 
-    EventStatus SplitView::OnEvent(Event *event)
-    {
-        // check if the event is a mouse event on the gripper
-        if (event->Type() == EventType::MouseButton) {
-            MouseEvent* e = dynamic_cast<MouseEvent*>(event);
-            
-            if (GripRect().HasPoint(e->x, e->y)) {
-                if (e->pressed && e->button == 1) {
-                    m_dragging = true;
-                    return EventStatus::Consumed;
-                } else if (!e->pressed && e->button == 1) {
-                    m_dragging = false;
-                    return EventStatus::Consumed;
-                }
-            }
-        } else if (event->Type() == EventType::MouseMotion) {
-            if (m_dragging) {
-                MotionEvent* e = dynamic_cast<MotionEvent*>(event);
-                if (m_direction == Direction::Horizontal) {
-                    HandleDragHorizontal(e->y);
-                } else {
-                    HandleDragVertical(e->x);
-                }
-                return EventStatus::Consumed;
-            }
-        }
-        return Container::OnEvent(event);
+    void SplitView::OnMouseDown(MouseEvent e) {
+		if (e.button != 1) return;
+		if (GripRect().HasPoint(e.x, e.y)) {
+			m_dragging = true;
+		}
     }
+
+	void SplitView::OnMouseUp(MouseEvent e) {
+		if (e.button != 1) return;
+		m_dragging = false;
+	}
+
+	void SplitView::OnMouseMove(MotionEvent e) {
+		if (!m_dragging) return;
+		if (m_direction == Direction::Horizontal) {
+			HandleDragHorizontal(e.y);
+		} else {
+			HandleDragVertical(e.x);
+		}
+	}
 
     Size SplitView::GetPreferredSize() const
     {

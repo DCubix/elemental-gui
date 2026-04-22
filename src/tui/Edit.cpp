@@ -190,195 +190,179 @@ namespace tui {
 		g.ClipPop();
 	}
 
-	EventStatus Edit::OnEvent(Event* event) {
-		EventStatus status = Element::OnEvent(event);
-		if (event->Type() == EventType::MouseButton) {
-			Rectangle b = GetIntersectedBounds();
-			MouseEvent* e = dynamic_cast<MouseEvent*>(event);
-			switch (m_state) {
-				case EditState::Normal: {
-					if (IsFocused() &&
-						e->pressed && e->button == 1 &&
-						m_editable &&
-						b.HasPoint(e->x, e->y))
-					{
-						for (CharRect cr : m_charRects) {
-							Rectangle crr = cr.rect;
-							if (m_text.size() > 1 && cr.index < m_text.size() - 1)
-								crr.x -= crr.w/2;
-							if (crr.HasPoint(e->x, e->y)) {
-								m_caretIndex = cr.index;
-								Invalidate();
-								break;
-							}
-						}
-						m_state = EditState::Selecting;
-						m_selectionStart = m_caretIndex;
-						m_selectionEnd = -1;
-						status = EventStatus::Consumed;
-					}
-				} break;
-				case EditState::Selecting: {
-					if (!e->pressed && e->button == 1) {
-						m_state = EditState::Normal;
-						Invalidate();
-					}
-				} break;
-			}
-		} else if (event->Type() == EventType::MouseMotion) {
-			MotionEvent* e = dynamic_cast<MotionEvent*>(event);
-			switch (m_state) {
-				default: break;
-				case EditState::Selecting: {
-					for (CharRect cr : m_charRects) {
-						Rectangle crr = cr.rect;
-						if (m_text.size() > 1 && cr.index < m_text.size() - 1)
-							crr.x -= crr.w/2;
-						if (crr.HasPoint(e->x, e->y)) {
-							m_selectionEnd = cr.index;
-							m_caretIndex = cr.index;
-							break;
-						} else { continue; }
-					}
-					Invalidate();
-				} break;
-			}
-		} else if (event->Type() == EventType::TextInput) {
-			TextInput *e = dynamic_cast<TextInput*>(event);
-			if (IsFocused() && m_editable) {
-				InsertChar(e->inputChar);
+	void Edit::OnMouseDown(MouseEvent e) {
+		if (!IsFocused() || !m_editable) return;
+		if (e.button != 1) return;
+
+		Rectangle b = GetLocalBounds();
+		if (!b.HasPoint(e.x, e.y)) return;
+
+		for (CharRect cr : m_charRects) {
+			Rectangle crr = cr.rect;
+			if (m_text.size() > 1 && cr.index < m_text.size() - 1)
+				crr.x -= crr.w/2;
+			if (crr.HasPoint(e.x, e.y)) {
+				m_caretIndex = cr.index;
 				Invalidate();
-				status = EventStatus::Consumed;
-			}
-		} else if (event->Type() == EventType::Key) {
-			KeyEvent *e = dynamic_cast<KeyEvent*>(event);
-			if (e->pressed && IsFocused() && m_editable) {
-				// Map out the lines start offset and length.
-				// Since the text is just a linear
-				// array, we just check for line breaks (\n)
-				std::map<int, std::tuple<int, int>> lines;
-				int curr = 0, currChar = 0, idx = 0, line = 0, currLine = 0;
-				for (auto&& c : m_text) {
-					curr++;
-					if (idx == m_caretIndex) {
-						currLine = line;
-					}
-					idx++;
-					if (c.c == '\n') {
-						lines[line] = std::make_tuple(currChar, curr);
-						currChar += curr;
-						curr = 0;
-						line++;
-					}
-				}
-
-				if ((e->key == SDLK_RETURN || e->key == SDLK_KP_ENTER) && m_multiLine) {
-					InsertChar('\n');
-				} else if (e->key == SDLK_HOME) {
-					int loff = std::get<0>(lines[currLine]);
-					m_caretIndex = loff;
-				} else if (e->key == SDLK_END) {
-					int loff = std::get<0>(lines[currLine]);
-					int lsz = std::get<1>(lines[currLine]);
-					m_caretIndex = loff + lsz-1;
-				} else if (e->key == SDLK_BACKSPACE) {
-					if (IsSelected()) {
-						DeleteSelected();
-					} else {
-						if (m_caretIndex-- > 0 && !m_text.empty()) {
-							RemoveChar(m_caretIndex);
-						} else {
-							m_caretIndex = 0;
-						}
-					}
-				} else if (e->key == SDLK_DELETE) {
-					if (IsSelected()) {
-						DeleteSelected();
-					} else {
-						if (!m_text.empty()) {
-							RemoveChar(m_caretIndex);
-							if (m_caretIndex >= m_textRaw.size()) {
-								m_caretIndex = m_textRaw.size()-1;
-							}
-						} else {
-							m_caretIndex = 0;
-						}
-					}
-				} else if (e->key == SDLK_LEFT) {
-					m_caretIndex--;
-					if (m_caretIndex <= 0) m_caretIndex = 0;
-				} else if (e->key == SDLK_RIGHT) {
-					m_caretIndex++;
-					if (m_caretIndex >= m_text.size()) m_caretIndex = int(m_text.size());
-				} else if (e->key == SDLK_UP && m_multiLine) {
-					int loff = std::get<0>(lines[currLine]);
-					int dist = m_caretIndex - loff;
-
-					if (--currLine < 0) currLine = 0;
-					loff = std::get<0>(lines[currLine]);
-
-					int off = loff + dist;
-					int lsz = std::get<1>(lines[currLine]);
-					if (off >= loff + lsz) {
-						off = loff + lsz-1;
-					}
-					m_caretIndex = off;
-				} else if (e->key == SDLK_DOWN && m_multiLine) {
-					int loff = std::get<0>(lines[currLine]);
-					int dist = m_caretIndex - loff;
-
-					if (++currLine >= lines.size()) currLine = lines.size()-1;
-					loff = std::get<0>(lines[currLine]);
-
-					int off = loff + dist;
-					int lsz = std::get<1>(lines[currLine]);
-					if (off >= loff + lsz) {
-						off = loff + lsz-1;
-					}
-					m_caretIndex = off;
-				} else if (e->key == SDLK_C && GetApp()->GetMod() & SDL_KMOD_CTRL && IsSelected()) {
-					int a = m_selectionStart,
-						b = m_selectionEnd;
-					if (a > b) std::swap(a, b);
-					std::string selTxt = m_textRaw.substr(a, b - a);
-					GetApp()->SetClipboard(selTxt);
-				} else if (e->key == SDLK_X && GetApp()->GetMod() & SDL_KMOD_CTRL && IsSelected()) {
-					int a = m_selectionStart,
-						b = m_selectionEnd;
-					if (a > b) std::swap(a, b);
-					std::string selTxt = m_textRaw.substr(a, b - a);
-					GetApp()->SetClipboard(selTxt);
-					DeleteSelected();
-				} else if (e->key == SDLK_V && GetApp()->GetMod() & SDL_KMOD_CTRL) {
-					if (IsSelected()) {
-						DeleteSelected();
-					}
-					std::string ntxt = GetApp()->GetClipboard();
-					for (char c : ntxt) {
-						InsertChar(c);
-					}
-				} else if (e->key == SDLK_A && GetApp()->GetMod() & SDL_KMOD_CTRL) {
-					Select(0);
-				}
-				Invalidate();
-				status = EventStatus::Consumed;
-			} else if (!e->pressed && IsFocused()) {
-				Invalidate();
-			}
-		} else if (event->Type() == EventType::Focus) {
-			FocusEvent *e = dynamic_cast<FocusEvent*>(event);
-			if (e->element == this) {
-				GetApp()->StartInput();
-				status = EventStatus::Consumed;
-			}
-		} else if (event->Type() == EventType::Blur) {
-			BlurEvent *e = dynamic_cast<BlurEvent*>(event);
-			if (e->element == this) {
-				GetApp()->StopInput();
-				status = EventStatus::Consumed;
+				break;
 			}
 		}
-		return status;
+		m_state = EditState::Selecting;
+		m_selectionStart = m_caretIndex;
+		m_selectionEnd = -1;
+	}
+
+	void Edit::OnMouseUp(MouseEvent e) {
+		if (e.button != 1) return;
+		if (m_state == EditState::Selecting) {
+			m_state = EditState::Normal;
+			Invalidate();
+		}
+	}
+
+	void Edit::OnMouseMove(MotionEvent e) {
+		if (m_state != EditState::Selecting) return;
+
+		for (CharRect cr : m_charRects) {
+			Rectangle crr = cr.rect;
+			if (m_text.size() > 1 && cr.index < m_text.size() - 1)
+				crr.x -= crr.w/2;
+			if (crr.HasPoint(e.x, e.y)) {
+				m_selectionEnd = cr.index;
+				m_caretIndex = cr.index;
+				break;
+			}
+		}
+		Invalidate();
+	}
+
+	void Edit::OnTextInput(TextInputEvent e) {
+		if (!IsFocused() || !m_editable) return;
+		InsertChar(e.inputChar);
+		Invalidate();
+	}
+
+	void Edit::OnKeyDown(KeyEvent e) {
+		if (!IsFocused() || !m_editable) return;
+
+		// Map out the lines start offset and length.
+		// Since the text is just a linear
+		// array, we just check for line breaks (\n)
+		std::map<int, std::tuple<int, int>> lines;
+		int curr = 0, currChar = 0, idx = 0, line = 0, currLine = 0;
+		for (auto&& c : m_text) {
+			curr++;
+			if (idx == m_caretIndex) {
+				currLine = line;
+			}
+			idx++;
+			if (c.c == '\n') {
+				lines[line] = std::make_tuple(currChar, curr);
+				currChar += curr;
+				curr = 0;
+				line++;
+			}
+		}
+
+		if ((e.key == SDLK_RETURN || e.key == SDLK_KP_ENTER) && m_multiLine) {
+			InsertChar('\n');
+		} else if (e.key == SDLK_HOME) {
+			int loff = std::get<0>(lines[currLine]);
+			m_caretIndex = loff;
+		} else if (e.key == SDLK_END) {
+			int loff = std::get<0>(lines[currLine]);
+			int lsz = std::get<1>(lines[currLine]);
+			m_caretIndex = loff + lsz-1;
+		} else if (e.key == SDLK_BACKSPACE) {
+			if (IsSelected()) {
+				DeleteSelected();
+			} else {
+				if (m_caretIndex-- > 0 && !m_text.empty()) {
+					RemoveChar(m_caretIndex);
+				} else {
+					m_caretIndex = 0;
+				}
+			}
+		} else if (e.key == SDLK_DELETE) {
+			if (IsSelected()) {
+				DeleteSelected();
+			} else {
+				if (!m_text.empty()) {
+					RemoveChar(m_caretIndex);
+					if (m_caretIndex >= m_textRaw.size()) {
+						m_caretIndex = m_textRaw.size()-1;
+					}
+				} else {
+					m_caretIndex = 0;
+				}
+			}
+		} else if (e.key == SDLK_LEFT) {
+			m_caretIndex--;
+			if (m_caretIndex <= 0) m_caretIndex = 0;
+		} else if (e.key == SDLK_RIGHT) {
+			m_caretIndex++;
+			if (m_caretIndex >= m_text.size()) m_caretIndex = int(m_text.size());
+		} else if (e.key == SDLK_UP && m_multiLine) {
+			int loff = std::get<0>(lines[currLine]);
+			int dist = m_caretIndex - loff;
+
+			if (--currLine < 0) currLine = 0;
+
+			int off = loff + dist;
+			int lsz = std::get<1>(lines[currLine]);
+			if (off >= loff + lsz) {
+				off = loff + lsz-1;
+			}
+			m_caretIndex = off;
+		} else if (e.key == SDLK_DOWN && m_multiLine) {
+			int loff = std::get<0>(lines[currLine]);
+			int dist = m_caretIndex - loff;
+
+			if (++currLine >= (int)lines.size()) currLine = (int)lines.size()-1;
+
+			int off = loff + dist;
+			int lsz = std::get<1>(lines[currLine]);
+			if (off >= loff + lsz) {
+				off = loff + lsz-1;
+			}
+			m_caretIndex = off;
+		} else if (e.key == SDLK_C && GetApp()->GetMod() & SDL_KMOD_CTRL && IsSelected()) {
+			int a = m_selectionStart,
+				b = m_selectionEnd;
+			if (a > b) std::swap(a, b);
+			std::string selTxt = m_textRaw.substr(a, b - a);
+			GetApp()->SetClipboard(selTxt);
+		} else if (e.key == SDLK_X && GetApp()->GetMod() & SDL_KMOD_CTRL && IsSelected()) {
+			int a = m_selectionStart,
+				b = m_selectionEnd;
+			if (a > b) std::swap(a, b);
+			std::string selTxt = m_textRaw.substr(a, b - a);
+			GetApp()->SetClipboard(selTxt);
+			DeleteSelected();
+		} else if (e.key == SDLK_V && GetApp()->GetMod() & SDL_KMOD_CTRL) {
+			if (IsSelected()) {
+				DeleteSelected();
+			}
+			std::string ntxt = GetApp()->GetClipboard();
+			for (char c : ntxt) {
+				InsertChar(c);
+			}
+		} else if (e.key == SDLK_A && GetApp()->GetMod() & SDL_KMOD_CTRL) {
+			Select(0);
+		}
+		Invalidate();
+	}
+
+	void Edit::OnFocus(FocusEvent e) {
+		if (e.element == this) {
+			GetApp()->StartInput();
+		}
+	}
+
+	void Edit::OnBlur(BlurEvent e) {
+		if (e.element == this) {
+			GetApp()->StopInput();
+		}
 	}
 
 	Size Edit::GetPreferredSize() const {

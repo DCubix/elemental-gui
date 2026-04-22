@@ -13,27 +13,26 @@ namespace tui {
 		  m_scrollDirection(Direction::Vertical)
 	{}
 
-	EventStatus ScrollView::OnEvent(Event* event) {
-		Rectangle b = GetIntersectedBounds();
+	void ScrollView::OnScroll(ScrollEvent e) {
+		const float scrollSpeed = 30.0f;
+		if (m_scrollBar && m_scrollBar->IsEnabled()) {
+			float newVal = m_scrollBar->GetValue() - e.scrollY * scrollSpeed;
+			newVal = std::max((float)m_scrollBar->GetRange().minimum,
+					std::min(newVal, (float)m_scrollBar->GetRange().maximum));
+			m_scrollBar->SetValue(newVal);
+		}
+	}
 
+	EventStatus ScrollView::OnEvent(Event* event) {
 		if (m_scrollBar && m_scrollBar->IsVisible()) {
 			if (m_scrollBar->OnEvent(event) == EventStatus::Consumed)
 				return EventStatus::Consumed;
 		}
 
+		// Let base Element handle scroll and forward other events to child
 		if (event->Type() == EventType::Scroll) {
-			ScrollEvent* e = dynamic_cast<ScrollEvent*>(event);
-			Rectangle full = GetIntersectedBounds();
-			if (full.HasPoint(e->mouseX, e->mouseY)) {
-				const float scrollSpeed = 30.0f;
-				if (m_scrollBar && m_scrollBar->IsEnabled()) {
-					float newVal = m_scrollBar->GetValue() - e->scrollY * scrollSpeed;
-					newVal = std::max((float)m_scrollBar->GetRange().minimum,
-								std::min(newVal, (float)m_scrollBar->GetRange().maximum));
-					m_scrollBar->SetValue(newVal);
-					return EventStatus::Consumed;
-				}
-			}
+			// Base Element will call OnScroll after bounds check
+			return Element::OnEvent(event);
 		}
 
 		// Forward events to child

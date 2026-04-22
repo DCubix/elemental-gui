@@ -7,51 +7,36 @@ namespace tui {
 		SetLocalBounds(Rectangle(0, 0, 100, 22));
 	}
     
-    EventStatus RadioButton::OnEvent(Event *event)
-    {
-        EventStatus status = Element::OnEvent(event);
-		if (event->Type() == EventType::MouseButton) {
-			Rectangle b = GetIntersectedBounds();
-			MouseEvent* e = dynamic_cast<MouseEvent*>(event);
-			if (b.HasPoint(e->x, e->y)) {
-				if (e->pressed && e->button == 1) {
-					m_pressed = true;
-					status = EventStatus::Consumed;
-					Invalidate();
-				} else if (!e->pressed && e->button == 1 && m_pressed) {
-					m_pressed = false;
-                    
-                    auto* prev = GetApp()->FindElement<RadioButton>([this](RadioButton* rb) {
-                        return rb != this && rb->GetGroup() == GetGroup();
-                    });
-                    if (prev) {
-                        prev->SetChecked(false);
-                    }
-                    SetChecked(true);
-
-					status = EventStatus::Consumed;
-					Invalidate();
-				}
-			} else {
-				if (m_pressed) {
-					m_pressed = false;
-					Invalidate();
-				}
-			}
-		} else if (event->Type() == EventType::MouseMotion) {
-			Rectangle b = GetIntersectedBounds();
-			MotionEvent* e = dynamic_cast<MotionEvent*>(event);
-			bool inside = b.HasPoint(e->x, e->y);
-			if (inside != m_hovered) {
-				m_hovered = inside;
-				Invalidate();
-			}
-			if (inside) {
-				status = EventStatus::Consumed;
-			}
-		}
-		return status;
+    void RadioButton::OnMouseDown(MouseEvent e) {
+		if (e.button != 1) return;
+		m_pressed = true;
+		Invalidate();
     }
+
+	void RadioButton::OnMouseUp(MouseEvent e) {
+		if (e.button != 1) return;
+		if (m_pressed) {
+			m_pressed = false;
+
+			auto* prev = GetApp()->FindElement<RadioButton>([this](RadioButton* rb) {
+				return rb != this && rb->GetGroup() == GetGroup();
+			});
+			if (prev) {
+				prev->SetChecked(false);
+			}
+			SetChecked(true);
+
+			Invalidate();
+		}
+	}
+
+	void RadioButton::OnMouseEnter() {
+		Invalidate();
+	}
+
+	void RadioButton::OnMouseLeave() {
+		Invalidate();
+	}
     
     void RadioButton::OnDraw(Graphics &g)
     {

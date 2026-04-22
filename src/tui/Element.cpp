@@ -1,11 +1,9 @@
 #include "Element.h"
 
-#include <algorithm>
-#include <fstream>
 #include <cmath>
-#include <iostream>
 
 #include "Application.h"
+#include "EventSystem.h"
 
 namespace tui {
 
@@ -19,14 +17,89 @@ namespace tui {
 	void Element::OnDraw(Graphics& g) {}
 
 	EventStatus Element::OnEvent(Event* event) {
+		Rectangle intersectedBounds = GetIntersectedBounds();
+		Rectangle localBounds = GetBounds();
+
 		// Handle focus on mouse click
 		if (event->Type() == EventType::MouseButton) {
-			Rectangle b = GetIntersectedBounds();
 			MouseEvent* e = dynamic_cast<MouseEvent*>(event);
-			if (b.HasPoint(e->x, e->y) && e->pressed && e->button == 1) {
+			if (intersectedBounds.HasPoint(e->x, e->y) && e->pressed && e->button == 1) {
 				RequestFocus();
 			}
 		}
+
+		switch (event->Type()) {
+			case EventType::MouseButton: {
+				MouseEvent eCopy = *dynamic_cast<MouseEvent*>(event);
+				if (!intersectedBounds.HasPoint(eCopy.x, eCopy.y)) {
+					return EventStatus::Active;
+				}
+
+				eCopy.x -= localBounds.x;
+				eCopy.y -= localBounds.y;
+				
+				if (eCopy.pressed) {
+					OnMouseDown(eCopy);
+				} else {
+					OnMouseUp(eCopy);
+				}
+				return EventStatus::Consumed;
+			};
+			case EventType::MouseMotion: {
+				MotionEvent eCopy = *dynamic_cast<MotionEvent*>(event);
+
+				if (!intersectedBounds.HasPoint(eCopy.x, eCopy.y)) {
+					if (m_hovered) {
+						m_hovered = false;
+						OnMouseLeave();
+					}
+					return EventStatus::Active;
+				}
+
+				if (!m_hovered) {
+					m_hovered = true;
+					OnMouseEnter();
+				}
+
+				OnMouseMove(eCopy);
+				return EventStatus::Consumed;
+			};
+			case EventType::Scroll: {
+				ScrollEvent eCopy = *dynamic_cast<ScrollEvent*>(event);
+				if (!intersectedBounds.HasPoint(eCopy.mouseX, eCopy.mouseY)) {
+					return EventStatus::Active;
+				}
+				eCopy.mouseX -= localBounds.x;
+				eCopy.mouseY -= localBounds.y;
+				OnScroll(eCopy);
+				return EventStatus::Consumed;
+			};
+			case EventType::Key: {
+				KeyEvent eCopy = *dynamic_cast<KeyEvent*>(event);
+				if (eCopy.pressed) {
+					OnKeyDown(eCopy);
+				} else {
+					OnKeyUp(eCopy);
+				}
+				return EventStatus::Consumed;
+			}
+			case EventType::TextInput: {
+				TextInputEvent eCopy = *dynamic_cast<TextInputEvent*>(event);
+				OnTextInput(eCopy);
+				return EventStatus::Consumed;
+			}
+			case EventType::Focus: {
+				FocusEvent eCopy = *dynamic_cast<FocusEvent*>(event);
+				OnFocus(eCopy);
+				return EventStatus::Consumed;
+			}
+			case EventType::Blur: {
+				BlurEvent eCopy = *dynamic_cast<BlurEvent*>(event);
+				OnBlur(eCopy);
+				return EventStatus::Consumed;
+			}
+		}
+		
 		return EventStatus::Active;
 	}
 

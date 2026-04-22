@@ -9,7 +9,10 @@ namespace tui {
     public:
         Switch();
 
-        EventStatus OnEvent(Event *event) override;
+        void OnMouseDown(MouseEvent e) override;
+        void OnMouseUp(MouseEvent e) override;
+        void OnMouseEnter() override;
+        void OnMouseLeave() override;
         void OnDraw(Graphics& g) override;
 
         bool IsChecked() const { return m_state == State::Checked; }
@@ -27,7 +30,6 @@ namespace tui {
             Indeterminate
         } m_state{ State::Unchecked };
 
-        bool m_hovered{ false };
         bool m_pressed{ false };
 
         std::function<void(bool)> m_onChanged;

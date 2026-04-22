@@ -27,7 +27,22 @@ namespace tui {
 		~Element() = default;
 
 		virtual void OnDraw(Graphics& g);
+
+		// Raw event handler - called by the application
 		virtual EventStatus OnEvent(Event *event) override;
+
+		// Event handlers - override these to handle specific events
+		virtual void OnMouseDown(MouseEvent e) {}
+		virtual void OnMouseMove(MotionEvent e) {}
+		virtual void OnMouseUp(MouseEvent e) {}
+		virtual void OnMouseEnter() {}
+		virtual void OnMouseLeave() {}
+		virtual void OnScroll(ScrollEvent e) {}
+		virtual void OnKeyDown(KeyEvent e) {}
+		virtual void OnKeyUp(KeyEvent e) {}
+		virtual void OnTextInput(TextInputEvent e) {}
+		virtual void OnFocus(FocusEvent e) {}
+		virtual void OnBlur(BlurEvent e) {}
 
 		// Used for Auto-Size
 		virtual Size GetPreferredSize() const { return { m_bounds.w, m_bounds.h }; }
@@ -69,11 +84,15 @@ namespace tui {
 		Application* GetApp() const { return m_application; }
 
 	protected:
-		Application *m_application;
-		Element *m_parent;
+		Application *m_application{nullptr};
+		Element *m_parent{nullptr};
 		Rectangle m_bounds;
 
-		bool m_dirty, m_visible, m_focused, m_autoSize;
+		bool m_dirty{false},
+			 m_visible{true},
+			 m_focused{false},
+			 m_autoSize{false},
+			 m_hovered{false};
 		float m_flexGrow{0.0f};
 
 		Json m_style;

@@ -8,42 +8,28 @@ namespace tui {
 		SetLocalBounds(Rectangle(0, 0, 100, 22));
 	}
 
-	EventStatus CheckBox::OnEvent(Event *event) {
-		EventStatus status = Element::OnEvent(event);
-		if (event->Type() == EventType::MouseButton) {
-			Rectangle b = GetIntersectedBounds();
-			MouseEvent* e = dynamic_cast<MouseEvent*>(event);
-			if (b.HasPoint(e->x, e->y)) {
-				if (e->pressed && e->button == 1) {
-					m_pressed = true;
-					status = EventStatus::Consumed;
-					Invalidate();
-				} else if (!e->pressed && e->button == 1 && m_pressed) {
-					m_pressed = false;
-					m_checked = !m_checked;
-					if (m_onChanged) m_onChanged(m_checked);
-					status = EventStatus::Consumed;
-					Invalidate();
-				}
-			} else {
-				if (m_pressed) {
-					m_pressed = false;
-					Invalidate();
-				}
-			}
-		} else if (event->Type() == EventType::MouseMotion) {
-			Rectangle b = GetIntersectedBounds();
-			MotionEvent* e = dynamic_cast<MotionEvent*>(event);
-			bool inside = b.HasPoint(e->x, e->y);
-			if (inside != m_hovered) {
-				m_hovered = inside;
-				Invalidate();
-			}
-			if (inside) {
-				status = EventStatus::Consumed;
-			}
+	void CheckBox::OnMouseDown(MouseEvent e) {
+		if (e.button != 1) return;
+		m_pressed = true;
+		Invalidate();
+	}
+
+	void CheckBox::OnMouseUp(MouseEvent e) {
+		if (e.button != 1) return;
+		if (m_pressed) {
+			m_pressed = false;
+			m_checked = !m_checked;
+			if (m_onChanged) m_onChanged(m_checked);
+			Invalidate();
 		}
-		return status;
+	}
+
+	void CheckBox::OnMouseEnter() {
+		Invalidate();
+	}
+
+	void CheckBox::OnMouseLeave() {
+		Invalidate();
 	}
 
 	void CheckBox::OnDraw(Graphics &g) {

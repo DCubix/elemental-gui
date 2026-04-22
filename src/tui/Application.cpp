@@ -104,7 +104,7 @@ namespace tui {
 						);
 					} break;
 					case SDL_EVENT_TEXT_INPUT: {
-						DispatchEvent<TextInput>(
+						DispatchEvent<TextInputEvent>(
 									evt.text.text[0]
 						);
 					} break;

@@ -14,8 +14,12 @@ namespace tui {
 		ToolButton();
 
 		void OnDraw(Graphics& g) override;
-		EventStatus OnEvent(Event *event) override;
-		
+
+		void OnMouseDown(MouseEvent e) override;
+		void OnMouseUp(MouseEvent e) override;
+		void OnMouseEnter() override;
+		void OnMouseLeave() override;
+
 		Size GetPreferredSize() const override;
 
         Mode GetMode() const { return m_mode; }

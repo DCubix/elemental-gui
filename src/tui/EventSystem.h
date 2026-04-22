@@ -48,11 +48,11 @@ namespace tui {
 		int x, y, button;
 	};
 
-	struct TextInput : public Event {
+	struct TextInputEvent : public Event {
 		EventType Type() const override { return EventType::TextInput; }
 
-		TextInput() = default;
-		TextInput(char c) : inputChar(c) {}
+		TextInputEvent() = default;
+		TextInputEvent(char c) : inputChar(c) {}
 
 		char inputChar;
 	};

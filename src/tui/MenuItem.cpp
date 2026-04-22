@@ -65,58 +65,54 @@ namespace tui {
         }
     }
 
-    EventStatus MenuItem::OnEvent(Event *event) {
-        if (m_separator) return EventStatus::Active;
+    void MenuItem::OnMouseDown(MouseEvent e) {
+		if (m_separator) return;
+		if (e.button != 1) return;
 
-        EventStatus status = Element::OnEvent(event);
-
-        if (event->Type() == EventType::MouseButton) {
-            Rectangle b = GetIntersectedBounds();
-            auto* e = dynamic_cast<MouseEvent*>(event);
-
-            if (m_state == ButtonState::Hover && e->pressed && e->button == 1) {
-                if (!m_subMenu) {
-                    m_state = ButtonState::Click;
-                    Invalidate();
-                }
-                status = EventStatus::Consumed;
-            } else if (m_state == ButtonState::Click) {
-                if (!b.HasPoint(e->x, e->y)) {
-                    m_state = ButtonState::Normal;
-                    Invalidate();
-                } else if (!e->pressed && e->button == 1) {
-                    if (m_onClick) m_onClick();
-                    m_state = ButtonState::Normal;
-                    if (auto* menu = GetParentMenu())
-                        menu->HideAll();
-                    Invalidate();
-                }
-                status = EventStatus::Consumed;
-            }
-        } else if (event->Type() == EventType::MouseMotion) {
-            Rectangle b = GetIntersectedBounds();
-            auto* e = dynamic_cast<MotionEvent*>(event);
-
-            if (b.HasPoint(e->x, e->y)) {
-                if (m_state == ButtonState::Normal) {
-                    m_state = ButtonState::Hover;
-                    Invalidate();
-                    NotifyParentMenuHover();
-                }
-                status = EventStatus::Consumed;
-            } else {
-                // Don't leave hover if mouse is in our open submenu
-                bool inSubMenu = m_subMenu && m_subMenu->IsOpen()
-                    && m_subMenu->HitTest(e->x, e->y);
-                if (!inSubMenu && m_state != ButtonState::Normal) {
-                    m_state = ButtonState::Normal;
-                    Invalidate();
-                }
-            }
-        }
-
-        return status;
+		if (m_state == ButtonState::Hover) {
+			if (!m_subMenu) {
+				m_state = ButtonState::Click;
+				Invalidate();
+			}
+		}
     }
+
+	void MenuItem::OnMouseUp(MouseEvent e) {
+		if (m_separator) return;
+		if (e.button != 1) return;
+
+		if (m_state == ButtonState::Click) {
+			Rectangle b = GetLocalBounds();
+			if (b.HasPoint(e.x, e.y)) {
+				if (m_onClick) m_onClick();
+				m_state = ButtonState::Normal;
+				if (auto* menu = GetParentMenu())
+					menu->HideAll();
+				Invalidate();
+			}
+		}
+	}
+
+	void MenuItem::OnMouseMove(MotionEvent e) {
+		if (m_separator) return;
+		Rectangle b = GetLocalBounds();
+
+		if (b.HasPoint(e.x, e.y)) {
+			if (m_state == ButtonState::Normal) {
+				m_state = ButtonState::Hover;
+				Invalidate();
+				NotifyParentMenuHover();
+			}
+		} else {
+			// Don't leave hover if mouse is in our open submenu
+			bool inSubMenu = m_subMenu && m_subMenu->IsOpen()
+				&& m_subMenu->HitTest(e.x, e.y);
+			if (!inSubMenu && m_state != ButtonState::Normal) {
+				m_state = ButtonState::Normal;
+				Invalidate();
+			}
+		}
+	}
 
     Menu* MenuItem::GetParentMenu() const {
         return dynamic_cast<Menu*>(GetParent());
