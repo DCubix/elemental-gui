@@ -44,7 +44,7 @@ namespace tui {
     }
     
     void ToolButton::OnMouseDown(MouseEvent e) {
-		if (e.button != 1) return;
+		if (e.button != MouseButton::Left) return;
 		if (m_state == ButtonState::Hover) {
 			m_state = ButtonState::Click;
 			if (m_mode == Mode::Toggle) {
@@ -57,7 +57,7 @@ namespace tui {
     }
 
 	void ToolButton::OnMouseUp(MouseEvent e) {
-		if (e.button != 1) return;
+		if (e.button != MouseButton::Left) return;
 		if (m_state == ButtonState::Click) {
 			if (m_onClick)
 				m_onClick();

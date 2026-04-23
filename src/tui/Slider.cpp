@@ -54,7 +54,7 @@ namespace tui {
 	}
 
 	void Slider::OnMouseDown(MouseEvent e) {
-		if (e.button != 1) return;
+		if (e.button != MouseButton::Left) return;
 		int p = (m_direction == Direction::Horizontal ? e.x : e.y);
 		int thumb = SliderThumbSize;
 
@@ -71,7 +71,7 @@ namespace tui {
 	}
 
 	void Slider::OnMouseUp(MouseEvent e) {
-		if (e.button != 1) return;
+		if (e.button != MouseButton::Left) return;
 		if (m_state == ButtonState::Click) {
 			Rectangle b = GetLocalBounds();
 			m_state = b.HasPoint(e.x, e.y) ? ButtonState::Hover : ButtonState::Normal;

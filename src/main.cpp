@@ -97,7 +97,7 @@ public:
 		Rectangle b = GetIntersectedBounds();
 		if (event->Type() == EventType::MouseButton) {
 			auto* e = static_cast<MouseEvent*>(event);
-			if (e->button == 1 && e->pressed && b.HasPoint(e->x, e->y)) {
+			if (e->button == MouseButton::Left && e->pressed && b.HasPoint(e->x, e->y)) {
 				switch (m_mode) {
 					case Mode::DrawPath:
 						return OnMouseDown_ModeDrawPath(event);
@@ -106,7 +106,7 @@ public:
 					case Mode::SegmentEdit:
 						return OnMouseDown_ModeSegmentEdit(event);
 				}
-			} else if (e->button == 1 && !e->pressed && b.HasPoint(e->x, e->y)) {
+			} else if (e->button == MouseButton::Left && !e->pressed && b.HasPoint(e->x, e->y)) {
 				switch (m_mode) {
 					case Mode::DrawPath:
 						return OnMouseUp_ModeDrawPath(event);

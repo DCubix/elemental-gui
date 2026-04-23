@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <map>
 #include <tuple>
-#include <iostream>
+
 #include "Application.h"
 
 namespace tui {
@@ -192,7 +192,7 @@ namespace tui {
 
 	void Edit::OnMouseDown(MouseEvent e) {
 		if (!IsFocused() || !m_editable) return;
-		if (e.button != 1) return;
+		if (e.button != MouseButton::Left) return;
 
 		Rectangle b = GetLocalBounds();
 		if (!b.HasPoint(e.x, e.y)) return;
@@ -213,7 +213,7 @@ namespace tui {
 	}
 
 	void Edit::OnMouseUp(MouseEvent e) {
-		if (e.button != 1) return;
+		if (e.button != MouseButton::Left) return;
 		if (m_state == EditState::Selecting) {
 			m_state = EditState::Normal;
 			Invalidate();
@@ -264,16 +264,16 @@ namespace tui {
 			}
 		}
 
-		if ((e.key == SDLK_RETURN || e.key == SDLK_KP_ENTER) && m_multiLine) {
+		if ((e.key == Key::Enter || e.key == Key::NumpadEnter) && m_multiLine) {
 			InsertChar('\n');
-		} else if (e.key == SDLK_HOME) {
+		} else if (e.key == Key::Home) {
 			int loff = std::get<0>(lines[currLine]);
 			m_caretIndex = loff;
-		} else if (e.key == SDLK_END) {
+		} else if (e.key == Key::End) {
 			int loff = std::get<0>(lines[currLine]);
 			int lsz = std::get<1>(lines[currLine]);
 			m_caretIndex = loff + lsz-1;
-		} else if (e.key == SDLK_BACKSPACE) {
+		} else if (e.key == Key::Backspace) {
 			if (IsSelected()) {
 				DeleteSelected();
 			} else {
@@ -283,7 +283,7 @@ namespace tui {
 					m_caretIndex = 0;
 				}
 			}
-		} else if (e.key == SDLK_DELETE) {
+		} else if (e.key == Key::Delete) {
 			if (IsSelected()) {
 				DeleteSelected();
 			} else {
@@ -296,13 +296,13 @@ namespace tui {
 					m_caretIndex = 0;
 				}
 			}
-		} else if (e.key == SDLK_LEFT) {
+		} else if (e.key == Key::Left) {
 			m_caretIndex--;
 			if (m_caretIndex <= 0) m_caretIndex = 0;
-		} else if (e.key == SDLK_RIGHT) {
+		} else if (e.key == Key::Right) {
 			m_caretIndex++;
 			if (m_caretIndex >= m_text.size()) m_caretIndex = int(m_text.size());
-		} else if (e.key == SDLK_UP && m_multiLine) {
+		} else if (e.key == Key::Up && m_multiLine) {
 			int loff = std::get<0>(lines[currLine]);
 			int dist = m_caretIndex - loff;
 
@@ -314,7 +314,7 @@ namespace tui {
 				off = loff + lsz-1;
 			}
 			m_caretIndex = off;
-		} else if (e.key == SDLK_DOWN && m_multiLine) {
+		} else if (e.key == Key::Down && m_multiLine) {
 			int loff = std::get<0>(lines[currLine]);
 			int dist = m_caretIndex - loff;
 
@@ -326,20 +326,20 @@ namespace tui {
 				off = loff + lsz-1;
 			}
 			m_caretIndex = off;
-		} else if (e.key == SDLK_C && GetApp()->GetMod() & SDL_KMOD_CTRL && IsSelected()) {
+		} else if (e.key == Key::C && e.mod.control && IsSelected()) {
 			int a = m_selectionStart,
 				b = m_selectionEnd;
 			if (a > b) std::swap(a, b);
 			std::string selTxt = m_textRaw.substr(a, b - a);
 			GetApp()->SetClipboard(selTxt);
-		} else if (e.key == SDLK_X && GetApp()->GetMod() & SDL_KMOD_CTRL && IsSelected()) {
+		} else if (e.key == Key::X && e.mod.control && IsSelected()) {
 			int a = m_selectionStart,
 				b = m_selectionEnd;
 			if (a > b) std::swap(a, b);
 			std::string selTxt = m_textRaw.substr(a, b - a);
 			GetApp()->SetClipboard(selTxt);
 			DeleteSelected();
-		} else if (e.key == SDLK_V && GetApp()->GetMod() & SDL_KMOD_CTRL) {
+		} else if (e.key == Key::V && e.mod.control) {
 			if (IsSelected()) {
 				DeleteSelected();
 			}
@@ -347,7 +347,7 @@ namespace tui {
 			for (char c : ntxt) {
 				InsertChar(c);
 			}
-		} else if (e.key == SDLK_A && GetApp()->GetMod() & SDL_KMOD_CTRL) {
+		} else if (e.key == Key::A && e.mod.control) {
 			Select(0);
 		}
 		Invalidate();

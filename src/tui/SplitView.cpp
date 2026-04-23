@@ -41,14 +41,14 @@ namespace tui {
     }
 
     void SplitView::OnMouseDown(MouseEvent e) {
-		if (e.button != 1) return;
+		if (e.button != MouseButton::Left) return;
 		if (GripRect().HasPoint(e.x, e.y)) {
 			m_dragging = true;
 		}
     }
 
 	void SplitView::OnMouseUp(MouseEvent e) {
-		if (e.button != 1) return;
+		if (e.button != MouseButton::Left) return;
 		m_dragging = false;
 	}
 

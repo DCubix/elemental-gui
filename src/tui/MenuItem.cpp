@@ -67,7 +67,7 @@ namespace tui {
 
     void MenuItem::OnMouseDown(MouseEvent e) {
 		if (m_separator) return;
-		if (e.button != 1) return;
+		if (e.button != MouseButton::Left) return;
 
 		if (m_state == ButtonState::Hover) {
 			if (!m_subMenu) {
@@ -79,7 +79,7 @@ namespace tui {
 
 	void MenuItem::OnMouseUp(MouseEvent e) {
 		if (m_separator) return;
-		if (e.button != 1) return;
+		if (e.button != MouseButton::Left) return;
 
 		if (m_state == ButtonState::Click) {
 			Rectangle b = GetLocalBounds();

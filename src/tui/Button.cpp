@@ -1,5 +1,6 @@
 #include "Button.h"
 
+#include "EventSystem.h"
 #include "Layout.h"
 
 namespace tui {
@@ -35,7 +36,7 @@ namespace tui {
 	}
 
 	void Button::OnMouseDown(MouseEvent e) {
-		if (e.button != 1) return;
+		if (e.button != MouseButton::Left) return;
 		if (m_state == ButtonState::Hover) {
 			m_state = ButtonState::Click;
 			Invalidate();
@@ -43,7 +44,7 @@ namespace tui {
 	}
 
 	void Button::OnMouseUp(MouseEvent e) {
-		if (e.button != 1) return;
+		if (e.button != MouseButton::Left) return;
 		if (m_state == ButtonState::Click) {
 			if (m_onClick)
 				m_onClick();

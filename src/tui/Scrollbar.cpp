@@ -2,7 +2,6 @@
 
 #include "Application.h"
 
-#include <iostream>
 
 namespace tui {
 
@@ -42,7 +41,7 @@ namespace tui {
 	}
 
 	void Scrollbar::OnMouseDown(MouseEvent e) {
-		if (e.button != 1) return;
+		if (e.button != MouseButton::Left) return;
 		Rectangle c = GetLocalBounds();
 		int p = (m_direction == Direction::Horizontal ? e.x : e.y);
 		int btn = GetButtonSize();
@@ -61,7 +60,7 @@ namespace tui {
 	}
 
 	void Scrollbar::OnMouseUp(MouseEvent e) {
-		if (e.button != 1) return;
+		if (e.button != MouseButton::Left) return;
 		if (m_state == ButtonState::Click) {
 			Rectangle b = GetLocalBounds();
 			m_state = b.HasPoint(e.x, e.y) ? ButtonState::Hover : ButtonState::Normal;

@@ -8,13 +8,13 @@ namespace tui {
 	}
     
     void RadioButton::OnMouseDown(MouseEvent e) {
-		if (e.button != 1) return;
+		if (e.button != MouseButton::Left) return;
 		m_pressed = true;
 		Invalidate();
     }
 
 	void RadioButton::OnMouseUp(MouseEvent e) {
-		if (e.button != 1) return;
+		if (e.button != MouseButton::Left) return;
 		if (m_pressed) {
 			m_pressed = false;
 

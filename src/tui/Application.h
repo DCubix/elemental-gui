@@ -14,7 +14,8 @@ namespace tui {
 
 	class Application;
 	class ApplicationAdapter {
-		public:
+	public:
+		virtual ~ApplicationAdapter() = default;
 		virtual void OnCreate(Application& app) = 0;
 		virtual void OnDestroy() = 0;
 	};

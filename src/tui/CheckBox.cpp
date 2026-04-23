@@ -9,13 +9,13 @@ namespace tui {
 	}
 
 	void CheckBox::OnMouseDown(MouseEvent e) {
-		if (e.button != 1) return;
+		if (e.button != MouseButton::Left) return;
 		m_pressed = true;
 		Invalidate();
 	}
 
 	void CheckBox::OnMouseUp(MouseEvent e) {
-		if (e.button != 1) return;
+		if (e.button != MouseButton::Left) return;
 		if (m_pressed) {
 			m_pressed = false;
 			m_checked = !m_checked;

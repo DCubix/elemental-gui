@@ -115,7 +115,7 @@ namespace tui {
         }
 
         void OnMouseDown(MouseEvent e) override {
-            if (e.button != 1) return;
+            if (e.button != MouseButton::Left) return;
             Rectangle b = GetLocalBounds();
             int scrollOffset = m_scrollbar ? static_cast<int>(m_scrollbar->GetValue()) : 0;
             int contentWidth = GetContentWidth();

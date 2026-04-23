@@ -77,7 +77,7 @@ namespace tui {
         // Escape: close submenu or self
         if (event->Type() == EventType::Key) {
             auto* e = dynamic_cast<KeyEvent*>(event);
-            if (e->pressed && e->key == SDLK_ESCAPE) {
+            if (e->pressed && e->key == Key::Escape) {
                 if (m_activeSubMenuItem)
                     CloseSubMenu();
                 else

@@ -23,7 +23,8 @@ namespace tui {
 		// Handle focus on mouse click
 		if (event->Type() == EventType::MouseButton) {
 			MouseEvent* e = dynamic_cast<MouseEvent*>(event);
-			if (intersectedBounds.HasPoint(e->x, e->y) && e->pressed && e->button == 1) {
+			if (intersectedBounds.HasPoint(e->x, e->y) &&
+				e->pressed && e->button == MouseButton::Left) {
 				RequestFocus();
 			}
 		}
