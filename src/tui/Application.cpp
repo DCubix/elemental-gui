@@ -138,6 +138,12 @@ namespace tui {
 							win->Close();
 						}
 					} break;
+					case SDL_EVENT_WINDOW_EXPOSED: {
+						auto win = FindWindow(evt.window.windowID);
+						if (win) {
+							win->Update();
+						}
+					} break;
 					case SDL_EVENT_WINDOW_RESIZED:
 					case SDL_EVENT_WINDOW_MAXIMIZED:
 					case SDL_EVENT_WINDOW_RESTORED: {
