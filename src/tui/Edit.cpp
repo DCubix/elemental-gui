@@ -5,6 +5,7 @@
 #include <tuple>
 
 #include "Application.h"
+#include "Window.h"
 
 namespace tui {
 
@@ -331,19 +332,19 @@ namespace tui {
 				b = m_selectionEnd;
 			if (a > b) std::swap(a, b);
 			std::string selTxt = m_textRaw.substr(a, b - a);
-			GetApp()->SetClipboard(selTxt);
+			m_window->GetApp()->SetClipboard(selTxt);
 		} else if (e.key == Key::X && e.mod.control && IsSelected()) {
 			int a = m_selectionStart,
 				b = m_selectionEnd;
 			if (a > b) std::swap(a, b);
 			std::string selTxt = m_textRaw.substr(a, b - a);
-			GetApp()->SetClipboard(selTxt);
+			m_window->GetApp()->SetClipboard(selTxt);
 			DeleteSelected();
 		} else if (e.key == Key::V && e.mod.control) {
 			if (IsSelected()) {
 				DeleteSelected();
 			}
-			std::string ntxt = GetApp()->GetClipboard();
+			std::string ntxt = m_window->GetApp()->GetClipboard();
 			for (char c : ntxt) {
 				InsertChar(c);
 			}
@@ -355,13 +356,13 @@ namespace tui {
 
 	void Edit::OnFocus(FocusEvent e) {
 		if (e.element == this) {
-			GetApp()->StartInput();
+			m_window->StartInput();
 		}
 	}
 
 	void Edit::OnBlur(BlurEvent e) {
 		if (e.element == this) {
-			GetApp()->StopInput();
+			m_window->StopInput();
 		}
 	}
 

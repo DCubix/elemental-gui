@@ -1,6 +1,6 @@
 #include "RadioButton.h"
 
-#include "Application.h"
+#include "Window.h"
 
 namespace tui {
     RadioButton::RadioButton() : Element(), m_text("") {
@@ -18,7 +18,7 @@ namespace tui {
 		if (m_pressed) {
 			m_pressed = false;
 
-			auto* prev = GetApp()->FindElement<RadioButton>([this](RadioButton* rb) {
+			auto* prev = m_window->Find<RadioButton>([this](RadioButton* rb) {
 				return rb != this && rb->GetGroup() == GetGroup();
 			});
 			if (prev) {

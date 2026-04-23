@@ -106,6 +106,7 @@ namespace tui {
 
 	class Graphics {
 		friend class Application;
+		friend class Window;
 	public:
 		void Clear(float r, float g, float b, float a = 1.0f);
 

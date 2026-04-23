@@ -351,11 +351,25 @@ struct InfiniteCanvasProps {
 class App : public ApplicationAdapter {
 public:
 	tui::Image icPencil, icEraser, icSegment;
+	tui::Window* winMain{ nullptr }, *winDialog{ nullptr };
 
 	void OnCreate(Application& app) {
 		icPencil = tui::Image("pencil.svg");
 		icEraser = tui::Image("eraser.svg");
 		icSegment = tui::Image("segment.svg");
+
+		winMain = app.CreateWindow({
+			.title = "Elemental Canvas",
+			.width = 800,
+			.height = 600
+		});
+		winDialog = app.CreateWindow({
+			.title = "Message",
+			.width = 400,
+			.height = 300,
+			.style = WindowStyle::Utility,
+			.parent = winMain
+		});
 
 		auto toolSize = decl::ElementProps{ .bounds = Rectangle::FromHeight(34) };
 		auto toolBox = decl::Column({
@@ -366,20 +380,20 @@ public:
 			.justify = FlexJustify::Start,
 			.showBackground = true
 		}, {
-			decl::ToolRadioButton("", { .base = toolSize, .icon = &icPencil, .toggled = true, .onClick = [&app]() {
-				auto canvas = app.FindByTag<InfiniteCanvas>("canvas");
+			decl::ToolRadioButton("", { .base = toolSize, .icon = &icPencil, .toggled = true, .onClick = [this]() {
+				auto canvas = winMain->FindByTag<InfiniteCanvas>("canvas");
 				if (canvas) {
 					canvas->SetMode(InfiniteCanvas::Mode::DrawPath);
 				}
 			}}),
-			decl::ToolRadioButton("", { .base = toolSize, .icon = &icEraser, .onClick = [&app]() {
-				auto canvas = app.FindByTag<InfiniteCanvas>("canvas");
+			decl::ToolRadioButton("", { .base = toolSize, .icon = &icEraser, .onClick = [this]() {
+				auto canvas = winMain->FindByTag<InfiniteCanvas>("canvas");
 				if (canvas) {
 					canvas->SetMode(InfiniteCanvas::Mode::ErasePath);
 				}
 			}}),
-			decl::ToolRadioButton("", { .base = toolSize, .icon = &icSegment, .onClick = [&app]() {
-				auto canvas = app.FindByTag<InfiniteCanvas>("canvas");
+			decl::ToolRadioButton("", { .base = toolSize, .icon = &icSegment, .onClick = [this]() {
+				auto canvas = winMain->FindByTag<InfiniteCanvas>("canvas");
 				if (canvas) {
 					canvas->SetMode(InfiniteCanvas::Mode::SegmentEdit);
 				}
@@ -398,7 +412,25 @@ public:
 				// TODO: Implement drawing logic
 			})
 		});
-		app.SetRoot(gui(app));
+
+		winMain->SetRoot(gui(*winMain));
+		winMain->Show();
+
+		auto dialog = decl::Column({
+			.gap = 8,
+			.padding = EdgeInsets::All(16),
+			.align = FlexAlign::Stretch,
+			.justify = FlexJustify::Start
+		}, {
+			decl::Text("Hello, World!", {}),
+			decl::Button("OK", { .onClick = [this]() {
+				winDialog->Close();
+			}})
+		});
+
+		winDialog->SetRoot(dialog(*winDialog));
+		winDialog->Show();
+
 	}
 
 	void OnDestroy() {
@@ -406,6 +438,6 @@ public:
 };
 
 int main(int argc, char** argv) {
-	tui::Application app{ "Elemental GUI Demo", 640, 480 };
+	tui::Application app{};
 	return app.Start(new App());
 }

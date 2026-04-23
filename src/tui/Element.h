@@ -13,11 +13,12 @@
 using namespace tui::utils;
 
 namespace tui {
-	class Application;
+	class Window;
 	class Menu;
 	template<typename> class List;
 	class Element : public Subscriber {
 		friend class Application;
+		friend class Window;
 		friend class Container;
 		friend class ScrollView;
 		friend class Menu;
@@ -81,10 +82,10 @@ namespace tui {
 		std::string GetTag() const { return m_tag; }
 		void SetTag(const std::string& tag) { m_tag = tag; }
 
-		Application* GetApp() const { return m_application; }
+		Window* GetWindow() const { return m_window; }
 
 	protected:
-		Application *m_application{nullptr};
+		Window* m_window{ nullptr };
 		Element *m_parent{nullptr};
 		Rectangle m_bounds;
 

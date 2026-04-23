@@ -1,5 +1,5 @@
 #include "Menu.h"
-#include "Application.h"
+#include "Window.h"
 #include "Layout.h"
 
 namespace tui {
@@ -119,13 +119,13 @@ namespace tui {
 
     void Menu::Add(MenuItem *item) {
         item->m_parent = this;
-        item->m_application = m_application;
+        item->m_window = m_window;
         m_items.push_back(item);
     }
 
     void Menu::Show(int x, int y) {
         for (auto* item : m_items)
-            item->m_application = m_application;
+            item->m_window = m_window;
         Size s = GetPreferredSize();
         SetLocalBounds({x, y, s.w, s.h});
         m_open = true;
@@ -160,9 +160,9 @@ namespace tui {
         m_activeSubMenuItem = item;
 
         Rectangle itemBounds = item->GetBounds();
-        subMenu->m_application = m_application;
+        subMenu->m_window = m_window;
         subMenu->SetParentMenu(this);
-        m_application->ShowPopup(subMenu);
+        m_window->ShowPopup(subMenu);
         subMenu->Show(itemBounds.x + itemBounds.w, itemBounds.y);
     }
 
@@ -173,7 +173,7 @@ namespace tui {
             subMenu->CloseSubMenu();
             subMenu->m_open = false;
             subMenu->SetVisible(false);
-            m_application->DismissPopup(subMenu);
+            m_window->DismissPopup(subMenu);
         }
         m_activeSubMenuItem = nullptr;
         Invalidate();

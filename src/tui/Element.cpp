@@ -4,14 +4,14 @@
 
 #include "Application.h"
 #include "EventSystem.h"
+#include "Window.h"
 
 namespace tui {
 
 	Element::Element()
 		: m_parent(nullptr), m_bounds(0, 0, 50, 50),
 		  m_dirty(true), m_visible(true),
-		  m_focused(false), m_autoSize(false),
-		  m_application(nullptr)
+		  m_focused(false), m_autoSize(false)
 	{}
 
 	void Element::OnDraw(Graphics& g) {}
@@ -106,12 +106,12 @@ namespace tui {
 
 	void Element::Invalidate() {
 		m_dirty = true;
-		if (m_application) m_application->RequestRedraw();
+		if (m_window) m_window->RequestRedraw();
 	}
 
 	void Element::RequestFocus() {
-		if (m_application) {
-			m_application->Focus(this);
+		if (m_window) {
+			m_window->Focus(this);
 			Invalidate();
 		}
 	}

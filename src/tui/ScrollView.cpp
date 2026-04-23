@@ -1,6 +1,6 @@
 #include "ScrollView.h"
 
-#include "Application.h"
+#include "Window.h"
 
 constexpr int SCROLLBAR_SIZE = 12;
 
@@ -47,7 +47,7 @@ namespace tui {
 
 	void ScrollView::OnDraw(Graphics& g) {
 		if (!m_scrollBar) {
-			m_scrollBar = &GetApp()->Create<Scrollbar>();
+			m_scrollBar = &m_window->template Create<Scrollbar>();
 			m_scrollBar->m_parent = this;
 			m_scrollBar->SetDirection(m_scrollDirection);
 			m_scrollBar->SetStep(1);

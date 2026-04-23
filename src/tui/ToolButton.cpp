@@ -1,7 +1,7 @@
 #include "ToolButton.h"
 
 #include "Layout.h"
-#include "Application.h"
+#include "Window.h"
 
 namespace tui {
     ToolButton::ToolButton() : Label()
@@ -62,7 +62,7 @@ namespace tui {
 			if (m_onClick)
 				m_onClick();
 			if (m_mode == Mode::Radio) {
-				auto* prev = GetApp()->FindElement<ToolButton>([this](ToolButton* tb) {
+				auto* prev = m_window->Find<ToolButton>([this](ToolButton* tb) {
 					return tb != this &&
 						tb->GetGroup() == GetGroup() &&
 						tb->GetMode() == Mode::Radio &&

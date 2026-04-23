@@ -28,8 +28,8 @@ namespace tui::declarative {
     }
 
     WidgetDesc Column(const ColumnProps& props, const std::vector<WidgetDesc>& children) {
-        return [props, children](Application& app) -> Element* {
-            auto& panel = app.Create<Panel>();
+        return [props, children](Window& window) -> Element* {
+            auto& panel = window.Create<Panel>();
             ElementSetup(panel, props.base);
 
             panel.SetBackgroundVisible(props.showBackground);
@@ -42,7 +42,7 @@ namespace tui::declarative {
             flex->SetPadding(props.padding);
 
             for (auto&& childDesc : children) {
-                Element* child = childDesc(app);
+                Element* child = childDesc(window);
                 panel.Add(child);
             }
 
@@ -52,8 +52,8 @@ namespace tui::declarative {
 
     WidgetDesc Row(const RowProps &props, const std::vector<WidgetDesc> &children)
     {
-        return [props, children](Application& app) -> Element* {
-            auto& panel = app.Create<Panel>();
+        return [props, children](Window& window) -> Element* {
+            auto& panel = window.Create<Panel>();
             ElementSetup(panel, props.base);
 
             panel.SetBackgroundVisible(props.showBackground);
@@ -66,7 +66,7 @@ namespace tui::declarative {
             flex->SetPadding(props.padding);
 
             for (auto&& childDesc : children) {
-                Element* child = childDesc(app);
+                Element* child = childDesc(window);
                 panel.Add(child);
             }
 
@@ -76,8 +76,8 @@ namespace tui::declarative {
     
     WidgetDesc Text(const std::string &text, const TextProps &props)
     {
-        return [text, props](Application& app) -> Element* {
-            auto& label = app.Create<Label>();
+        return [text, props](Window& window) -> Element* {
+            auto& label = window.Create<Label>();
             ElementSetup(label, props.base);
             label.SetText(text);
             label.SetAlignment(props.align);
@@ -88,8 +88,8 @@ namespace tui::declarative {
     
     WidgetDesc Button(const std::string &text, const ButtonProps &props)
     {
-        return [text, props](Application& app) -> Element* {
-            auto& button = app.Create<tui::Button>();
+        return [text, props](Window& window) -> Element* {
+            auto& button = window.Create<tui::Button>();
             ElementSetup(button, props.base);
             button.SetText(text);
             button.SetIcon(props.icon);
@@ -100,8 +100,8 @@ namespace tui::declarative {
 
     WidgetDesc TextEdit(const TextEditProps &props)
     {
-        return [props](Application& app) -> Element* {
-            auto& edit = app.Create<Edit>();
+        return [props](Window& window) -> Element* {
+            auto& edit = window.Create<Edit>();
             ElementSetup(edit, props.base);
             edit.SetText(props.text);
             edit.SetMultiLine(props.multiLine);
@@ -113,8 +113,8 @@ namespace tui::declarative {
 
     WidgetDesc Image(const ImageProps &props)
     {
-        return [props](Application& app) -> Element* {
-            auto& imageView = app.Create<ImageView>();
+        return [props](Window& window) -> Element* {
+            auto& imageView = window.Create<ImageView>();
             ElementSetup(imageView, props.base);
             
             imageView.SetImage(new tui::Image(props.fileName));
@@ -126,11 +126,11 @@ namespace tui::declarative {
     
     WidgetDesc ScrollView(const WidgetDesc &child, const ScrollViewProps& props)
     {
-        return [child, props](Application& app) -> Element* {
-            auto& sv = app.Create<tui::ScrollView>();
+        return [child, props](Window& window) -> Element* {
+            auto& sv = window.Create<tui::ScrollView>();
             ElementSetup(sv, props.base);
             sv.SetScrollDirection(props.scrollDirection);
-            Element* content = child(app);
+            Element* content = child(window);
             sv.SetElement(content);
             return &sv;
         };
@@ -138,8 +138,8 @@ namespace tui::declarative {
     
     WidgetDesc CheckBox(const std::string &text, const CheckBoxProps &props)
     {
-        return [props, text](Application& app) -> Element* {
-            auto& cb = app.Create<tui::CheckBox>();
+        return [props, text](Window& window) -> Element* {
+            auto& cb = window.Create<tui::CheckBox>();
             ElementSetup(cb, props.base);
             cb.SetText(text);
             cb.SetChecked(props.checked);
@@ -150,8 +150,8 @@ namespace tui::declarative {
 
     WidgetDesc RadioButton(const std::string &text, const RadioButtonProps &props)
     {
-        return [props, text](Application& app) -> Element* {
-            auto& rb = app.Create<tui::RadioButton>();
+        return [props, text](Window& window) -> Element* {
+            auto& rb = window.Create<tui::RadioButton>();
             ElementSetup(rb, props.base);
             rb.SetText(text);
             rb.SetGroup(props.group);
@@ -163,8 +163,8 @@ namespace tui::declarative {
 
     WidgetDesc Switch(const SwitchProps &props)
     {
-        return [props](Application& app) -> Element* {
-            auto& sw = app.Create<tui::Switch>();
+        return [props](Window& window) -> Element* {
+            auto& sw = window.Create<tui::Switch>();
             ElementSetup(sw, props.base);
             sw.SetChecked(props.checked);
             sw.SetOnChanged(props.onChanged);
@@ -174,8 +174,8 @@ namespace tui::declarative {
 
     WidgetDesc Slider(const SliderProps &props)
     {
-        return [props](Application& app) -> Element* {
-            auto& slider = app.Create<tui::Slider>();
+        return [props](Window& window) -> Element* {
+            auto& slider = window.Create<tui::Slider>();
             ElementSetup(slider, props.base);
             slider.SetDirection(props.direction);
             slider.SetRange(props.range.minimum, props.range.maximum);
@@ -188,15 +188,15 @@ namespace tui::declarative {
 
     WidgetDesc MenuItem(const MenuItemProps &props)
     {
-        return [props](Application& app) -> Element* {
-            auto& item = app.Create<tui::MenuItem>();
+        return [props](Window& window) -> Element* {
+            auto& item = window.Create<tui::MenuItem>();
             ElementSetup(item, props.base);
             item.SetText(props.text);
             item.SetIcon(props.icon);
             item.SetChecked(props.checked);
             item.SetOnClick(props.onClick);
             if (props.subMenu) {
-                tui::Menu* subMenu = props.subMenu(app);
+                tui::Menu* subMenu = props.subMenu(window);
                 item.SetSubMenu(subMenu);
             }
             return &item;
@@ -205,8 +205,8 @@ namespace tui::declarative {
 
     WidgetDesc MenuSeparator()
     {
-        return [](Application& app) -> Element* {
-            auto& item = app.Create<tui::MenuItem>();
+        return [](Window& window) -> Element* {
+            auto& item = window.Create<tui::MenuItem>();
             item.SetSeparator(true);
             item.SetAutoSize(true);
             return &item;
@@ -215,14 +215,14 @@ namespace tui::declarative {
 
     MenuDesc Menu(const MenuProps &props, const std::vector<WidgetDesc> &items)
     {
-        return [props, items](Application& app) -> tui::Menu* {
-            auto& menu = app.Create<tui::Menu>();
+        return [props, items](Window& window) -> tui::Menu* {
+            auto& menu = window.Create<tui::Menu>();
             ElementSetup(menu, props.base);
             menu.SetAutoSize(true);
             menu.SetOnDismiss(props.onDismiss);
 
             for (auto&& itemDesc : items) {
-                Element* el = itemDesc(app);
+                Element* el = itemDesc(window);
                 if (auto* item = dynamic_cast<tui::MenuItem*>(el)) {
                     item->SetAutoSize(true);
                     menu.Add(item);
@@ -235,17 +235,17 @@ namespace tui::declarative {
     
     WidgetDesc SplitView(const SplitViewProps &props)
     {
-        return [props](Application& app) -> Element* {
-            auto& splitView = app.Create<tui::SplitView>();
+        return [props](Window& window) -> Element* {
+            auto& splitView = window.Create<tui::SplitView>();
             ElementSetup(splitView, props.base);
             splitView.SetDirection(props.direction);
             splitView.SetSplitPosition(props.splitPosition);
             if (props.first) {
-                Element* first = props.first(app);
+                Element* first = props.first(window);
                 splitView.Add(first);
             }
             if (props.second) {
-                Element* second = props.second(app);
+                Element* second = props.second(window);
                 splitView.Add(second);
             }
             return &splitView;
@@ -254,8 +254,8 @@ namespace tui::declarative {
     
     WidgetDesc BasicList(const BasicListProps &props)
     {
-        return [props](Application& app) -> Element* {
-            auto& list = app.Create<tui::List<std::string>>();
+        return [props](Window& window) -> Element* {
+            auto& list = window.Create<tui::List<std::string>>();
             ElementSetup(list, props.base);
             for (const auto& item : props.items) {
                 list.AddItem(item, item);
@@ -268,8 +268,8 @@ namespace tui::declarative {
     
     WidgetDesc ToolButton(const std::string &text, const ToolButtonProps &props)
     {
-        return [text, props](Application& app) -> Element* {
-            auto& button = app.Create<tui::ToolButton>();
+        return [text, props](Window& window) -> Element* {
+            auto& button = window.Create<tui::ToolButton>();
             ElementSetup(button, props.base);
             button.SetText(text);
             button.SetIcon(props.icon);
@@ -283,8 +283,8 @@ namespace tui::declarative {
 
     WidgetDesc ToolRadioButton(const std::string &text, const ToolButtonProps &props)
     {
-        return [text, props](Application& app) -> Element* {
-            auto& button = app.Create<tui::ToolButton>();
+        return [text, props](Window& window) -> Element* {
+            auto& button = window.Create<tui::ToolButton>();
             ElementSetup(button, props.base);
             button.SetText(text);
             button.SetIcon(props.icon);
@@ -299,8 +299,8 @@ namespace tui::declarative {
 
     WidgetDesc ToolToggleButton(const std::string &text, const ToolButtonProps &props)
     {
-        return [text, props](Application& app) -> Element* {
-            auto& button = app.Create<tui::ToolButton>();
+        return [text, props](Window& window) -> Element* {
+            auto& button = window.Create<tui::ToolButton>();
             ElementSetup(button, props.base);
             button.SetText(text);
             button.SetIcon(props.icon);
@@ -314,8 +314,8 @@ namespace tui::declarative {
     
     WidgetDesc ProgressBar(const ProgressBarProps &props)
     {
-        return [props](Application& app) -> Element* {
-            auto& progressBar = app.Create<tui::ProgressBar>();
+        return [props](Window& window) -> Element* {
+            auto& progressBar = window.Create<tui::ProgressBar>();
             ElementSetup(progressBar, props.base);
             progressBar.SetRange(props.range.minimum, props.range.maximum);
             progressBar.SetValue(props.value);

@@ -2,14 +2,14 @@
 
 #include "Utils.h"
 #include "Element.h"
-#include "Application.h"
+#include "Window.h"
 #include "FlexLayout.h"
 #include "ImageView.h"
 #include "Menu.h"
 #include "List.h"
 
 namespace tui::declarative {
-    using WidgetDesc = std::function<Element*(Application&)>;
+    using WidgetDesc = std::function<Element*(Window&)>;
 
     // --- Element base props -------------------------------
     struct ElementProps {
@@ -128,7 +128,7 @@ namespace tui::declarative {
     WidgetDesc Slider(const SliderProps& props);
 
     // --- MenuItem widget ----------------------------------
-    using MenuDesc = std::function<tui::Menu*(Application&)>;
+    using MenuDesc = std::function<tui::Menu*(Window&)>;
 
     struct MenuItemProps {
         ElementProps base{};
@@ -151,8 +151,8 @@ namespace tui::declarative {
     // --- Custom widget ------------------------------------
     template <DerivedFromElement Elem, HasBaseProps Props>
     WidgetDesc Custom(const Props& props, std::function<void(Elem&, const Props&)> setup = nullptr) {
-        return [props, setup](Application& app) -> Element* {
-            auto& element = app.Create<Elem>();
+        return [props, setup](Window& window) -> Element* {
+            auto& element = window.Create<Elem>();
             ElementSetup(element, props.base);
             if (setup) {
                 setup(element, props);
@@ -182,8 +182,8 @@ namespace tui::declarative {
     
     template <typename T>
     WidgetDesc List(const ListProps<T>& props) {
-        return [props](Application& app) -> Element* {
-            auto& list = app.Create<tui::List<T>>();
+        return [props](Window& window) -> Element* {
+            auto& list = window.Create<tui::List<T>>();
             ElementSetup(list, props.base);
             for (const auto& item : props.items) {
                 list.AddItem(item.data, item.label);

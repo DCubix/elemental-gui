@@ -3,7 +3,7 @@
 #include "Element.h"
 #include "Layout.h"
 #include "Scrollbar.h"
-#include "Application.h"
+#include "Window.h"
 
 namespace tui {
     template<typename T>
@@ -31,7 +31,7 @@ namespace tui {
 
             // Lazy-init the scrollbar
             if (m_scrollbar == nullptr) {
-                m_scrollbar = &GetApp()->template Create<Scrollbar>();
+                m_scrollbar = &m_window->template Create<Scrollbar>();
                 m_scrollbar->m_parent = this;
                 m_scrollbar->SetDirection(Direction::Vertical);
                 m_scrollbar->SetStep(1);

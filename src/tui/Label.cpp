@@ -1,6 +1,6 @@
 #include "Label.h"
 
-#include "Application.h"
+#include "Window.h"
 
 #include <algorithm>
 
@@ -110,7 +110,7 @@ namespace tui {
 
 			const auto textStyle = GetStyle()["DefaultText"];
 
-			auto& g = GetApp()->GetGraphics();
+			auto& g = m_window->GetGraphics();
 			int maxW = 0, maxH = 0;
 
 			g.Save();

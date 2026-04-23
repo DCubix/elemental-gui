@@ -2,7 +2,7 @@
 #include "Menu.h"
 
 #include "Layout.h"
-#include "Application.h"
+#include "Window.h"
 
 static constexpr int CHECK_AREA = 20;
 static constexpr int ICON_SIZE = 16;
@@ -135,7 +135,7 @@ namespace tui {
         if (IsAutoSize()) {
             if (m_separator) return { 0, 8 };
 
-            auto& g = GetApp()->GetGraphics();
+            auto& g = m_window->GetGraphics();
             const auto textStyle = GetStyle()["DefaultText"];
 
             g.Save();

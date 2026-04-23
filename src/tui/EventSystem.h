@@ -178,8 +178,12 @@ namespace tui {
 		bool IsEnabled() const { return m_enabled; }
 		void SetEnabled(bool v) { m_enabled = v; }
 
+		bool IsHighPriority() const { return m_highPriority; }
+		void SetHighPriority(bool v) { m_highPriority = v; }
+
 	private:
 		bool m_enabled = true;
+		bool m_highPriority = false;
 	};
 	using EventSubscriberMap = std::map<EventType, std::vector<Subscriber*>>;
 
