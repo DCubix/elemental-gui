@@ -83,7 +83,8 @@ file(GLOB_RECURSE TUI_SRC
 
 add_library(${PROJECT_NAME} ${TUI_SRC})
 target_include_directories(${PROJECT_NAME} PUBLIC ${CAIRO_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} PUBLIC SDL3::SDL3 ${CAIRO_LIBRARIES} nlohmann_json nanosvg OpenGL::GL)
+target_link_libraries(${PROJECT_NAME} PUBLIC ${CAIRO_LIBRARIES} nlohmann_json nanosvg OpenGL::GL)
+target_link_libraries(${PROJECT_NAME} PRIVATE SDL3::SDL3)
 
 # Re-embed resources before each build
 add_custom_target(embed_resources ALL
@@ -96,4 +97,4 @@ add_custom_target(embed_resources ALL
 add_dependencies(${PROJECT_NAME} embed_resources)
 
 add_executable(tui_test "src/main.cpp")
-target_link_libraries(tui_test PRIVATE ${PROJECT_NAME})
+target_link_libraries(tui_test PRIVATE ${PROJECT_NAME} SDL3::SDL3)

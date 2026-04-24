@@ -1,4 +1,5 @@
 #include "tui/Application.h"
+#include "tui/SDL3Backend.h"
 #include "tui/EventSystem.h"
 #include "tui/Panel.h"
 #include "tui/Label.h"
@@ -439,5 +440,6 @@ public:
 
 int main(int argc, char** argv) {
 	tui::Application app{};
+	app.SetBackend(std::make_unique<tui::SDL3Backend>());
 	return app.Start(new App());
 }
