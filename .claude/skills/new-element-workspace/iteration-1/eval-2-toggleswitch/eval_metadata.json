@@ -1,0 +1,6 @@
+{
+  "eval_id": 2,
+  "eval_name": "toggleswitch",
+  "prompt": "add a new ToggleSwitch element that switches between on/off",
+  "assertions": []
+}

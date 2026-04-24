@@ -1,0 +1,30 @@
+// In Declarative.h — add before the closing brace of namespace tui::declarative:
+
+    // --- ProgressBar widget -------------------------------------
+    struct ProgressBarProps {
+        ElementProps base{};
+        Range range{0.0f, 100.0f};
+        float value{0.0f};
+        bool indeterminate{false};
+        Direction direction{Direction::Horizontal};
+    };
+    WidgetDesc ProgressBar(const ProgressBarProps& props);
+
+
+// In Declarative.cpp — add the include near the top:
+#include "ProgressBar.h"
+
+// Add at the bottom of the namespace tui::declarative block:
+
+    WidgetDesc ProgressBar(const ProgressBarProps& props)
+    {
+        return [props](Window& window) -> Element* {
+            auto& progressBar = window.Create<tui::ProgressBar>();
+            ElementSetup(progressBar, props.base);
+            progressBar.SetRange(props.range.minimum, props.range.maximum);
+            progressBar.SetValue(props.value);
+            progressBar.SetIndeterminate(props.indeterminate);
+            progressBar.SetDirection(props.direction);
+            return &progressBar;
+        };
+    }

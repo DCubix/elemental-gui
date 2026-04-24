@@ -1,0 +1,26 @@
+=== INSERT INTO Declarative.h (before closing `}` of namespace tui::declarative) ===
+
+    // --- ToggleSwitch widget ------------------------------------
+    struct ToggleSwitchProps {
+        ElementProps base{};
+        bool on{false};
+        ValueChanged<bool> onChanged;
+    };
+    WidgetDesc ToggleSwitch(const ToggleSwitchProps& props = {});
+
+
+=== INSERT INTO Declarative.cpp (before closing `}` of namespace tui::declarative) ===
+
+Add to includes at top of file:
+    #include "ToggleSwitch.h"
+
+Add factory function:
+    WidgetDesc ToggleSwitch(const ToggleSwitchProps& props) {
+        return [props](Window& window) -> Element* {
+            auto& ts = window.Create<tui::ToggleSwitch>();
+            ElementSetup(ts, props.base);
+            ts.SetOn(props.on);
+            ts.SetOnChanged(props.onChanged);
+            return &ts;
+        };
+    }

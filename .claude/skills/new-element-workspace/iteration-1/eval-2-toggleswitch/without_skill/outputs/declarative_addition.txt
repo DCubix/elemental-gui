@@ -1,0 +1,27 @@
+// --- In Declarative.h, add after the Switch block: ---
+
+    // --- ToggleSwitch widget -------------------------------------
+    struct ToggleSwitchProps {
+        ElementProps base{};
+        bool on{false};
+        std::string label{""};
+        ValueChanged<bool> onChanged;
+    };
+    WidgetDesc ToggleSwitch(const ToggleSwitchProps& props);
+
+
+// --- In Declarative.cpp, add the include at the top: ---
+#include "ToggleSwitch.h"
+
+// --- Then add the builder function: ---
+    WidgetDesc ToggleSwitch(const ToggleSwitchProps& props)
+    {
+        return [props](Window& window) -> Element* {
+            auto& ts = window.Create<tui::ToggleSwitch>();
+            ElementSetup(ts, props.base);
+            ts.SetOn(props.on);
+            ts.SetLabel(props.label);
+            ts.SetOnChanged(props.onChanged);
+            return &ts;
+        };
+    }

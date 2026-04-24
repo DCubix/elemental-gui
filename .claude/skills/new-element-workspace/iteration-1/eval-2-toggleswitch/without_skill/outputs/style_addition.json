@@ -1,0 +1,52 @@
+"ToggleSwitch": {
+    "width": 52,
+    "height": 28,
+    "track": {
+        "off": {
+            "border": {
+                "radius": 999.0,
+                "color": "#FF404045",
+                "width": 1.0
+            },
+            "background": {
+                "color": "#FF1F1F1F"
+            }
+        },
+        "on": {
+            "border": {
+                "radius": 999.0,
+                "color": "#FF3866BF",
+                "width": 1.0
+            },
+            "background": {
+                "color": "#FF24478A"
+            }
+        }
+    },
+    "thumb": {
+        "normal": {
+            "border": { "radius": 999.0, "color": "#FF616166", "width": 1.0 },
+            "background": { "color": "#FF85858A" }
+        },
+        "hover": {
+            "border": { "radius": 999.0, "color": "#FF7A7A80", "width": 1.0 },
+            "background": { "color": "#FF9E9EA3" }
+        },
+        "click": {
+            "border": { "radius": 999.0, "color": "#FF525257", "width": 1.0 },
+            "background": { "color": "#FF6B6B70" }
+        },
+        "normalOn": {
+            "border": { "radius": 999.0, "color": "#FF4D80D9", "width": 1.0 },
+            "background": { "color": "#FFA6BDE6" }
+        },
+        "hoverOn": {
+            "border": { "radius": 999.0, "color": "#FF6194EB", "width": 1.0 },
+            "background": { "color": "#FFB8CCF0" }
+        },
+        "clickOn": {
+            "border": { "radius": 999.0, "color": "#FF3866B8", "width": 1.0 },
+            "background": { "color": "#FF859ED6" }
+        }
+    }
+}

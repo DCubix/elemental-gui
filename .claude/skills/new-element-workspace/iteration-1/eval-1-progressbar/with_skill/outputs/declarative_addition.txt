@@ -1,0 +1,28 @@
+NOTE: ProgressBar already exists in the project. The skill agent confirmed the existing implementation.
+
+=== In Declarative.h (already present after ToolButton declarations) ===
+
+    // --- ProgressBar widget -------------------------------------
+    struct ProgressBarProps {
+        ElementProps base{};
+        Range range{0.0f, 1.0f};
+        float value{0.0f};
+        bool indeterminate{false};
+        Direction direction{Direction::Horizontal};
+    };
+    WidgetDesc ProgressBar(const ProgressBarProps& props);
+
+=== In Declarative.cpp (already present at end of namespace) ===
+
+    WidgetDesc ProgressBar(const ProgressBarProps &props)
+    {
+        return [props](Window& window) -> Element* {
+            auto& progressBar = window.Create<tui::ProgressBar>();
+            ElementSetup(progressBar, props.base);
+            progressBar.SetRange(props.range.minimum, props.range.maximum);
+            progressBar.SetValue(props.value);
+            progressBar.SetIndeterminate(props.indeterminate);
+            progressBar.SetDirection(props.direction);
+            return &progressBar;
+        };
+    }
