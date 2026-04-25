@@ -33,14 +33,15 @@ namespace gui {
         while (m_running) {
             m_backend->PollEvents(*this);
 
-            for (auto& win : m_windows) {
-                win->Update();
-            }
             m_windows.erase(
                 std::remove_if(m_windows.begin(), m_windows.end(),
                     [](const auto& win) { return win->m_closeRequested; }),
                 m_windows.end()
             );
+
+            for (auto& win : m_windows) {
+                win->Update();
+            }
         }
 
         adapter->OnDestroy();

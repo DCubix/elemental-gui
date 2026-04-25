@@ -32,16 +32,23 @@ namespace gui {
 		switch (event->Type()) {
 			case EventType::MouseButton: {
 				MouseEvent eCopy = *dynamic_cast<MouseEvent*>(event);
+				
+				// Only accept clicks within bounds, but always accept releases if we're tracking a drag
 				if (!intersectedBounds.HasPoint(eCopy.x, eCopy.y)) {
-					return EventStatus::Active;
+					if (eCopy.pressed || !m_mouseDown) {
+						return EventStatus::Active;
+					}
+					// Release event outside bounds while dragging - still handle it
 				}
 
 				eCopy.x -= localBounds.x;
 				eCopy.y -= localBounds.y;
 				
 				if (eCopy.pressed) {
+					m_mouseDown = true;
 					OnMouseDown(eCopy);
 				} else {
+					m_mouseDown = false;
 					OnMouseUp(eCopy);
 				}
 				return EventStatus::Consumed;
@@ -49,20 +56,39 @@ namespace gui {
 			case EventType::MouseMotion: {
 				MotionEvent eCopy = *dynamic_cast<MotionEvent*>(event);
 
-				if (!intersectedBounds.HasPoint(eCopy.x, eCopy.y)) {
+				bool isInBounds = intersectedBounds.HasPoint(eCopy.x, eCopy.y);
+
+				// Handle hover state
+				if (!isInBounds) {
 					if (m_hovered) {
 						m_hovered = false;
 						OnMouseLeave();
 					}
-					return EventStatus::Active;
+					// If not dragging from this element, stop handling the event
+					if (!m_mouseDown) {
+						return EventStatus::Active;
+					}
+				} else {
+					if (!m_hovered) {
+						m_hovered = true;
+						OnMouseEnter();
+					}
 				}
 
-				if (!m_hovered) {
-					m_hovered = true;
-					OnMouseEnter();
+				// If dragging from this element, always report motion events (even outside bounds)
+				if (m_mouseDown) {
+					eCopy.x -= localBounds.x;
+					eCopy.y -= localBounds.y;
+					OnMouseMove(eCopy);
+					return EventStatus::Consumed;
 				}
 
-				OnMouseMove(eCopy);
+				// Normal hover motion (within bounds)
+				if (isInBounds) {
+					eCopy.x -= localBounds.x;
+					eCopy.y -= localBounds.y;
+					OnMouseMove(eCopy);
+				}
 				return EventStatus::Consumed;
 			};
 			case EventType::Scroll: {

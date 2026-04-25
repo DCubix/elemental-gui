@@ -93,7 +93,8 @@ namespace gui {
 			 m_visible{true},
 			 m_focused{false},
 			 m_autoSize{false},
-			 m_hovered{false};
+			 m_hovered{false},
+			 m_mouseDown{false};
 		float m_flexGrow{0.0f};
 
 		Json m_style;
