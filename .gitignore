@@ -6,5 +6,5 @@
 *.lib
 *.user
 *.png
-src/tui/generated/
+src/generated/
 .cache/

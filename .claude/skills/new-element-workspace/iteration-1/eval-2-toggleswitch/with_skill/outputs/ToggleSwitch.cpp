@@ -1,7 +1,7 @@
 #include "ToggleSwitch.h"
 #include "Application.h"
 
-namespace tui {
+namespace gui {
 
     ToggleSwitch::ToggleSwitch() : Element() {
         SetLocalBounds(Rectangle(0, 0, 48, 26));

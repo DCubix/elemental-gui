@@ -45,8 +45,8 @@ cmake --build build
 #include "tui/SDL3Backend.h"
 #include "tui/Declarative.h"
 
-using namespace tui;
-namespace decl = tui::declarative;
+using namespace gui;
+namespace decl = gui::declarative;
 
 class App : public ApplicationAdapter {
 public:
@@ -75,8 +75,8 @@ public:
 };
 
 int main() {
-    tui::Application app;
-    app.SetBackend(std::make_unique<tui::SDL3Backend>());
+    gui::Application app;
+    app.SetBackend(std::make_unique<gui::SDL3Backend>());
     return app.Start(new App());
 }
 ```

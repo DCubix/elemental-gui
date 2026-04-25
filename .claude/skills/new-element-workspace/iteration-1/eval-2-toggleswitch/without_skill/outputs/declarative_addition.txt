@@ -17,7 +17,7 @@
     WidgetDesc ToggleSwitch(const ToggleSwitchProps& props)
     {
         return [props](Window& window) -> Element* {
-            auto& ts = window.Create<tui::ToggleSwitch>();
+            auto& ts = window.Create<gui::ToggleSwitch>();
             ElementSetup(ts, props.base);
             ts.SetOn(props.on);
             ts.SetLabel(props.label);

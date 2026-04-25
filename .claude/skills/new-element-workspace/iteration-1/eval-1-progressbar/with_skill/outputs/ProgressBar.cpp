@@ -1,6 +1,6 @@
 #include "ProgressBar.h"
 
-namespace tui {
+namespace gui {
     ProgressBar::ProgressBar() : Element()
     {
         m_range.minimum = 0.0f;

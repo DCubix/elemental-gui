@@ -1,9 +1,13 @@
 cmake_minimum_required(VERSION 3.14)
-project(elemental VERSION 0.0.1 LANGUAGES CXX)
+project(elemental VERSION 0.5.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# Some options
+option(ELEMENTAL_BUILD_EXAMPLES "Build example applications" ON)
+option(ELEMENTAL_BACKEND_SDL3 "Enable SDL3 backend" ON)
 
 # Auto-download CPM.cmake into cmake/
 set(CPM_DOWNLOAD_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/cmake/CPM.cmake")
@@ -15,20 +19,6 @@ if(NOT EXISTS ${CPM_DOWNLOAD_LOCATION})
     )
 endif()
 include(${CPM_DOWNLOAD_LOCATION})
-
-# SDL3
-CPMAddPackage(
-    NAME SDL3
-    GITHUB_REPOSITORY libsdl-org/SDL
-    GIT_TAG release-3.4.4
-    EXCLUDE_FROM_ALL YES
-    SYSTEM YES
-    OPTIONS
-        "SDL_SHARED OFF"
-        "SDL_STATIC ON"
-        "SDL_TEST_LIBRARY OFF"
-		"SDL_X11_XSCRNSAVER OFF"
-)
 
 # nlohmann/json
 CPMAddPackage(
@@ -61,13 +51,9 @@ endif()
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 CPMFindPackage(NAME Cairo)
 
-find_package(OpenGL REQUIRED)
-
-add_definitions(-DSDL_MAIN_HANDLED)
-
 # Embed resources as headers before building
 set(RESOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/resources")
-set(GENERATED_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/tui/generated")
+set(GENERATED_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/generated")
 execute_process(
 	COMMAND ${CMAKE_COMMAND}
 		-DRESOURCE_DIR=${RESOURCE_DIR}
@@ -76,15 +62,42 @@ execute_process(
 )
 
 file(GLOB_RECURSE TUI_SRC
-	"src/tui/*.h"
-	"src/tui/*.cpp"
-	"src/tui/*.hpp"
+	"src/*.h"
+	"src/*.cpp"
+	"src/*.hpp"
 )
 
+file(GLOB_RECURSE EXCLUDE_FILES
+  "src/backends/*.h"
+  "src/backends/*.cpp"
+)
+
+# Exclude backend files from the main library (they will be included in separate targets if enabled)
+foreach(EXCLUDE_FILE ${EXCLUDE_FILES})
+  list(REMOVE_ITEM TUI_SRC ${CMAKE_CURRENT_SOURCE_DIR}/${EXCLUDE_FILE})
+endforeach()
+
+if (ELEMENTAL_BACKEND_SDL3)
+  file(GLOB_RECURSE SDL3_SRC
+    "src/backends/sdl3/*.h"
+    "src/backends/sdl3/*.cpp"
+  )
+  list(APPEND TUI_SRC ${SDL3_SRC})
+endif()
+
 add_library(${PROJECT_NAME} ${TUI_SRC})
-target_include_directories(${PROJECT_NAME} PUBLIC ${CAIRO_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} PUBLIC ${CAIRO_LIBRARIES} nlohmann_json nanosvg OpenGL::GL)
-target_link_libraries(${PROJECT_NAME} PRIVATE SDL3::SDL3)
+target_include_directories(${PROJECT_NAME} PUBLIC ${CAIRO_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_link_libraries(${PROJECT_NAME} PUBLIC ${CAIRO_LIBRARIES} nlohmann_json nanosvg)
+
+# Backends linking (headers only)
+if (ELEMENTAL_BACKEND_SDL3)
+  add_definitions(-DSDL_MAIN_HANDLED)
+  add_definitions(-DELEMENTAL_BACKEND_SDL3)
+  CPMFindPackage(NAME SDL3)
+  if (TARGET SDL3::SDL3)
+    target_link_libraries(${PROJECT_NAME} PUBLIC SDL3::SDL3)
+  endif()
+endif()
 
 # Re-embed resources before each build
 add_custom_target(embed_resources ALL
@@ -96,5 +109,6 @@ add_custom_target(embed_resources ALL
 )
 add_dependencies(${PROJECT_NAME} embed_resources)
 
-add_executable(tui_test "src/main.cpp")
-target_link_libraries(tui_test PRIVATE ${PROJECT_NAME} SDL3::SDL3)
+if (ELEMENTAL_BUILD_EXAMPLES)
+  add_subdirectory(examples)
+endif()

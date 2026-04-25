@@ -143,7 +143,7 @@ window.SetRoot(desc);  // ← instantiation happens here
 #include "Element.h"
 #include "Graphics.h"
 
-namespace tui {
+namespace gui {
     class MyWidget : public Element {  // or Container for widgets with children
     public:
         void OnDraw(Graphics& g) override;
@@ -195,7 +195,7 @@ WidgetDesc MyWidget(const MyWidgetProps& props);
 // In Declarative.cpp - implement builder
 WidgetDesc MyWidget(const MyWidgetProps& props) {
     return [props](Window& window) -> Element* {
-        auto& w = window.Create<tui::MyWidget>();
+        auto& w = window.Create<gui::MyWidget>();
         ElementSetup(w, props.base);
         w.SetValue(props.initialValue);
         // ... wire up callbacks
@@ -250,7 +250,7 @@ EventSystem::Broadcast<MouseEvent>(x, y, button, pressed);
 The declarative API uses **builder functions** that return `WidgetDesc` (a `std::function<Element*(Window&)>`). Widgets are instantiated lazily when `SetRoot()` calls the function.
 
 ```cpp
-using namespace tui::declarative;
+using namespace gui::declarative;
 
 auto ui = Column({
     .gap = 16,
@@ -280,7 +280,7 @@ Every widget has a `Props` struct with `ElementProps base` as the first member:
 ```cpp
 struct ButtonProps {
     ElementProps base{};   // tag, bounds, flexGrow, enabled, style
-    tui::Image* icon{nullptr};
+    gui::Image* icon{nullptr};
     VoidCallback onClick;
 };
 ```

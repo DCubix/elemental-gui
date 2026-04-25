@@ -3,7 +3,7 @@
 #include "Element.h"
 #include "Timer.h"
 
-namespace tui {
+namespace gui {
     class ProgressBar : public Element {
     public:
         ProgressBar();

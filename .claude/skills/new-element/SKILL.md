@@ -32,7 +32,7 @@ Use this structure. Fill in the archetype-specific parts described below.
 
 #include "<BaseClass>.h"  // Element.h or Container.h
 
-namespace tui {
+namespace gui {
     class <Name> : public <Base> {
     public:
         <Name>();
@@ -124,7 +124,7 @@ private:
 #include "<Name>.h"
 #include "Application.h"
 
-namespace tui {
+namespace gui {
 
     <Name>::<Name>() : <Base>() {
         SetLocalBounds(Rectangle(0, 0, <w>, <h>));
@@ -203,7 +203,7 @@ void <Name>::OnMouseLeave() { if (m_state != State::Normal)  { m_state = State::
 
 ## Step 4: Edit `src/tui/Declarative.h`
 
-Insert just before the closing `}` of `namespace tui::declarative`, after the last existing `WidgetDesc` declaration. Pattern:
+Insert just before the closing `}` of `namespace gui::declarative`, after the last existing `WidgetDesc` declaration. Pattern:
 
 ```cpp
     // --- <Name> widget -------------------------------------
@@ -229,12 +229,12 @@ Common prop fields by archetype:
 
 ## Step 5: Edit `src/tui/Declarative.cpp`
 
-Insert before the closing `}` of `namespace tui::declarative`. Standard factory pattern:
+Insert before the closing `}` of `namespace gui::declarative`. Standard factory pattern:
 
 ```cpp
     WidgetDesc <Name>(const <Name>Props& props) {
         return [props](Window& window) -> Element* {
-            auto& w = window.Create<tui::<Name>>();
+            auto& w = window.Create<gui::<Name>>();
             ElementSetup(w, props.base);
             // Apply widget-specific props:
             // if (props.onClick) w.SetOnClick(props.onClick);

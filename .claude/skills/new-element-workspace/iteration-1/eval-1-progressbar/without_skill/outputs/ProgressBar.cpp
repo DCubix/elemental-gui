@@ -1,6 +1,6 @@
 #include "ProgressBar.h"
 
-namespace tui {
+namespace gui {
 
     ProgressBar::ProgressBar() : Element()
     {
@@ -80,4 +80,4 @@ namespace tui {
         Invalidate();
     }
 
-} // namespace tui
+} // namespace gui

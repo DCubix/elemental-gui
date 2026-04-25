@@ -2,7 +2,7 @@
 
 #include "Element.h"
 
-namespace tui {
+namespace gui {
     class ToggleSwitch : public Element {
     public:
         ToggleSwitch();

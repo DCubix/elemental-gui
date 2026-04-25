@@ -1,4 +1,4 @@
-// In Declarative.h — add before the closing brace of namespace tui::declarative:
+// In Declarative.h — add before the closing brace of namespace gui::declarative:
 
     // --- ProgressBar widget -------------------------------------
     struct ProgressBarProps {
@@ -14,12 +14,12 @@
 // In Declarative.cpp — add the include near the top:
 #include "ProgressBar.h"
 
-// Add at the bottom of the namespace tui::declarative block:
+// Add at the bottom of the namespace gui::declarative block:
 
     WidgetDesc ProgressBar(const ProgressBarProps& props)
     {
         return [props](Window& window) -> Element* {
-            auto& progressBar = window.Create<tui::ProgressBar>();
+            auto& progressBar = window.Create<gui::ProgressBar>();
             ElementSetup(progressBar, props.base);
             progressBar.SetRange(props.range.minimum, props.range.maximum);
             progressBar.SetValue(props.value);

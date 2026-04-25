@@ -17,7 +17,7 @@ NOTE: ProgressBar already exists in the project. The skill agent confirmed the e
     WidgetDesc ProgressBar(const ProgressBarProps &props)
     {
         return [props](Window& window) -> Element* {
-            auto& progressBar = window.Create<tui::ProgressBar>();
+            auto& progressBar = window.Create<gui::ProgressBar>();
             ElementSetup(progressBar, props.base);
             progressBar.SetRange(props.range.minimum, props.range.maximum);
             progressBar.SetValue(props.value);
