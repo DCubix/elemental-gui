@@ -28,7 +28,7 @@ cmake --build build
 
 **Dependencies:** SDL3, Cairo (system), nlohmann_json, nanosvg. All except Cairo are auto-fetched via CPM.cmake.
 
-**Resource Embedding:** Files in `resources/` are embedded as C++ raw-string headers into `src/tui/generated/` at configure time. Edit the `.json` source, never the generated headers.
+**Resource Embedding:** Files in `resources/` are embedded as C++ raw-string headers into `src/generated/` at configure time. Edit the `.json` source, never the generated headers.
 
 ## Architecture Overview
 

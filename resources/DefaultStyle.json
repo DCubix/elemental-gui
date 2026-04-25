@@ -526,5 +526,21 @@
                 }
             }
         }
+    },
+    "Spinner": {
+        "normal": {
+            "border": { "radius": 6.0, "color": "#FF383838", "width": 1.0 },
+            "background": { "color": "#FF141414" }
+        },
+        "button": {
+            "hover": {
+                "border": { "radius": 0.0, "color": "#FF4D73CC", "width": 0.0 },
+                "background": { "color": "#FF2A2A40" }
+            },
+            "click": {
+                "border": { "radius": 0.0, "color": "#FF2E4780", "width": 0.0 },
+                "background": { "color": "#FF1A1A28" }
+            }
+        }
     }
 }

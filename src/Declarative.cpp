@@ -13,6 +13,7 @@
 #include "SplitView.h"
 #include "ToolButton.h"
 #include "ProgressBar.h"
+#include "Spinner.h"
 
 namespace gui::declarative {
 
@@ -322,6 +323,20 @@ namespace gui::declarative {
             progressBar.SetIndeterminate(props.indeterminate);
             progressBar.SetDirection(props.direction);
             return &progressBar;
+        };
+    }
+
+    WidgetDesc Spinner(const SpinnerProps& props)
+    {
+        return [props](Window& window) -> Element* {
+            auto& spinner = window.Create<gui::Spinner>();
+            ElementSetup(spinner, props.base);
+            spinner.SetRange(props.range.minimum, props.range.maximum);
+            spinner.SetValue(props.value);
+            spinner.SetStep(props.step);
+            spinner.SetDecimals(props.decimals);
+            if (props.onValueChange) spinner.SetOnValueChange(props.onValueChange);
+            return &spinner;
         };
     }
 }

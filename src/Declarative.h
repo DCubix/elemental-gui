@@ -224,4 +224,15 @@ namespace gui::declarative {
         Direction direction{Direction::Horizontal};
     };
     WidgetDesc ProgressBar(const ProgressBarProps& props);
+
+    // --- Spinner widget -------------------------------------
+    struct SpinnerProps {
+        ElementProps base{};
+        Range range{0.0f, 100.0f};
+        float value{0.0f};
+        float step{1.0f};
+        int decimals{0};
+        ValueChanged<float> onValueChange;
+    };
+    WidgetDesc Spinner(const SpinnerProps& props = {});
 }
