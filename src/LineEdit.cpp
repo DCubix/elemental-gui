@@ -23,6 +23,7 @@ namespace gui {
 
         auto style = GetStyle();
         text::ApplyTextStyle(g, style);
+
         auto fm = g.GetFontExtents();
         int lineHeight = static_cast<int>(fm.ascent + fm.descent);
 

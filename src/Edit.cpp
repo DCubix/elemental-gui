@@ -23,7 +23,8 @@ namespace gui {
         else if (m_hovered)
             state = "hover";
 
-        g.StyledRect(0, 0, sz.w, sz.h, GetStyle()[state]);
+        auto style = GetStyle()[state];
+        g.StyledRect(0, 0, sz.w, sz.h, style);
         LineEdit::OnDraw(g);
     }
 

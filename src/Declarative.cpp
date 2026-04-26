@@ -330,4 +330,12 @@ namespace gui::declarative {
             return &spinner;
         };
     }
+
+    WidgetDesc Spacer() {
+        return [](Window& window) -> Element* {
+            auto& el = window.Create<gui::Element>();
+            el.SetFlexGrow(1.0f);
+            return &el;
+        };
+    }
 } // namespace gui::declarative

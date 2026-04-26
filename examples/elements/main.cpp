@@ -386,6 +386,31 @@ public:
                     },
                     .indeterminate = true,
                 }),
+                dec::Spacer(),
+                dec::Row({
+                    .base = {
+                        .autoSize = true,
+                    },
+                    .gap = 5,
+                    .justify = FlexJustify::End,
+                }, {
+                    dec::Button("Light", {
+                        .base = {
+                            .autoSize = true,
+                        },
+                        .onClick = [this]() {
+                            GetApp()->LoadTheme("LightStyle.json");
+                        }
+                    }),
+                    dec::Button("Dark", {
+                        .base = {
+                            .autoSize = true,
+                        },
+                        .onClick = [this]() {
+                            GetApp()->ResetStyle();
+                        }
+                    }),
+                }),
             }),
         });
         // clang-format on

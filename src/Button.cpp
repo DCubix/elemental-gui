@@ -32,6 +32,8 @@ namespace gui {
         }
 
         g.StyledRect(0, 0, sz.w, sz.h, GetStyle()[state]);
+
+        m_textStyle = GetStyle()[state]["text"];
         Label::OnDraw(g);
     }
 

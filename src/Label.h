@@ -43,5 +43,6 @@ namespace gui {
         Alignment m_alignment;
         Image* m_icon;
         uint m_iconSize{16};
+        Json m_textStyle;
     };
 } // namespace gui

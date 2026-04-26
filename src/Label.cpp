@@ -13,7 +13,9 @@ namespace gui {
           m_icon(nullptr) {}
 
     void Label::OnDraw(Graphics& g) {
-        const auto textStyle = GetStyle();
+        auto textStyle = GetStyle();
+        if (m_textStyle.is_object())
+            textStyle.update(m_textStyle);
 
         auto sz = GetSize();
         Rectangle clip = GetLocalIntersectedBounds();

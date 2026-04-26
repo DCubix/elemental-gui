@@ -71,10 +71,17 @@ namespace gui {
         return m_backend->GetClipboardText();
     }
 
+    void Application::ResetStyle() {
+        LoadThemeFromString(DefaultStyleJson);
+    }
+
     void Application::LoadTheme(const std::string& themePath) {
         try {
             m_style = Json::parse(std::ifstream(themePath));
             ProcessStyle(m_style);
+            for (const auto& win : m_windows) {
+                win->RequestRedrawAll();
+            }
         } catch (const std::exception& e) {
             // If parsing fails, keep the existing style and print an error.
             std::cerr << "Failed to load theme: " << e.what() << std::endl;
@@ -85,6 +92,9 @@ namespace gui {
         try {
             m_style = Json::parse(themeJson);
             ProcessStyle(m_style);
+            for (const auto& win : m_windows) {
+                win->RequestRedrawAll();
+            }
         } catch (const std::exception& e) {
             // If parsing fails, keep the existing style and print an error.
             std::cerr << "Failed to load theme: " << e.what() << std::endl;

@@ -236,4 +236,6 @@ namespace gui::declarative {
         ValueChanged<float> onValueChange;
     };
     WidgetDesc Spinner(const SpinnerProps& props = {});
+
+    WidgetDesc Spacer();
 } // namespace gui::declarative

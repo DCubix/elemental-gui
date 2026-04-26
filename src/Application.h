@@ -40,6 +40,7 @@ namespace gui {
         Backend& GetBackend() { return *m_backend; }
         EventSystem& GetEventSystem() { return m_eventSystem; }
         Json& GetStyle() { return m_style; }
+        void ResetStyle();
 
         void LoadTheme(const std::string& themePath);
         void LoadThemeFromString(const std::string& themeJson);
