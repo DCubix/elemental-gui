@@ -33,13 +33,13 @@ namespace gui {
 	}
 
 	void CheckBox::OnDraw(Graphics &g) {
-		Rectangle b = GetBounds();
+		Size size = GetSize();
 		Json style = GetStyle()["CheckBox"];
 		Json textStyle = GetStyle()["DefaultText"];
 
-		int boxSize = style.value("size", b.h);
-		int boxX = b.x;
-		int boxY = b.y + (b.h - boxSize) / 2;
+		int boxSize = style.value("size", size.h);
+		int boxX = 0;
+		int boxY = (size.h - boxSize) / 2;
 
 		// Select state-based style
 		std::string boxState = "normal";
@@ -66,7 +66,7 @@ namespace gui {
 
 			g.StyledTextBegin(textStyle);
 			auto ex = g.MeasureText(m_text);
-			int textOffY = boxSize / 2 + static_cast<int>(ex.height) / 2;
+			int textOffY = boxSize / 2 + static_cast<int>(ex.size.h) / 2;
 			g.StyledTextEnd(m_text, textX, textY + textOffY);
 		}
 	}

@@ -10,6 +10,8 @@ namespace gui {
 
         virtual void OnDraw(Graphics& g) override;
 
+        std::string StyleKey() const override { return "ProgressBar"; }
+
 		const Range& GetRange() const { return m_range; }
 		void SetRange(float min, float max);
 

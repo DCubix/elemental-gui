@@ -40,15 +40,15 @@ namespace gui {
     
     void RadioButton::OnDraw(Graphics &g)
     {
-        Rectangle b = GetBounds();
+        Size size = GetSize();
         Json style = GetStyle()["RadioButton"];
         Json textStyle = GetStyle()["DefaultText"];
 
-        int circleSize = style.value("size", b.h);
-        int circleX = b.x;
-        int circleY = b.y + (b.h - circleSize) / 2;
-        int textX = b.x + circleSize + 6;
-        int textY = b.y + b.h / 2;
+        int circleSize = style.value("size", size.h);
+        int circleX = 0;
+        int circleY = (size.h - circleSize) / 2;
+        int textX = circleSize + 6;
+        int textY = size.h / 2;
 
         // Select state-based style
         std::string circleState = "normal";
@@ -80,7 +80,7 @@ namespace gui {
 
 			g.StyledTextBegin(textStyle);
 			auto ex = g.MeasureText(m_text);
-			int textOffY = circleSize / 2 + static_cast<int>(ex.height) / 2;
+			int textOffY = circleSize / 2 + static_cast<int>(ex.size.h) / 2;
 			g.StyledTextEnd(m_text, textX, textY + textOffY);
         }
     }

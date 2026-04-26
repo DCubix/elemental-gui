@@ -8,6 +8,8 @@ namespace gui {
 	public:
 		ScrollView();
 
+		std::string StyleKey() const override { return "Panel"; }
+
 		void OnScroll(ScrollEvent e) override;
 		void OnDraw(Graphics& g) override;
 

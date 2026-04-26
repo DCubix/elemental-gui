@@ -9,21 +9,22 @@ static constexpr int ICON_SIZE = 16;
 static constexpr int ICON_GAP = 4;
 static constexpr int SUBMENU_ARROW_AREA = 16;
 
-namespace gui {
+namespace gui
+{
 
-    MenuItem::MenuItem(const std::string &text)
+    MenuItem::MenuItem(const std::string& text)
         : Element(), m_text(text) {
-        SetLocalBounds({0, 0, 100, 20});
+        SetLocalBounds({ 0, 0, 100, 20 });
         SetAutoSize(true);
     }
 
-    void MenuItem::OnDraw(Graphics &g) {
+    void MenuItem::OnDraw(Graphics& g) {
         if (m_separator) return;
 
         Json style = GetStyle()["MenuItem"];
         EdgeInsets padding = EdgeInsets::FromStyle(style["padding"]);
         Json textStyle = GetStyle()["DefaultText"];
-        Rectangle b = GetBounds();
+        Size size = GetSize();
 
         // Background
         Json bgStyle;
@@ -32,15 +33,15 @@ namespace gui {
             case ButtonState::Hover:  bgStyle = style["hover"]; break;
             case ButtonState::Click:  bgStyle = style["click"]; break;
         }
-        g.StyledRect(b.x, b.y, b.w, b.h, bgStyle);
+        g.StyledRect(0, 0, size.w, size.h, bgStyle);
 
-        int cx = b.x + (int)padding.left;
-        int cy = b.y + (int)padding.top;
-        int contentH = b.h - (int)padding.GetVertical();
+        int cx = (int)padding.left;
+        int cy = (int)padding.top;
+        int contentH = size.h - (int)padding.GetVertical();
 
         // Checkmark
         if (m_checked) {
-            Json checkmarkStyle = GetStyle()["CheckBox"]["checkmark"];
+            Json checkmarkStyle = GetStyle()["checkmark"];
             g.DrawSVG(checkmarkStyle, cx + 2, cy, ICON_SIZE, ICON_SIZE);
         }
         cx += CHECK_AREA;
@@ -54,65 +55,66 @@ namespace gui {
         // Text
         g.StyledTextBegin(textStyle);
         auto ex = g.MeasureText(m_text);
-        g.StyledTextEnd(m_text, cx, cy + (contentH + (int)ex.height) / 2);
+        g.StyledTextEnd(m_text, cx, cy + (contentH + (int)ex.size.h) / 2);
 
         // Submenu arrow
         if (m_subMenu) {
-            Json arrowStyle = GetStyle()["MenuItem"]["arrow"];
-            int arrowX = b.x + b.w - (int)padding.right - ICON_SIZE;
-            int arrowY = b.y + (b.h - ICON_SIZE) / 2;
+            Json arrowStyle = GetStyle()["arrow"];
+            int arrowX = size.w - (int)padding.right - ICON_SIZE;
+            int arrowY = (size.h - ICON_SIZE) / 2;
             g.DrawSVG(arrowStyle, arrowX, arrowY, ICON_SIZE, ICON_SIZE);
         }
     }
 
     void MenuItem::OnMouseDown(MouseEvent e) {
-		if (m_separator) return;
-		if (e.button != MouseButton::Left) return;
+        if (m_separator) return;
+        if (e.button != MouseButton::Left) return;
 
-		if (m_state == ButtonState::Hover) {
-			if (!m_subMenu) {
-				m_state = ButtonState::Click;
-				Invalidate();
-			}
-		}
+        if (m_state == ButtonState::Hover) {
+            if (!m_subMenu) {
+                m_state = ButtonState::Click;
+                Invalidate();
+            }
+        }
     }
 
-	void MenuItem::OnMouseUp(MouseEvent e) {
-		if (m_separator) return;
-		if (e.button != MouseButton::Left) return;
+    void MenuItem::OnMouseUp(MouseEvent e) {
+        if (m_separator) return;
+        if (e.button != MouseButton::Left) return;
 
-		if (m_state == ButtonState::Click) {
-			Rectangle b = GetLocalBounds();
-			if (b.HasPoint(e.x, e.y)) {
-				if (m_onClick) m_onClick();
-				m_state = ButtonState::Normal;
-				if (auto* menu = GetParentMenu())
-					menu->HideAll();
-				Invalidate();
-			}
-		}
-	}
+        if (m_state == ButtonState::Click) {
+            Rectangle b = GetLocalBounds();
+            if (b.HasPoint(e.x, e.y)) {
+                if (m_onClick) m_onClick();
+                m_state = ButtonState::Normal;
+                if (auto* menu = GetParentMenu())
+                    menu->HideAll();
+                Invalidate();
+            }
+        }
+    }
 
-	void MenuItem::OnMouseMove(MotionEvent e) {
-		if (m_separator) return;
-		Rectangle b = GetLocalBounds();
+    void MenuItem::OnMouseMove(MotionEvent e) {
+        if (m_separator) return;
+        Rectangle b = GetLocalBounds();
 
-		if (b.HasPoint(e.x, e.y)) {
-			if (m_state == ButtonState::Normal) {
-				m_state = ButtonState::Hover;
-				Invalidate();
-				NotifyParentMenuHover();
-			}
-		} else {
-			// Don't leave hover if mouse is in our open submenu
-			bool inSubMenu = m_subMenu && m_subMenu->IsOpen()
-				&& m_subMenu->HitTest(e.x, e.y);
-			if (!inSubMenu && m_state != ButtonState::Normal) {
-				m_state = ButtonState::Normal;
-				Invalidate();
-			}
-		}
-	}
+        if (b.HasPoint(e.x, e.y)) {
+            if (m_state == ButtonState::Normal) {
+                m_state = ButtonState::Hover;
+                Invalidate();
+                NotifyParentMenuHover();
+            }
+        }
+        else {
+            // Don't leave hover if mouse is in our open submenu
+            bool inSubMenu = m_subMenu && m_subMenu->IsOpen()
+                && m_subMenu->HitTest(e.x, e.y);
+            if (!inSubMenu && m_state != ButtonState::Normal) {
+                m_state = ButtonState::Normal;
+                Invalidate();
+            }
+        }
+    }
 
     Menu* MenuItem::GetParentMenu() const {
         return dynamic_cast<Menu*>(GetParent());
@@ -143,8 +145,8 @@ namespace gui {
             auto sz = g.MeasureText(m_text);
             g.Restore();
 
-            int w = (int)padding.GetHorizontal() + CHECK_AREA + (int)sz.x_advance;
-            int h = (int)padding.GetVertical() + (int)sz.height;
+            int w = (int)padding.GetHorizontal() + CHECK_AREA + (int)sz.xAdvance;
+            int h = (int)padding.GetVertical() + (int)sz.size.h;
 
             if (m_icon) {
                 w += ICON_SIZE + ICON_GAP;

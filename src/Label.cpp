@@ -4,130 +4,129 @@
 
 #include <algorithm>
 
-namespace gui {
+namespace gui
+{
 
-	Label::Label()
-		: Element(),
-		  m_text(""),
-		  m_alignment(Alignment::TopLeft),
-		  m_icon(nullptr)
-	{}
+    Label::Label()
+        : Element(),
+        m_text(""),
+        m_alignment(Alignment::TopLeft),
+        m_icon(nullptr) {}
 
-	void Label::OnDraw(Graphics& g) {
-		const auto textStyle = GetStyle()["DefaultText"];
+    void Label::OnDraw(Graphics& g) {
+        const auto textStyle = GetStyle();
 
-		Rectangle b = GetBounds();
-		Rectangle c = GetIntersectedBounds();
+        auto sz = GetSize();
+        Rectangle clip = GetLocalIntersectedBounds();
 
-		g.Save();
-		g.StyledTextBegin(textStyle);
-		g.ClipPushRect(c.x, c.y, c.w, c.h);
+        g.Save();
+        g.StyledTextBegin(textStyle);
+        g.ClipPushRect(clip.x, clip.y, clip.w, clip.h);
 
-		int iconSz = m_icon ? m_iconSize : 0;
-		bool hasText = !m_text.empty();
+        int iconSz = m_icon ? m_iconSize : 0;
+        bool hasText = !m_text.empty();
 
-		// Icon-only: always center+middle
-		if (m_icon && !hasText) {
-			g.DrawImage(m_icon, b.x + b.w / 2 - iconSz / 2, b.y + b.h / 2 - iconSz / 2, iconSz, iconSz);
-			g.ClipPop();
-			g.Restore();
-			return;
-		}
+        // Icon-only: always center+middle
+        if (m_icon && !hasText) {
+            g.DrawImage(m_icon, sz.w / 2 - iconSz / 2, sz.h / 2 - iconSz / 2, iconSz, iconSz);
+            g.ClipPop();
+            g.Restore();
+            return;
+        }
 
-		int maxW = 0, maxH = 0;
-		auto&& lines = utils::SplitString(m_text, "\n");
-		for (auto&& text : lines) {
-			auto&& ex = g.MeasureText(text);
-			maxH += ex.height;
-			maxW = std::max(maxW, static_cast<int>(ex.width));
-		}
+        int maxW = 0, maxH = 0;
+        auto&& lines = utils::SplitString(m_text, "\n");
+        for (auto&& text : lines) {
+            auto&& ex = g.MeasureText(text);
+            maxH += ex.size.h;
+            maxW = std::max(maxW, static_cast<int>(ex.size.w));
+        }
 
-		int gap = m_icon ? 4 : 0;
-		int totalW = iconSz + gap + maxW;
-		int totalH = std::max(iconSz, maxH);
+        int gap = m_icon ? 4 : 0;
+        int totalW = iconSz + gap + maxW;
+        int totalH = std::max(iconSz, maxH);
 
-		// Content block origin based on alignment
-		int cx = b.x, cy = b.y;
-		switch (m_alignment) {
-			case Alignment::TopCenter:
-			case Alignment::MiddleCenter:
-			case Alignment::BottomCenter:
-				cx += b.w / 2 - totalW / 2; break;
-			case Alignment::TopRight:
-			case Alignment::MiddleRight:
-			case Alignment::BottomRight:
-				cx += b.w - totalW; break;
-			default: break;
-		}
-		switch (m_alignment) {
-			case Alignment::MiddleLeft:
-			case Alignment::MiddleCenter:
-			case Alignment::MiddleRight:
-				cy += b.h / 2 - totalH / 2; break;
-			case Alignment::BottomLeft:
-			case Alignment::BottomCenter:
-			case Alignment::BottomRight:
-				cy += b.h - totalH; break;
-			default: break;
-		}
+        // Content block origin based on alignment
+        int cx = 0, cy = 0;
+        switch (m_alignment) {
+            case Alignment::TopCenter:
+            case Alignment::MiddleCenter:
+            case Alignment::BottomCenter:
+                cx += sz.w / 2 - totalW / 2; break;
+            case Alignment::TopRight:
+            case Alignment::MiddleRight:
+            case Alignment::BottomRight:
+                cx += sz.w - totalW; break;
+            default: break;
+        }
+        switch (m_alignment) {
+            case Alignment::MiddleLeft:
+            case Alignment::MiddleCenter:
+            case Alignment::MiddleRight:
+                cy += sz.h / 2 - totalH / 2; break;
+            case Alignment::BottomLeft:
+            case Alignment::BottomCenter:
+            case Alignment::BottomRight:
+                cy += sz.h - totalH; break;
+            default: break;
+        }
 
-		if (m_icon) {
-			g.DrawImage(m_icon, cx, cy + totalH / 2 - iconSz / 2, iconSz, iconSz);
-		}
+        if (m_icon) {
+            g.DrawImage(m_icon, cx, cy + totalH / 2 - iconSz / 2, iconSz, iconSz);
+        }
 
-		int textX = cx + iconSz + gap;
-		int textY = cy + totalH / 2 - maxH / 2;
-		for (auto&& text : lines) {
-			auto&& ex = g.MeasureText(text);
-			int tx = textX;
-			switch (m_alignment) {
-				case Alignment::TopCenter:
-				case Alignment::MiddleCenter:
-				case Alignment::BottomCenter:
-					tx += maxW / 2 - static_cast<int>(ex.width) / 2; break;
-				case Alignment::TopRight:
-				case Alignment::MiddleRight:
-				case Alignment::BottomRight:
-					tx += maxW - static_cast<int>(ex.width); break;
-				default: break;
-			}
-			g.StyledTextEnd(text, tx, textY + ex.height);
-			textY += ex.height;
-		}
+        int textX = cx + iconSz + gap;
+        int textY = cy + totalH / 2 - maxH / 2;
+        for (auto&& text : lines) {
+            auto&& ex = g.MeasureText(text);
+            int tx = textX;
+            switch (m_alignment) {
+                case Alignment::TopCenter:
+                case Alignment::MiddleCenter:
+                case Alignment::BottomCenter:
+                    tx += maxW / 2 - static_cast<int>(ex.size.w) / 2; break;
+                case Alignment::TopRight:
+                case Alignment::MiddleRight:
+                case Alignment::BottomRight:
+                    tx += maxW - static_cast<int>(ex.size.w); break;
+                default: break;
+            }
+            g.StyledTextEnd(text, tx, textY + ex.size.h);
+            textY += ex.size.h;
+        }
 
-		g.ClipPop();
-		g.Restore();
-	}
+        g.ClipPop();
+        g.Restore();
+    }
 
-    Size Label::GetPreferredSize() const
-    {
-		if (IsAutoSize()) {
-			int iconSz = m_icon ? m_iconSize : 0;
+    Size Label::GetPreferredSize() const {
+        if (IsAutoSize()) {
+            int iconSz = m_icon ? m_iconSize : 0;
 
-			if (m_text.empty()) {
-				return { iconSz, iconSz };
-			}
+            if (m_text.empty()) {
+                return { iconSz, iconSz };
+            }
 
-			const auto textStyle = GetStyle()["DefaultText"];
+            const auto textStyle = GetStyle();
 
-			auto& g = m_window->GetGraphics();
-			int maxW = 0, maxH = 0;
+            auto& g = m_window->GetGraphics();
+            int maxW = 0, maxH = 0;
 
-			g.Save();
-			g.StyledTextBegin(textStyle);
+            g.Save();
+            g.StyledTextBegin(textStyle);
 
-			auto&& lines = utils::SplitString(m_text, "\n");
-			for (auto&& text : lines) {
-				auto&& ex = g.MeasureText(text);
-				maxH += ex.height;
-				maxW = std::max(maxW, static_cast<int>(ex.width));
-			}
+            auto&& lines = utils::SplitString(m_text, "\n");
+            for (auto&& text : lines) {
+                auto&& ex = g.MeasureText(text);
+                maxH += ex.size.h;
+                maxW = std::max(maxW, static_cast<int>(ex.size.w));
+            }
 
-			g.Restore();
+            g.Restore();
 
-			int gap = m_icon ? 4 : 0;
-        	return { iconSz + gap + maxW, std::max(iconSz, maxH) };
-		}
-		return Element::GetPreferredSize();
+            int gap = m_icon ? 4 : 0;
+            return { iconSz + gap + maxW, std::max(iconSz, maxH) };
+        }
+        return Element::GetPreferredSize();
     }
 }

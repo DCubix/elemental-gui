@@ -8,7 +8,11 @@ namespace gui {
 			if (e == nullptr) continue;
 			if (e == this) continue;
 			if (e->GetBounds().Intersects(b)) {
+				const auto& lb = e->GetLocalBounds();
+				g.Save();
+				g.Translate(lb.x, lb.y);
 				e->OnDraw(g);
+				g.Restore();
 			}
 		}
     }

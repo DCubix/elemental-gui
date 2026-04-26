@@ -7,7 +7,8 @@
 #include "Graphics.h"
 #include "WindowConfig.h"
 
-namespace gui {
+namespace gui
+{
 
     class Window {
         friend class Application;
@@ -32,9 +33,11 @@ namespace gui {
         template <DerivedFromElement E>
         E& Create() {
             m_elements.push_back(std::make_unique<E>());
-            m_elements.back()->m_window = this;
-            HookEventsUp(m_elements.back().get());
-            return *dynamic_cast<E*>(m_elements.back().get());
+            auto* el = m_elements.back().get();
+            el->m_window = this;
+            HookEventsUp(el);
+            el->OnCreate();
+            return *dynamic_cast<E*>(el);
         }
 
         template <DerivedFromElement E>
@@ -98,8 +101,7 @@ namespace gui {
         void HookEventsUp(Element* el);
 
         template <DerivedFromEvent E, typename... Args>
-        void DispatchEvent(Args&&... args)
-        {
+        void DispatchEvent(Args&&... args) {
             E event(std::forward<Args>(args)...);
             for (auto it = m_popups.rbegin(); it != m_popups.rend(); ++it) {
                 if ((*it)->OnEvent(&event) == EventStatus::Consumed)

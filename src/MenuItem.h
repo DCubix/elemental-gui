@@ -11,6 +11,8 @@ namespace gui {
 
         void OnDraw(Graphics& g) override;
 
+        std::string StyleKey() const override { return "MenuItem"; }
+
         void OnMouseDown(MouseEvent e) override;
         void OnMouseUp(MouseEvent e) override;
         void OnMouseMove(MotionEvent e) override;

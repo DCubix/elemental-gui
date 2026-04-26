@@ -3,13 +3,15 @@
 #include "Window.h"
 
 #include <unordered_map>
+#include <fstream>
+#include <iostream>
 
-namespace gui {
+namespace gui
+{
 
     static const std::string DefaultStyleJson =
-        #include "generated/DefaultStyle.h"
-            ;
-    Json Application::DefaultStyle = Json::parse(DefaultStyleJson);
+#include "generated/DefaultStyle.h"
+        ;
 
     void Application::SetBackend(std::unique_ptr<Backend> backend) {
         m_backend = std::move(backend);
@@ -20,6 +22,9 @@ namespace gui {
     }
 
     int Application::Start(ApplicationAdapter* adapter) {
+        m_style = Json::parse(DefaultStyleJson);
+        ProcessStyle(m_style);
+
         if (!adapter || !m_backend) {
             return 1;
         }
@@ -69,6 +74,28 @@ namespace gui {
 
     std::string Application::GetClipboard() {
         return m_backend->GetClipboardText();
+    }
+
+    void Application::LoadTheme(const std::string& themePath) {
+        try {
+            m_style = Json::parse(std::ifstream(themePath));
+            ProcessStyle(m_style);
+        }
+        catch (const std::exception& e) {
+            // If parsing fails, keep the existing style and print an error.
+            std::cerr << "Failed to load theme: " << e.what() << std::endl;
+        }
+    }
+
+    void Application::LoadThemeFromString(const std::string& themeJson) {
+        try {
+            m_style = Json::parse(themeJson);
+            ProcessStyle(m_style);
+        }
+        catch (const std::exception& e) {
+            // If parsing fails, keep the existing style and print an error.
+            std::cerr << "Failed to load theme: " << e.what() << std::endl;
+        }
     }
 
     Window* Application::FindWindow(WindowId id) {
@@ -145,6 +172,51 @@ namespace gui {
         if (auto* win = FindWindow(id)) {
             win->DispatchEvent<TextInputEvent>(c);
         }
+    }
+
+    void Application::ProcessStyle(Json& style) {
+        auto fnVisitVariables = [&](auto&& self, Json& node) -> void {
+            if (node.is_object()) {
+                for (auto& [key, value] : node.items()) {
+                    if (value.is_string() && value.get<std::string>().starts_with("$")) {
+                        std::string varName = value.get<std::string>().substr(1);
+                        auto vars = style["$variables"];
+                        if (vars.is_object() && vars.contains(varName)) {
+                            value = vars[varName];
+                        }
+                    }
+                    self(self, value);
+                }
+            }
+            else if (node.is_array()) {
+                for (auto& item : node) {
+                    self(self, item);
+                }
+            }
+            };
+
+        // Allow styles to inherit from a base style using an "inherits" property
+        auto fnVisitInheritance = [&](auto&& self, Json& node) -> void {
+            if (node.is_object() && node.contains("inherits")) {
+                std::string baseStyleName = node["inherits"].get<std::string>();
+                if (style.contains(baseStyleName)) {
+                    Json baseStyle = style[baseStyleName];
+                    node.update(baseStyle);
+                }
+            }
+            else if (node.is_array()) {
+                for (auto& item : node) {
+                    self(self, item);
+                }
+            }
+            };
+
+        // recursively resolve references in the style (e.g., "$textPrimary" -> actual color value)
+        // from the $variables section of the style
+        fnVisitVariables(fnVisitVariables, style);
+
+        // recursively resolve inheritance specified by "inherits" properties in the style
+        fnVisitInheritance(fnVisitInheritance, style);
     }
 
 }

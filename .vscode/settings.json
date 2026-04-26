@@ -1,5 +1,7 @@
 {
     "cmake.debugConfig": {
         "cwd": "${workspaceFolder}/examples/assets"
-    }
+    },
+    "editor.formatOnSave": true,
+    "C_Cpp.formatting": "vcFormat"
 }

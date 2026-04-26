@@ -23,10 +23,8 @@ include(${CPM_DOWNLOAD_LOCATION})
 # nlohmann/json
 CPMAddPackage(
   NAME nlohmann_json
-  VERSION 3.7.3
-  # the git repo is incredibly large, so we download the archived include directory
-  URL https://github.com/nlohmann/json/releases/download/v3.7.3/include.zip
-  URL_HASH SHA256=87b5884741427220d3a33df1363ae0e8b898099fbc59f1c451113f6732891014
+  URL https://github.com/nlohmann/json/releases/download/v3.12.0/include.zip
+  DOWNLOAD_ONLY YES
 )
 
 if (nlohmann_json_ADDED)

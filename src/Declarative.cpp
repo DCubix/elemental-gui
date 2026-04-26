@@ -4,6 +4,7 @@
 #include "FlexLayout.h"
 #include "Button.h"
 #include "Edit.h"
+#include "TextArea.h"
 #include "ScrollView.h"
 #include "Slider.h"
 #include "Switch.h"
@@ -102,13 +103,20 @@ namespace gui::declarative {
     WidgetDesc TextEdit(const TextEditProps &props)
     {
         return [props](Window& window) -> Element* {
-            auto& edit = window.Create<Edit>();
-            ElementSetup(edit, props.base);
-            edit.SetText(props.text);
-            edit.SetMultiLine(props.multiLine);
-            edit.SetMasked(props.masked);
-            edit.SetOnChange(props.onChanged);
-            return &edit;
+            if (props.multiLine) {
+                auto& edit = window.Create<TextArea>();
+                ElementSetup(edit, props.base);
+                edit.SetText(props.text);
+                edit.SetOnChange(props.onChanged);
+                return &edit;
+            } else {
+                auto& edit = window.Create<Edit>();
+                ElementSetup(edit, props.base);
+                edit.SetText(props.text);
+                edit.SetMasked(props.masked);
+                edit.SetOnChange(props.onChanged);
+                return &edit;
+            }
         };
     }
 

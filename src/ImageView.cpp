@@ -9,45 +9,45 @@ namespace gui {
 	void ImageView::OnDraw(Graphics& g) {
 		if (!m_image) return;
 
-		Rectangle b = GetBounds();
-		Rectangle c = GetIntersectedBounds();
-		Size sz = GetPreferredSize();
+		Size size = GetSize();
+		Rectangle clip = GetLocalIntersectedBounds();
+		Size pref = GetPreferredSize();
 
-		Rectangle imgRect{ b.x, b.y, sz.w, sz.h };
+		Rectangle imgRect{ 0, 0, pref.w, pref.h };
 		switch (m_scalingMode) {
 			case ImageScalingMode::Stretch:
 				break;
 			case ImageScalingMode::Contain: {
 				float imgAspect = static_cast<float>(m_image->GetWidth()) / static_cast<float>(m_image->GetHeight());
-				float boxAspect = static_cast<float>(b.w) / static_cast<float>(b.h);
+				float boxAspect = static_cast<float>(size.w) / static_cast<float>(size.h);
 				if (imgAspect > boxAspect) {
-					imgRect.w = b.w;
-					imgRect.h = static_cast<int>(b.w / imgAspect);
-					imgRect.y += (b.h - imgRect.h) / 2;
+					imgRect.w = size.w;
+					imgRect.h = static_cast<int>(size.w / imgAspect);
+					imgRect.y = (size.h - imgRect.h) / 2;
 				} else {
-					imgRect.h = b.h;
-					imgRect.w = static_cast<int>(b.h * imgAspect);
-					imgRect.x += (b.w - imgRect.w) / 2;
+					imgRect.h = size.h;
+					imgRect.w = static_cast<int>(size.h * imgAspect);
+					imgRect.x = (size.w - imgRect.w) / 2;
 				}
 				break;
 			}
 			case ImageScalingMode::Cover: {
 				float imgAspect = static_cast<float>(m_image->GetWidth()) / static_cast<float>(m_image->GetHeight());
-				float boxAspect = static_cast<float>(b.w) / static_cast<float>(b.h);
+				float boxAspect = static_cast<float>(size.w) / static_cast<float>(size.h);
 				if (imgAspect < boxAspect) {
-					imgRect.w = b.w;
-					imgRect.h = static_cast<int>(b.w / imgAspect);
-					imgRect.y += (b.h - imgRect.h) / 2;
+					imgRect.w = size.w;
+					imgRect.h = static_cast<int>(size.w / imgAspect);
+					imgRect.y = (size.h - imgRect.h) / 2;
 				} else {
-					imgRect.h = b.h;
-					imgRect.w = static_cast<int>(b.h * imgAspect);
-					imgRect.x += (b.w - imgRect.w) / 2;
+					imgRect.h = size.h;
+					imgRect.w = static_cast<int>(size.h * imgAspect);
+					imgRect.x = (size.w - imgRect.w) / 2;
 				}
 				break;
 			}
 		}
 
-		g.ClipPushRect(c.x, c.y, c.w, c.h);
+		g.ClipPushRect(clip.x, clip.y, clip.w, clip.h);
 		g.DrawImage(m_image.get(), imgRect.x, imgRect.y, imgRect.w, imgRect.h);
 		g.ClipPop();
 	}

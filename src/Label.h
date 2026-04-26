@@ -12,6 +12,8 @@ namespace gui {
 
 		Size GetPreferredSize() const override;
 
+		std::string StyleKey() const override { return "DefaultText"; }
+
 		std::string GetText() const { return m_text; }
 		void SetText(const std::string& text) { m_text = text; Invalidate(); }
 

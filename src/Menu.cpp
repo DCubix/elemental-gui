@@ -14,16 +14,16 @@ namespace gui {
 
         Json style = GetStyle()["Menu"];
         EdgeInsets pad = EdgeInsets::FromStyle(style["padding"]);
-        Rectangle b = GetBounds();
+        Size size = GetSize();
 
-        g.StyledRect(b.x, b.y, b.w, b.h, style);
+        g.StyledRect(0, 0, size.w, size.h, style);
         PlaceItems();
 
         Rectangle padded{
-            b.x + (int)pad.left,
-            b.y + (int)pad.top,
-            b.w - (int)pad.GetHorizontal(),
-            b.h - (int)pad.GetVertical()
+            (int)pad.left,
+            (int)pad.top,
+            size.w - (int)pad.GetHorizontal(),
+            size.h - (int)pad.GetVertical()
         };
         g.ClipPushRect(padded.x, padded.y, padded.w, padded.h);
         for (auto* item : m_items) {
@@ -31,7 +31,7 @@ namespace gui {
             if (item->IsSeparator()) {
                 Json sepStyle = GetStyle()["MenuSeparator"];
                 float mx = sepStyle.value("margin", Json::object()).value("horizontal", 8.0f);
-                Rectangle ib = item->GetBounds();
+                const auto& ib = item->GetLocalBounds();
                 auto col = sepStyle.value("color", std::vector<float>{0.28f, 0.28f, 0.30f, 1.0f});
                 g.Color(col[0], col[1], col[2], col[3]);
                 g.LineWidth(1.0f);
@@ -39,15 +39,16 @@ namespace gui {
                 g.Line(ib.x + (int)mx, lineY, ib.x + ib.w - (int)mx, lineY);
                 g.Stroke();
             } else {
+                const auto& lb = item->GetLocalBounds();
+                g.Save();
+                g.Translate(lb.x, lb.y);
                 item->OnDraw(g);
+                g.Restore();
             }
         }
         g.ClipPop();
 
-        // Draw open submenu on top
-        if (HasOpenSubMenu()) {
-            m_activeSubMenuItem->GetSubMenu()->OnDraw(g);
-        }
+        // Submenu is a window-level popup; Window::Redraw draws it via the popup loop.
     }
 
     EventStatus Menu::OnEvent(Event *event) {

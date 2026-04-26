@@ -15,6 +15,8 @@ namespace gui {
 
 		void OnDraw(Graphics& g) override;
 
+		std::string StyleKey() const override { return "ToolButton"; }
+
 		void OnMouseDown(MouseEvent e) override;
 		void OnMouseUp(MouseEvent e) override;
 		void OnMouseEnter() override;

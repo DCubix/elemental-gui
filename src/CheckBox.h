@@ -7,6 +7,8 @@ namespace gui {
 	public:
 		CheckBox();
 
+		std::string StyleKey() const override { return "CheckBox"; }
+
 		void OnMouseDown(MouseEvent e) override;
 		void OnMouseUp(MouseEvent e) override;
 		void OnMouseEnter() override;

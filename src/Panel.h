@@ -14,6 +14,8 @@ namespace gui {
 	public:
 		Panel();
 
+		std::string StyleKey() const override { return "Panel"; }
+
 		void Add(Element *element) override;
 		void Remove(Element *element) override;
 

@@ -12,14 +12,14 @@ namespace gui {
     }
 
     Rectangle Spinner::GetUpButtonRect() const {
-        Rectangle b = GetBounds();
-        return Rectangle(b.x + b.w - SpinnerButtonWidth, b.y, SpinnerButtonWidth, b.h / 2);
+        Size size = GetSize();
+        return Rectangle(size.w - SpinnerButtonWidth, 0, SpinnerButtonWidth, size.h / 2);
     }
 
     Rectangle Spinner::GetDownButtonRect() const {
-        Rectangle b = GetBounds();
-        int half = b.h / 2;
-        return Rectangle(b.x + b.w - SpinnerButtonWidth, b.y + half, SpinnerButtonWidth, b.h - half);
+        Size size = GetSize();
+        int half = size.h / 2;
+        return Rectangle(size.w - SpinnerButtonWidth, half, SpinnerButtonWidth, size.h - half);
     }
 
     std::string Spinner::FormatValue() const {
@@ -34,26 +34,24 @@ namespace gui {
     }
 
     void Spinner::OnDraw(Graphics& g) {
-        Rectangle b = GetBounds();
+        Size size = GetSize();
         Json style = GetStyle()["Spinner"];
         Json textStyle = GetStyle()["DefaultText"];
 
-        // Draw background/border
-        g.StyledRect(b.x, b.y, b.w, b.h, style["normal"]);
+        g.StyledRect(0, 0, size.w, size.h, style["normal"]);
 
-        // Draw value text, clipped to text area
-        int textAreaW = b.w - SpinnerButtonWidth - 12;
-        g.ClipPushRect(b.x + 6, b.y, textAreaW, b.h);
+        int textAreaW = size.w - SpinnerButtonWidth - 12;
+        g.ClipPushRect(6, 0, textAreaW, size.h);
         g.StyledTextBegin(textStyle);
         auto te = g.MeasureText(FormatValue());
-        g.StyledTextEnd(FormatValue(), b.x + 6, b.y + (b.h + (int)te.height) / 2);
+        g.StyledTextEnd(FormatValue(), 6, (size.h + (int)te.size.h) / 2);
         g.ClipPop();
 
         // Vertical divider
-        int divX = b.x + b.w - SpinnerButtonWidth;
+        int divX = size.w - SpinnerButtonWidth;
         g.Color(0.25f, 0.25f, 0.28f, 1.0f);
         g.LineWidth(1.0f);
-        g.Line(divX, b.y + 3, divX, b.y + b.h - 3);
+        g.Line(divX, 3, divX, size.h - 3);
         g.Stroke();
 
         // Up button highlight
@@ -70,7 +68,6 @@ namespace gui {
             g.StyledRect(downRect.x, downRect.y, downRect.w, downRect.h, style["button"][s]);
         }
 
-        // Arrow color
         g.Color(0.72f, 0.72f, 0.76f, 1.0f);
 
         // Up arrow (triangle pointing up)

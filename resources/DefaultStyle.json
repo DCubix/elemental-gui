@@ -1,37 +1,87 @@
 {
+    "$variables": {
+        "primary": "#FF3859A6",
+        "primaryHover": "#FF4D73CC",
+        "primaryClick": "#FF2E4780",
+        "secondary": "#FF383838",
+        "secondaryHover": "#FF555555",
+        "secondaryClick": "#FF1A1A1A",
+        "accent": "#FF3D6BC7",
+        "accentHover": "#FF5280E0",
+        "accentClick": "#FF3866B8",
+        "textPrimary": "#FFE0E0E0",
+        "textSecondary": "#FFB8B8B8",
+        "textDisabled": "#FF7A7A7A",
+        "backgroundDark": "#FF141414",
+        "borderDark": "#FF333333",
+        "panelBackground": "#FF212121",
+        "textPrimaryBright": "#FFEBEBEB",
+        "primaryDark": "#FF294580",
+        "primaryHoverDark": "#FF3359A3",
+        "primaryClickDark": "#FF1A2E61",
+        "thumbNormalBorder": "#FF474747",
+        "thumbHoverBorder": "#FF616161",
+        "thumbClickBorder": "#FF525252",
+        "thumbHoverBackground": "#FF4D4D4D",
+        "thumbClickBackground": "#FF2E2E2E",
+        "focusBlue": "#FF2666D9",
+        "selectionBlue": "#732666D9",
+        "switchOffBorder": "#FF404045",
+        "switchOffBackground": "#FF1F1F1F",
+        "switchOnBackground": "#FF24478A",
+        "switchThumbBackground": "#FF85858A",
+        "switchThumbHoverBorder": "#FF7A7A80",
+        "switchThumbHoverBackground": "#FF9E9EA3",
+        "switchThumbClickBackground": "#FF6B6B70",
+        "switchThumbOnBorder": "#FF4D80D9",
+        "switchThumbOnBackground": "#FFA6BDE6",
+        "switchThumbOnHoverBorder": "#FF6194EB",
+        "switchThumbOnHoverBackground": "#FFB8CCF0",
+        "switchThumbOnClickBackground": "#FF859ED6",
+        "checkboxHoverBorder": "#FF4D73C7",
+        "hoverBackground": "#FF24242B",
+        "clickBackground": "#FF121217",
+        "accentDark": "#FF2E5299",
+        "accentHoverDark": "#FF3861B3",
+        "white": "#FFFFFFFF",
+        "menuItemClick": "#FF26478C",
+        "spinnerButtonHover": "#FF2A2A40",
+        "spinnerButtonClick": "#FF1A1A28",
+        "primaryDarkTransparent": "#00294580"
+    },
     "Window": {
         "background": {
-            "color": "#FF1A1A1A"
+            "color": "$secondaryClick"
         }
     },
     "DefaultText": {
         "font": "Sans",
-        "fontSize": 14.0,
+        "fontSize": 16.0,
         "fontSlant": "normal",
         "fontWeight": "normal",
-        "color": "#FFE0E0E0"
+        "color": "$textPrimary"
     },
     "DefaultTextBig": {
         "font": "Sans",
         "fontSize": 26.0,
         "fontSlant": "normal",
         "fontWeight": "bold",
-        "color": "#FFEBEBEB"
+        "color": "$textPrimaryBright"
     },
     "Default": {
         "background": {
-            "color": "#FF1A1A1A"
+            "color": "$secondaryClick"
         }
     },
     "Panel": {
         "elevation": 4.0,
         "border": {
             "radius": 8.0,
-            "color": "#FF333333",
+            "color": "$borderDark",
             "width": 1.0
         },
         "background": {
-            "color": "#FF212121"
+            "color": "$panelBackground"
         }
     },
     "Button": {
@@ -43,33 +93,33 @@
             "elevation": 4.0,
             "border": {
                 "radius": 8.0,
-                "color": "#FF3859A6",
+                "color": "$primary",
                 "width": 1.0
             },
             "background": {
-                "color": "#FF294580"
+                "color": "$primaryDark"
             }
         },
         "hover": {
             "elevation": 4.0,
             "border": {
                 "radius": 8.0,
-                "color": "#FF4D73CC",
+                "color": "$primaryHover",
                 "width": 1.0
             },
             "background": {
-                "color": "#FF3359A3"
+                "color": "$primaryHoverDark"
             }
         },
         "click": {
             "elevation": 4.0,
             "border": {
                 "radius": 8.0,
-                "color": "#FF2E4780",
+                "color": "$primaryClick",
                 "width": 1.0
             },
             "background": {
-                "color": "#FF1A2E61"
+                "color": "$primaryClickDark"
             }
         }
     },
@@ -77,42 +127,42 @@
         "track": {
             "border": {
                 "radius": 999.0,
-                "color": "#FF333333",
+                "color": "$borderDark",
                 "width": 1.0
             },
             "background": {
-                "color": "#FF141414"
+                "color": "$backgroundDark"
             }
         },
         "thumb": {
             "normal": {
                 "border": {
                     "radius": 999.0,
-                    "color": "#FF474747",
+                    "color": "$thumbNormalBorder",
                     "width": 1.0
                 },
                 "background": {
-                    "color": "#FF383838"
+                    "color": "$secondary"
                 }
             },
             "hover": {
                 "border": {
                     "radius": 999.0,
-                    "color": "#FF616161",
+                    "color": "$thumbHoverBorder",
                     "width": 1.0
                 },
                 "background": {
-                    "color": "#FF4D4D4D"
+                    "color": "$thumbHoverBackground"
                 }
             },
             "click": {
                 "border": {
                     "radius": 999.0,
-                    "color": "#FF525252",
+                    "color": "$thumbClickBorder",
                     "width": 1.0
                 },
                 "background": {
-                    "color": "#FF2E2E2E"
+                    "color": "$thumbClickBackground"
                 }
             }
         }
@@ -121,11 +171,11 @@
         "track": {
             "border": {
                 "radius": 6.0,
-                "color": "#FF333333",
+                "color": "$borderDark",
                 "width": 1.0
             },
             "background": {
-                "color": "#FF141414"
+                "color": "$backgroundDark"
             }
         },
         "thumb": {
@@ -133,50 +183,76 @@
                 "elevation": 2.0,
                 "border": {
                     "radius": 999.0,
-                    "color": "#FF3859A6",
+                    "color": "$primary",
                     "width": 1.0
                 },
                 "background": {
-                    "color": "#FF294580"
+                    "color": "$primaryDark"
                 }
             },
             "hover": {
                 "elevation": 2.0,
                 "border": {
                     "radius": 999.0,
-                    "color": "#FF4D73CC",
+                    "color": "$primaryHover",
                     "width": 1.0
                 },
                 "background": {
-                    "color": "#FF3359A3"
+                    "color": "$primaryHoverDark"
                 }
             },
             "click": {
                 "elevation": 2.0,
                 "border": {
                     "radius": 999.0,
-                    "color": "#FF2E4780",
+                    "color": "$primaryClick",
                     "width": 1.0
                 },
                 "background": {
-                    "color": "#FF1A2E61"
+                    "color": "$primaryClickDark"
                 }
             }
         }
     },
     "Edit": {
-        "border": {
-            "radius": 8.0,
-            "color": "#FF383838",
-            "width": 1.0
+        "padding": {
+            "horizontal": 8.0,
+            "vertical": 4.0
         },
-        "background": {
-            "color": "#FF141414"
+        "normal": {
+            "border": {
+                "radius": 8.0,
+                "color": "$secondary",
+                "width": 1.0
+            },
+            "background": {
+                "color": "$backgroundDark"
+            }
+        },
+        "hover": {
+            "border": {
+                "radius": 8.0,
+                "color": "$secondaryHover",
+                "width": 1.0
+            },
+            "background": {
+                "color": "$secondaryClick"
+            }
+        },
+        "focused": {
+            "border": {
+                "radius": 8.0,
+                "color": "$focusBlue",
+                "width": 2.0
+            },
+            "background": {
+                "color": "$backgroundDark"
+            }
         }
     },
     "Selection": {
         "background": {
-            "color": "#732666D9"
+            "color": "$selectionBlue"
         }
     },
     "Switch": {
@@ -184,21 +260,21 @@
             "off": {
                 "border": {
                     "radius": 999.0,
-                    "color": "#FF404045",
+                    "color": "$switchOffBorder",
                     "width": 1.0
                 },
                 "background": {
-                    "color": "#FF1F1F1F"
+                    "color": "$switchOffBackground"
                 }
             },
             "on": {
                 "border": {
                     "radius": 999.0,
-                    "color": "#FF3866BF",
+                    "color": "$accentClick",
                     "width": 1.0
                 },
                 "background": {
-                    "color": "#FF24478A"
+                    "color": "$switchOnBackground"
                 }
             }
         },
@@ -206,61 +282,61 @@
             "normal": {
                 "border": {
                     "radius": 999.0,
-                    "color": "#FF616166",
+                    "color": "$thumbHoverBorder",
                     "width": 1.0
                 },
                 "background": {
-                    "color": "#FF85858A"
+                    "color": "$switchThumbBackground"
                 }
             },
             "hover": {
                 "border": {
                     "radius": 999.0,
-                    "color": "#FF7A7A80",
+                    "color": "$switchThumbHoverBorder",
                     "width": 1.0
                 },
                 "background": {
-                    "color": "#FF9E9EA3"
+                    "color": "$switchThumbHoverBackground"
                 }
             },
             "click": {
                 "border": {
                     "radius": 999.0,
-                    "color": "#FF525257",
+                    "color": "$thumbClickBorder",
                     "width": 1.0
                 },
                 "background": {
-                    "color": "#FF6B6B70"
+                    "color": "$switchThumbClickBackground"
                 }
             },
             "normalOn": {
                 "border": {
                     "radius": 999.0,
-                    "color": "#FF4D80D9",
+                    "color": "$switchThumbOnBorder",
                     "width": 1.0
                 },
                 "background": {
-                    "color": "#FFA6BDE6"
+                    "color": "$switchThumbOnBackground"
                 }
             },
             "hoverOn": {
                 "border": {
                     "radius": 999.0,
-                    "color": "#FF6194EB",
+                    "color": "$switchThumbOnHoverBorder",
                     "width": 1.0
                 },
                 "background": {
-                    "color": "#FFB8CCF0"
+                    "color": "$switchThumbOnHoverBackground"
                 }
             },
             "clickOn": {
                 "border": {
                     "radius": 999.0,
-                    "color": "#FF3866B8",
+                    "color": "$accentClick",
                     "width": 1.0
                 },
                 "background": {
-                    "color": "#FF859ED6"
+                    "color": "$switchThumbOnClickBackground"
                 }
             }
         }
@@ -270,56 +346,56 @@
         "normal": {
             "border": {
                 "radius": 6.0,
-                "color": "#FF404047",
+                "color": "$switchOffBorder",
                 "width": 1.0
             },
             "background": {
-                "color": "#FF1F1F1F"
+                "color": "$switchOffBackground"
             }
         },
         "hover": {
             "border": {
                 "radius": 6.0,
-                "color": "#FF4D73C7",
+                "color": "$checkboxHoverBorder",
                 "width": 1.0
             },
             "background": {
-                "color": "#FF24242B"
+                "color": "$hoverBackground"
             }
         },
         "click": {
             "border": {
                 "radius": 6.0,
-                "color": "#FF2E4780",
+                "color": "$primaryClick",
                 "width": 1.0
             },
             "background": {
-                "color": "#FF121217"
+                "color": "$clickBackground"
             }
         },
         "checked": {
             "border": {
                 "radius": 6.0,
-                "color": "#FF3D6BC7",
+                "color": "$accent",
                 "width": 1.0
             },
             "background": {
-                "color": "#FF2E5299"
+                "color": "$accentDark"
             }
         },
         "checkedHover": {
             "border": {
                 "radius": 6.0,
-                "color": "#FF5280E0",
+                "color": "$accentHover",
                 "width": 1.0
             },
             "background": {
-                "color": "#FF3861B3"
+                "color": "$accentHoverDark"
             }
         },
         "checkmark": {
             "stroke": {
-                "color": "#FFFFFFFF",
+                "color": "$white",
                 "width": 2.0
             },
             "lineCap": "round",
@@ -332,61 +408,61 @@
         "normal": {
             "border": {
                 "radius": 999.0,
-                "color": "#FF404047",
+                "color": "$switchOffBorder",
                 "width": 1.0
             },
             "background": {
-                "color": "#FF1F1F1F"
+                "color": "$switchOffBackground"
             }
         },
         "hover": {
             "border": {
                 "radius": 999.0,
-                "color": "#FF4D73C7",
+                "color": "$checkboxHoverBorder",
                 "width": 1.0
             },
             "background": {
-                "color": "#FF24242B"
+                "color": "$hoverBackground"
             }
         },
         "click": {
             "border": {
                 "radius": 999.0,
-                "color": "#FF2E4780",
+                "color": "$primaryClick",
                 "width": 1.0
             },
             "background": {
-                "color": "#FF121217"
+                "color": "$clickBackground"
             }
         },
         "selected": {
             "border": {
                 "radius": 999.0,
-                "color": "#FF3D6BC7",
+                "color": "$accent",
                 "width": 1.0
             },
             "background": {
-                "color": "#FF2E5299"
+                "color": "$accentDark"
             }
         },
         "selectedHover": {
             "border": {
                 "radius": 999.0,
-                "color": "#FF5280E0",
+                "color": "$accentHover",
                 "width": 1.0
             },
             "background": {
-                "color": "#FF3861B3"
+                "color": "$accentHoverDark"
             }
         },
         "dot": {
             "border": {
                 "radius": 999.0,
-                "color": "#FFFFFFFF",
+                "color": "$white",
                 "width": 0.0
             },
             "background": {
-                "color": "#FFFFFFFF"
+                "color": "$white"
             }
         }
     },
@@ -398,11 +474,11 @@
         },
         "border": {
             "radius": 10.0,
-            "color": "#FF38383D",
+            "color": "$secondary",
             "width": 1.0
         },
         "background": {
-            "color": "#FF242424"
+            "color": "$hoverBackground"
         }
     },
     "MenuItem": {
@@ -417,17 +493,17 @@
         },
         "hover": {
             "background": {
-                "color": "#FF3359A6"
+                "color": "$primaryHoverDark"
             }
         },
         "click": {
             "background": {
-                "color": "#FF26478C"
+                "color": "$menuItemClick"
             }
         },
         "arrow": {
             "stroke": {
-                "color": "#FFFFFFFF",
+                "color": "$white",
                 "width": 2.0
             },
             "lineCap": "round",
@@ -436,7 +512,7 @@
         }
     },
     "MenuSeparator": {
-        "color": "#FF38383D",
+        "color": "$secondary",
         "margin": {
             "horizontal": 12.0,
             "vertical": 6.0
@@ -446,11 +522,11 @@
         "padding": 8.0,
         "border": {
             "radius": 8.0,
-            "color": "#FF383838",
+            "color": "$secondary",
             "width": 1.0
         },
         "background": {
-            "color": "#FF141414"
+            "color": "$backgroundDark"
         },
         "item": {
             "height": 22.0,
@@ -462,14 +538,14 @@
         "itemSelected": {
             "border": {
                 "radius": 6.0,
-                "color": "#FFF",
+                "color": "$white",
                 "width": 0.0
             },
             "background": {
-                "color": "#732666D9"
+                "color": "$selectionBlue"
             },
             "text": {
-                "color": "#FFFFFFFF",
+                "color": "$white",
                 "fontWeight": "bold"
             }
         }
@@ -481,17 +557,17 @@
         },
         "hover": {
             "background": {
-                "color": "#FF24242B"
+                "color": "$hoverBackground"
             }
         },
         "click": {
             "border": {
                 "radius": 6.0,
-                "color": "#FF2E4780",
+                "color": "$primaryClick",
                 "width": 1.0
             },
             "background": {
-                "color": "#FF121217"
+                "color": "$clickBackground"
             }
         }
     },
@@ -499,47 +575,79 @@
         "track": {
             "border": {
                 "radius": 6.0,
-                "color": "#FF333333",
+                "color": "$borderDark",
                 "width": 1.0
             },
             "background": {
-                "color": "#FF141414"
+                "color": "$backgroundDark"
             }
         },
         "progress": {
             "border": {
                 "radius": 6.0,
-                "color": "#FF3859A6",
+                "color": "$primary",
                 "width": 1.0
             },
             "background": {
-                "color": "#FF294580"
+                "color": "$primaryDark"
             }
         },
         "indeterminate": {
             "background": {
                 "linearGradient": {
-                    "start": [ 0.0, 0.0 ],
-                    "end": [ 1.0, 0.0 ],
-                    "stops": [ 0.0, 0.5, 1.0 ],
-                    "colors": [ "#00294580", "#FF3859A6", "#00294580" ]
+                    "start": [
+                        0.0,
+                        0.0
+                    ],
+                    "end": [
+                        1.0,
+                        0.0
+                    ],
+                    "stops": [
+                        0.0,
+                        0.5,
+                        1.0
+                    ],
+                    "colors": [
+                        "$primaryDarkTransparent",
+                        "$primary",
+                        "$primaryDarkTransparent"
+                    ]
                 }
             }
         }
     },
     "Spinner": {
         "normal": {
-            "border": { "radius": 6.0, "color": "#FF383838", "width": 1.0 },
-            "background": { "color": "#FF141414" }
+            "border": {
+                "radius": 6.0,
+                "color": "$secondary",
+                "width": 1.0
+            },
+            "background": {
+                "color": "$backgroundDark"
+            }
         },
         "button": {
             "hover": {
-                "border": { "radius": 0.0, "color": "#FF4D73CC", "width": 0.0 },
-                "background": { "color": "#FF2A2A40" }
+                "border": {
+                    "radius": 0.0,
+                    "color": "$primaryHover",
+                    "width": 0.0
+                },
+                "background": {
+                    "color": "$spinnerButtonHover"
+                }
             },
             "click": {
-                "border": { "radius": 0.0, "color": "#FF2E4780", "width": 0.0 },
-                "background": { "color": "#FF1A1A28" }
+                "border": {
+                    "radius": 0.0,
+                    "color": "$primaryClick",
+                    "width": 0.0
+                },
+                "background": {
+                    "color": "$spinnerButtonClick"
+                }
             }
         }
     }

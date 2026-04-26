@@ -13,33 +13,30 @@ namespace gui {
     void ProgressBar::OnDraw(Graphics &g)
     {
         auto style = GetStyle()["ProgressBar"];
+        Size size = GetSize();
 
-        // Track
-        Rectangle b = GetBounds();
-        g.StyledRect(b.x, b.y, b.w, b.h, style["track"]);
+        g.StyledRect(0, 0, size.w, size.h, style["track"]);
 
         if (!m_indeterminate) {
-            // Progress
             float progress = m_range.Normalized(m_value);
-            
             if (m_direction == Direction::Horizontal) {
-                int pw = (int)(b.w * progress);
-                g.StyledRect(b.x, b.y, pw, b.h, style["progress"]);
+                int pw = (int)(size.w * progress);
+                g.StyledRect(0, 0, pw, size.h, style["progress"]);
             } else {
-                int ph = (int)(b.h * progress);
-                g.StyledRect(b.x, b.y + b.h - ph, b.w, ph, style["progress"]);
+                int ph = (int)(size.h * progress);
+                g.StyledRect(0, size.h - ph, size.w, ph, style["progress"]);
             }
         } else {
-            g.ClipPushPath([&]() { g.GetStyledPath(style["track"], b.x, b.y, b.w, b.h); });
-            int indSize = (m_direction == Direction::Horizontal ? b.w : b.h) / 2;
-            if (m_indeterminateOffset > b.w) {
+            g.ClipPushPath([&]() { g.GetStyledPath(style["track"], 0, 0, size.w, size.h); });
+            int indSize = (m_direction == Direction::Horizontal ? size.w : size.h) / 2;
+            if (m_indeterminateOffset > size.w) {
                 m_indeterminateOffset = -indSize;
             }
 
             if (m_direction == Direction::Horizontal) {
-                g.StyledRect(b.x + m_indeterminateOffset, b.y, indSize, b.h, style["indeterminate"]);
+                g.StyledRect(m_indeterminateOffset, 0, indSize, size.h, style["indeterminate"]);
             } else {
-                g.StyledRect(b.x, b.y + m_indeterminateOffset, b.w, indSize, style["indeterminate"]);
+                g.StyledRect(0, m_indeterminateOffset, size.w, indSize, style["indeterminate"]);
             }
             g.ClipPop();
         }

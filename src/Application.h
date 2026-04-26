@@ -8,7 +8,8 @@
 #include "Graphics.h"
 #include "Backend.h"
 
-namespace gui {
+namespace gui
+{
     class Application;
     class ApplicationAdapter {
     public:
@@ -36,13 +37,16 @@ namespace gui {
         std::string GetClipboard();
 
         EventSystem& GetEventSystem() { return m_eventSystem; }
+        Json& GetStyle() { return m_style; }
 
-        static Json DefaultStyle;
+        void LoadTheme(const std::string& themePath);
+        void LoadThemeFromString(const std::string& themeJson);
     private:
         std::unique_ptr<Backend> m_backend;
         EventSystem m_eventSystem;
         std::vector<std::unique_ptr<Window>> m_windows;
         bool m_running{ false };
+        Json m_style;
 
         Window* FindWindow(WindowId id);
 
@@ -58,5 +62,7 @@ namespace gui {
         void OnKeyDown(WindowId id, Key key, ModifierState mod) override;
         void OnKeyUp(WindowId id, Key key, ModifierState mod) override;
         void OnTextInput(WindowId id, char c) override;
+
+        void ProcessStyle(Json& style);
     };
 }

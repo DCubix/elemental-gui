@@ -133,7 +133,7 @@ namespace gui {
 
     void <Name>::OnDraw(Graphics& g) {
         Rectangle b = GetBounds();
-        Json style = GetStyle()["<Name>"];
+        Json style = GetStyle();
 
         // Draw the widget background/frame using style
         g.StyledRect(b.x, b.y, b.w, b.h, style["normal"]);

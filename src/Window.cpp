@@ -2,7 +2,8 @@
 
 #include "Application.h"
 
-namespace gui {
+namespace gui
+{
 
     Backend& Window::GetBackend() {
         return m_application->GetBackend();
@@ -16,8 +17,7 @@ namespace gui {
     }
 
     Window::Window(const WindowConfig& config)
-        : m_config(config)
-    {
+        : m_config(config) {
         m_graphics = Graphics::CreateGraphics();
     }
 
@@ -40,7 +40,7 @@ namespace gui {
             b.GetWindowPosition(m_config.parent->m_handle, x, y);
             b.GetWindowSize(m_config.parent->m_handle, pw, ph);
             b.SetWindowPosition(m_handle,
-                x + pw / 2 - (int)m_config.width  / 2,
+                x + pw / 2 - (int)m_config.width / 2,
                 y + ph / 2 - (int)m_config.height / 2
             );
         }
@@ -133,21 +133,30 @@ namespace gui {
         m_graphics.SetupDrawing(m_config.width, m_config.height);
 
         if (m_root) {
-            Json windowStyle = m_root->GetStyle()["Window"];
+            Json windowStyle = GetApp()->GetStyle()["Window"];
             m_graphics.StyledRect(0, 0, m_config.width, m_config.height, windowStyle);
         }
 
         for (size_t i = 0; i < m_elements.size(); i++) {
-            if (m_elements[i]->GetParent() != nullptr) continue;
-            if (!m_elements[i]->IsVisible()) continue;
-            if (m_elements[i]->IsDirty()) {
-                m_elements[i]->OnDraw(m_graphics);
-                m_elements[i]->m_dirty = false;
+            auto* el = m_elements[i].get();
+            if (el->GetParent() != nullptr) continue;
+            if (!el->IsVisible()) continue;
+            if (el->IsDirty()) {
+                const auto& lb = el->GetLocalBounds();
+                m_graphics.Save();
+                m_graphics.Translate(lb.x, lb.y);
+                el->OnDraw(m_graphics);
+                m_graphics.Restore();
+                el->m_dirty = false;
             }
         }
         for (auto* popup : m_popups) {
             if (!popup->IsVisible()) continue;
+            const auto& lb = popup->GetLocalBounds();
+            m_graphics.Save();
+            m_graphics.Translate(lb.x, lb.y);
             popup->OnDraw(m_graphics);
+            m_graphics.Restore();
             popup->m_dirty = false;
         }
         m_graphics.Flush();

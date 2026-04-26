@@ -1,0 +1,61 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{c,cpp,h,hpp}]
+indent_style = space
+indent_size = 4
+tab_width = 4
+cpp_new_line_before_open_brace_namespace = new_line
+cpp_new_line_before_open_brace_class = same_line
+cpp_new_line_before_open_brace_struct = same_line
+cpp_new_line_before_open_brace_enum = same_line
+cpp_new_line_before_open_brace_function = same_line
+cpp_new_line_before_open_brace_lambda = same_line
+cpp_new_line_before_open_brace_control = same_line
+cpp_new_line_before_open_brace_block = same_line
+cpp_new_line_before_open_brace_bracket = same_line
+cpp_new_line_before_open_brace_parenthesis = same_line
+cpp_new_line_before_open_brace_access_specifier = same_line
+cpp_new_line_scope_braces_on_separate_lines = true
+cpp_new_line_close_brace_same_line_empty_type = true
+cpp_new_line_close_brace_same_line_empty_function = true
+cpp_new_line_close_brace_same_line_empty_namespace = true
+cpp_new_line_close_brace_same_line_empty_block = true
+cpp_new_line_close_brace_same_line_empty_control = true
+cpp_new_line_close_brace_same_line_empty_lambda = true
+cpp_new_line_close_brace_same_line_empty_bracket = true
+cpp_new_line_close_brace_same_line_empty_parenthesis = true
+cpp_new_line_before_catch = true
+cpp_new_line_before_else = true
+cpp_new_line_before_while_in_do_while = false
+cpp_space_before_function_open_parenthesis = remove
+cpp_space_within_parameter_list_parentheses = false
+cpp_indent_case_contents = true
+cpp_indent_case_labels = true
+cpp_indent_namespace_contents = true
+cpp_space_after_keywords_in_control_flow_statements = true
+cpp_space_within_control_flow_statement_parentheses = false
+cpp_space_between_empty_parameter_list_parentheses = false
+cpp_space_before_lambda_open_parenthesis = false
+cpp_space_pointer_reference_alignment = left
+cpp_space_around_ternary_operator = true
+cpp_new_line_after_close_brace = function
+cpp_indent_braces = false
+
+[*.json]
+indent_style = space
+indent_size = 2
+
+[*.md]
+indent_style = space
+indent_size = 2
+
+[CMakeLists.txt]
+indent_style = space
+indent_size = 2
+tab_width = 2

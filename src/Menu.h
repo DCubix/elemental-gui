@@ -10,6 +10,7 @@ namespace gui {
         ~Menu() = default;
 
         void OnDraw(Graphics& g) override;
+        std::string StyleKey() const override { return "Menu"; }
         EventStatus OnEvent(Event *event) override;
 
 		Size GetPreferredSize() const override;

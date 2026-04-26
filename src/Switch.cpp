@@ -35,29 +35,29 @@ namespace gui {
 
     void Switch::OnDraw(Graphics &g)
     {
-        Rectangle b = GetBounds();
+        Size size = GetSize();
         Json style = GetStyle()["Switch"];
 
-        int trackW = b.w;
-        int trackH = b.h;
+        int trackW = size.w;
+        int trackH = size.h;
         int thumbRadius = (trackH - 4) / 2;
-        int thumbCY = b.y + trackH / 2;
+        int thumbCY = trackH / 2;
 
         // Draw track
         std::string trackState = (m_state == State::Checked) ? "on" : "off";
-        g.StyledRect(b.x, b.y, trackW, trackH, style["track"][trackState]);
+        g.StyledRect(0, 0, trackW, trackH, style["track"][trackState]);
 
         // Thumb position: left when unchecked, center for indeterminate, right when checked
         int thumbCX;
         switch (m_state) {
             case State::Checked:
-                thumbCX = b.x + trackW - thumbRadius - 2;
+                thumbCX = trackW - thumbRadius - 2;
                 break;
             case State::Indeterminate:
-                thumbCX = b.x + trackW / 2;
+                thumbCX = trackW / 2;
                 break;
             default:
-                thumbCX = b.x + thumbRadius + 2;
+                thumbCX = thumbRadius + 2;
                 break;
         }
 

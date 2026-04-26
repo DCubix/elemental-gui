@@ -56,26 +56,36 @@ namespace gui {
 		m_scrollBar->SetEnabled(false);
 		m_scrollBar->SetVisible(false);
 
-		Rectangle b = GetBounds();
-		g.StyledRect(b.x, b.y, b.w, b.h, GetStyle()["Panel"]);
+		Size size = GetSize();
+		g.StyledRect(0, 0, size.w, size.h, GetStyle()["Panel"]);
 
-		Rectangle c = GetIntersectedBounds();
+		Rectangle clip = GetLocalIntersectedBounds();
 
 		if (m_element != nullptr) {
 			m_element->SetAutoSize(true);
-			
+
 			if (m_scrollDirection == Direction::Vertical) {
 				SolveScrollVertical();
 			} else {
 				SolveScrollHorizontal();
 			}
 
-			g.ClipPushRect(c.x, c.y, c.w, c.h);
+			g.ClipPushRect(clip.x, clip.y, clip.w, clip.h);
+			const auto& elb = m_element->GetLocalBounds();
+			g.Save();
+			g.Translate(elb.x, elb.y);
 			m_element->OnDraw(g);
+			g.Restore();
 			g.ClipPop();
 		}
 
-		if (m_scrollBar->IsVisible()) m_scrollBar->OnDraw(g);
+		if (m_scrollBar->IsVisible()) {
+			const auto& slb = m_scrollBar->GetLocalBounds();
+			g.Save();
+			g.Translate(slb.x, slb.y);
+			m_scrollBar->OnDraw(g);
+			g.Restore();
+		}
 	}
 
 	void ScrollView::SetElement(Element* e) {
@@ -105,23 +115,19 @@ namespace gui {
     
 	void ScrollView::SolveScrollVertical()
     {
-		Rectangle b = GetBounds();
+		Size size = GetSize();
 		Size ps = m_element->GetPreferredSize();
 
-		int viewSize = ps.h;
-		int contentSize = b.h;
+		int scrollAxisSize = size.h;
+		int crossAxisSize = size.w;
 
-		int scrollAxisSize = b.h;
-		int crossAxisSize = b.w;
-
-		// Needs scrollbar?
-		if (viewSize > contentSize) {
+		if (ps.h > size.h) {
 			crossAxisSize -= SCROLLBAR_SIZE;
 			m_scrollBar->SetRange(0, ps.h - scrollAxisSize);
 			m_scrollBar->SetEnabled(true);
 			m_scrollBar->SetVisible(true);
 			m_scrollBar->SetLocalBounds(
-				Rectangle(b.w - SCROLLBAR_SIZE, 0, SCROLLBAR_SIZE, b.h)
+				Rectangle(size.w - SCROLLBAR_SIZE, 0, SCROLLBAR_SIZE, size.h)
 			);
 		} else {
 			m_scrollBar->SetValue(0);
@@ -132,26 +138,22 @@ namespace gui {
 			crossAxisSize, ps.h
 		});
     }
-    
+
 	void ScrollView::SolveScrollHorizontal()
     {
-		Rectangle b = GetBounds();
+		Size size = GetSize();
 		Size ps = m_element->GetPreferredSize();
 
-		int viewSize = ps.w;
-		int contentSize = b.w;
+		int scrollAxisSize = size.w;
+		int crossAxisSize = size.h;
 
-		int scrollAxisSize = b.w;
-		int crossAxisSize = b.h;
-
-		// Needs scrollbar?
-		if (viewSize > contentSize) {
+		if (ps.w > size.w) {
 			crossAxisSize -= SCROLLBAR_SIZE;
 			m_scrollBar->SetRange(0, ps.w - scrollAxisSize);
 			m_scrollBar->SetEnabled(true);
 			m_scrollBar->SetVisible(true);
 			m_scrollBar->SetLocalBounds(
-				Rectangle(0, b.h - SCROLLBAR_SIZE, b.w, SCROLLBAR_SIZE)
+				Rectangle(0, size.h - SCROLLBAR_SIZE, size.w, SCROLLBAR_SIZE)
 			);
 		} else {
 			m_scrollBar->SetValue(0);

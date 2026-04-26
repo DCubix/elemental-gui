@@ -5,7 +5,8 @@
 #include "Scrollbar.h"
 #include "Window.h"
 
-namespace gui {
+namespace gui
+{
     template<typename T>
     struct ListItem {
         T value;
@@ -16,7 +17,7 @@ namespace gui {
     class List : public Element {
     public:
         List() : Element(), m_scrollbar(nullptr) {
-            SetLocalBounds({0, 0, 200, 200});
+            SetLocalBounds({ 0, 0, 200, 200 });
         }
 
         void OnDraw(Graphics& g) override {
@@ -24,10 +25,8 @@ namespace gui {
             auto textStyle = GetStyle()["DefaultText"];
             const int barsize = 12;
 
-            Rectangle b = GetBounds();
-
-            // Draw background
-            g.StyledRect(b.x, b.y, b.w, b.h, style);
+            Size size = GetSize();
+            g.StyledRect(0, 0, size.w, size.h, style);
 
             // Lazy-init the scrollbar
             if (m_scrollbar == nullptr) {
@@ -42,7 +41,8 @@ namespace gui {
             int itemHeight = style["item"].value("height", 22);
             int totalContentHeight = static_cast<int>(m_items.size()) * (itemHeight + itemPad.GetVertical());
 
-            Rectangle padB = pad.Apply(b);
+            Rectangle local{ 0, 0, size.w, size.h };
+            Rectangle padB = pad.Apply(local);
 
             // Determine if scrollbar is needed
             bool needsScrollbar = totalContentHeight > padB.h;
@@ -53,8 +53,9 @@ namespace gui {
             if (needsScrollbar) {
                 contentWidth -= barsize;
                 m_scrollbar->SetRange(0, totalContentHeight - padB.h);
-                m_scrollbar->SetLocalBounds(Rectangle(b.w - barsize, 0, barsize, b.h));
-            } else {
+                m_scrollbar->SetLocalBounds(Rectangle(size.w - barsize, 0, barsize, size.h));
+            }
+            else {
                 m_scrollbar->SetValue(0);
             }
 
@@ -75,10 +76,7 @@ namespace gui {
                 // Highlight selected item
                 if (static_cast<int>(i) == m_selectedIndex) {
                     g.StyledRect(
-                        itemRect.x,
-                        itemRect.y,
-                        itemRect.w,
-                        itemRect.h,
+                        itemRect.x, itemRect.y, itemRect.w, itemRect.h,
                         style["itemSelected"]
                     );
                     Json newTextStyle = style["itemSelected"].value("text", textStyle);
@@ -86,22 +84,27 @@ namespace gui {
                     g.StyledTextBegin(newTextStyle);
                     auto sz = g.MeasureText(item.label);
                     g.StyledTextEnd(
-                        item.label, itemRect.x + itemPad.left, itemRect.y + (itemRect.h + sz.height) / 2
+                        item.label, itemRect.x + itemPad.left, itemRect.y + (itemRect.h + sz.size.h) / 2
                     );
-                } else {
+                }
+                else {
                     Json newTextStyle = itemStyle.value("text", textStyle);
                     newTextStyle.update(textStyle);
                     g.StyledTextBegin(newTextStyle);
                     auto sz = g.MeasureText(item.label);
                     g.StyledTextEnd(
-                        item.label, itemRect.x + itemPad.left, itemRect.y + (itemRect.h + sz.height) / 2
+                        item.label, itemRect.x + itemPad.left, itemRect.y + (itemRect.h + sz.size.h) / 2
                     );
                 }
             }
             g.ClipPop();
 
             if (m_scrollbar->IsVisible()) {
+                const auto& slb = m_scrollbar->GetLocalBounds();
+                g.Save();
+                g.Translate(slb.x, slb.y);
                 m_scrollbar->OnDraw(g);
+                g.Restore();
             }
         }
 
@@ -110,7 +113,7 @@ namespace gui {
             const float scrollSpeed = 30.0f;
             float newVal = m_scrollbar->GetValue() - e.scrollY * scrollSpeed;
             newVal = std::max(m_scrollbar->GetRange().minimum,
-                             std::min(newVal, m_scrollbar->GetRange().maximum));
+                std::min(newVal, m_scrollbar->GetRange().maximum));
             m_scrollbar->SetValue(newVal);
         }
 
@@ -129,7 +132,7 @@ namespace gui {
             }
         }
 
-        EventStatus OnEvent(Event *event) override {
+        EventStatus OnEvent(Event* event) override {
             // Let scrollbar handle events first
             if (m_scrollbar != nullptr && m_scrollbar->IsVisible()) {
                 if (m_scrollbar->OnEvent(event) == EventStatus::Consumed)
@@ -150,7 +153,7 @@ namespace gui {
         }
 
         void AddItem(const T& data, const std::string& label) {
-            m_items.push_back({data, label});
+            m_items.push_back({ data, label });
         }
 
         void RemoveItem(size_t index) {
@@ -193,23 +196,23 @@ namespace gui {
 
         int GetContentWidth() const {
             const int barsize = 16;
-            Rectangle b = GetBounds();
-            EdgeInsets pad = EdgeInsets::FromStyle(GetStyle()["List"]["padding"]);
-            Rectangle padB = pad.Apply(b);
-            EdgeInsets itemPad = EdgeInsets::FromStyle(GetStyle()["List"]["item"]["padding"]);
-            int itemHeight = GetStyle()["List"]["item"].value("height", 22);
+            Size size = GetSize();
+            EdgeInsets pad = EdgeInsets::FromStyle(GetStyle()["padding"]);
+            Rectangle padB = pad.Apply({ 0, 0, size.w, size.h });
+            EdgeInsets itemPad = EdgeInsets::FromStyle(GetStyle()["item"]["padding"]);
+            int itemHeight = GetStyle()["item"].value("height", 22);
             int totalContentHeight = static_cast<int>(m_items.size()) * (itemHeight + itemPad.GetVertical());
             bool needsScrollbar = totalContentHeight > padB.h;
             return needsScrollbar ? padB.w - barsize : padB.w;
         }
 
         Rectangle GetItemRect(int index, int scrollOffset, int contentWidth) const {
-            Rectangle b = GetBounds();
-            EdgeInsets pad = EdgeInsets::FromStyle(GetStyle()["List"]["padding"]);
-            Rectangle padB = pad.Apply(b);
+            Size size = GetSize();
+            EdgeInsets pad = EdgeInsets::FromStyle(GetStyle()["padding"]);
+            Rectangle padB = pad.Apply({ 0, 0, size.w, size.h });
 
-            EdgeInsets itemPad = EdgeInsets::FromStyle(GetStyle()["List"]["item"]["padding"]);
-            int itemHeight = GetStyle()["List"]["item"].value("height", 22);
+            EdgeInsets itemPad = EdgeInsets::FromStyle(GetStyle()["item"]["padding"]);
+            int itemHeight = GetStyle()["item"].value("height", 22);
 
             return {
                 padB.x,
