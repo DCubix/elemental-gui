@@ -39,8 +39,7 @@ namespace gui {
 
     void CheckBox::OnDraw(Graphics& g) {
         Size size = GetSize();
-        Json style = GetStyle()["CheckBox"];
-        Json textStyle = GetStyle()["DefaultText"];
+        Json style = GetStyle();
 
         int boxSize = style.value("size", size.h);
         int boxX = 0;
@@ -69,7 +68,7 @@ namespace gui {
             int textX = boxX + boxSize + 6;
             int textY = boxY;
 
-            g.StyledTextBegin(textStyle);
+            g.StyledTextBegin(style);
             auto ex = g.MeasureText(m_text);
             int textOffY = boxSize / 2 + static_cast<int>(ex.size.h) / 2;
             g.StyledTextEnd(m_text, textX, textY + textOffY);
@@ -77,7 +76,7 @@ namespace gui {
     }
 
     Size CheckBox::GetPreferredSize() const {
-        Json style = GetStyle()["CheckBox"];
+        Json style = GetStyle();
         int boxSize = style.value("size", m_bounds.h);
         return {m_bounds.w, boxSize};
     }

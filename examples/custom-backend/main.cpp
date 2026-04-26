@@ -155,7 +155,7 @@ static inline MouseButton SMOLButtonToMouseButton(int button) {
 }
 
 class SmolBackend : public Backend {
-  public:
+public:
     bool Init() override { return true; }
     void Shutdown() override {}
 
@@ -390,12 +390,12 @@ class SmolBackend : public Backend {
         return "";
     }
 
-  private:
+private:
     std::vector<smol_frame_t*> m_frames;
 };
 
 class App : public gui::Window {
-  public:
+public:
     App()
         : gui::Window(WindowConfig{.title = "SmolBackend Example", .width = 800, .height = 600}) {}
 

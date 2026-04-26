@@ -5,7 +5,7 @@
 namespace gui {
     class Application;
     class Menu : public Element {
-      public:
+    public:
         Menu();
         ~Menu() = default;
 
@@ -32,7 +32,7 @@ namespace gui {
         Menu* GetParentMenu() const { return m_parentMenu; }
         void SetParentMenu(Menu* parent) { m_parentMenu = parent; }
 
-      private:
+    private:
         std::vector<MenuItem*> m_items;
         bool m_open{false};
         VoidCallback m_onDismiss;

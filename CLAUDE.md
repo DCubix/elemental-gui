@@ -338,16 +338,13 @@ The text editing hierarchy is built in three layers:
 | ---------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `LineEdit` | `Element`  | Single-line text editor with no background. Handles caret, selection, keyboard shortcuts (Home/End/Left/Right/Backspace/Delete/Ctrl+C/X/V/A), horizontal scroll offset, optional masking. `StyleKey()` = `"DefaultText"`. Padding is read on demand via `EdgeInsets::FromStyle(GetStyle()["padding"])` (resolves to zero for `DefaultText`).                                                                               |
 | `Edit`     | `LineEdit` | Adds a styled background drawn from `GetStyle()[state]` where state is `"normal"`, `"hover"`, or `"focused"`. Handles `OnMouseEnter`/`OnMouseLeave` for hover highlight and `OnFocus`/`OnBlur` to trigger a style refresh. `StyleKey()` = `"Edit"`. Padding comes from `GetStyle()["padding"]` (auto-resolved from the `Edit` JSON block).                                                                                 |
-| `TextArea` | `Edit`     | Multiline editor with per-character formatting. Adds `m_lines` (`vector<text::Line>`) and `m_formats` (`vector<CharFormat>`). Overrides `InsertChar` (allows `'\n'`), `RemoveChar`, `DeleteSelected`, `Rebuild` (calls `text::ComputeLines` on full text, then applies `m_formats`). Adds Up/Down/Enter line-aware key handling and `Format(from, len, style, r, g, b)` / `Format(style, r, g, b)` (applies to selection). |
+| `TextArea` | `Edit`     | Multiline editor with per-character formatting. Adds `m_lines` (`vector<text::Line>`) as the single source of truth for both geometry and per-character style. Overrides `InsertChar` (allows `'\n'`), `RemoveChar`, `DeleteSelected`, `Rebuild` (calls `text::ComputeLines`, then resets all chars to the default style color). Adds Up/Down/Enter line-aware key handling and `Format(from, len, style, r, g, b)` / `Format(style, r, g, b)` (directly sets `color`/`style` on `text::Char` objects in `m_lines`; no rebuild needed). |
 
 **Key rules:**
 
-- Always call `Rebuild()` after mutating `m_textRaw` or `m_formats` to keep
-  `m_lines` and `m_text` in sync.
-- `m_formats` is parallel to `m_textRaw` (one entry per raw character, including
-  `'\n'`).
-- In `TextArea::Rebuild`, `lineOffset` advances by `line.chars.size()` (visible
-  chars + sentinel), which correctly skips the `'\n'` separator in `m_textRaw`.
+- Always call `Rebuild()` after mutating `m_textRaw` to keep `m_lines` in sync. `Rebuild()` resets all char styles to the default color, so re-apply `Format()` calls after each rebuild if per-character styling must be preserved.
+- `Format()` modifies `text::Char::color` and `text::Char::style` directly in `m_lines` and calls `Invalidate()` — no rebuild required.
+- In `TextArea::Rebuild` and `Format`, `globalIdx = lineOffset + ch.index` maps a visible char to its position in `m_textRaw`. `lineOffset` advances by `line.chars.size()` (visible chars + sentinel), which accounts for the `'\n'` separator.
 
 **Props Pattern:** Every widget has a `Props` struct with `ElementProps base` as
 the first member:

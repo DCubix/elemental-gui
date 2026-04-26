@@ -4,7 +4,7 @@
 
 namespace gui {
     class Container : public Element {
-      public:
+    public:
         Container() = default;
         ~Container() = default;
 
@@ -18,7 +18,7 @@ namespace gui {
 
         const std::vector<Element*>& GetChildren() { return m_children; }
 
-      protected:
+    protected:
         std::vector<Element*> m_children;
 
         virtual bool IsDirty() override;

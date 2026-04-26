@@ -11,7 +11,7 @@ namespace gui {
     }
 
     void ProgressBar::OnDraw(Graphics& g) {
-        auto style = GetStyle()["ProgressBar"];
+        auto style = GetStyle();
         Size size = GetSize();
 
         g.StyledRect(0, 0, size.w, size.h, style["track"]);

@@ -5,7 +5,7 @@
 
 namespace gui {
     class ScrollView : public Element {
-      public:
+    public:
         ScrollView();
 
         std::string StyleKey() const override { return "Panel"; }
@@ -21,7 +21,7 @@ namespace gui {
         Direction GetScrollDirection() const { return m_scrollDirection; }
         void SetScrollDirection(Direction dir);
 
-      private:
+    private:
         Direction m_scrollDirection;
         Scrollbar* m_scrollBar;
         Element* m_element;

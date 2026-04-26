@@ -52,6 +52,7 @@ AllowShortIfStatementsOnASingleLine: Never
 AllowShortLambdasOnASingleLine: Inline # short lambdas inside calls stay on one line
 AllowShortLoopsOnASingleLine: false
 AllowShortBlocksOnASingleLine: Empty
+AccessModifierOffset: -4 # outdent public/private/protected by 4 spaces
 
 # Breaking long lines
 AlignAfterOpenBracket: BlockIndent # closing ) on its own line when args are broken

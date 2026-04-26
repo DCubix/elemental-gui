@@ -38,7 +38,7 @@ namespace gui {
 
     void Switch::OnDraw(Graphics& g) {
         Size size = GetSize();
-        Json style = GetStyle()["Switch"];
+        Json style = GetStyle();
 
         int trackW = size.w;
         int trackH = size.h;

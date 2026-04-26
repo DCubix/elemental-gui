@@ -4,7 +4,7 @@
 
 namespace gui {
     class CheckBox : public Element {
-      public:
+    public:
         CheckBox();
 
         std::string StyleKey() const override { return "CheckBox"; }
@@ -28,7 +28,7 @@ namespace gui {
 
         void SetOnChanged(ValueChanged<bool> cb) { m_onChanged = cb; }
 
-      private:
+    private:
         std::string m_text;
         bool m_checked{false};
         bool m_pressed{false};

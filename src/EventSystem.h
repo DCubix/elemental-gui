@@ -302,7 +302,7 @@ namespace gui {
     //
     enum class EventStatus { Consumed = 0, Active };
     class Subscriber {
-      public:
+    public:
         virtual EventStatus OnEvent(Event* event) = 0;
 
         bool IsEnabled() const { return m_enabled; }
@@ -311,14 +311,14 @@ namespace gui {
         bool IsHighPriority() const { return m_highPriority; }
         void SetHighPriority(bool v) { m_highPriority = v; }
 
-      private:
+    private:
         bool m_enabled = true;
         bool m_highPriority = false;
     };
     using EventSubscriberMap = std::map<EventType, std::vector<Subscriber*>>;
 
     class EventSystem {
-      public:
+    public:
         EventSystem() = default;
         ~EventSystem() = default;
 
@@ -352,7 +352,7 @@ namespace gui {
             delete e;
         }
 
-      private:
+    private:
         EventSubscriberMap m_subscribers;
     };
 } // namespace gui

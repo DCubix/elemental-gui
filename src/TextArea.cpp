@@ -7,7 +7,8 @@
 
 namespace gui {
 
-    TextArea::TextArea() {
+    TextArea::TextArea()
+        : Edit() {
         SetLocalBounds(Rectangle(0, 0, 200, 120));
     }
 
@@ -15,21 +16,13 @@ namespace gui {
         Edit::OnCreate();
     }
 
-    // -------------------------------------------------------------------------
-    // InsertChar
-    // -------------------------------------------------------------------------
     void TextArea::InsertChar(char c) {
         if (m_caretIndex < 0)
             m_caretIndex = 0;
         if (m_caretIndex > (int)m_textRaw.size())
             m_caretIndex = (int)m_textRaw.size();
 
-        CharFormat fmt;
-        if (m_caretIndex > 0 && m_caretIndex - 1 < (int)m_formats.size())
-            fmt = m_formats[m_caretIndex - 1];
-
         m_textRaw.insert(m_caretIndex, 1, c);
-        m_formats.insert(m_formats.begin() + m_caretIndex, fmt);
         m_caretIndex++;
         Rebuild();
         Invalidate();
@@ -37,24 +30,16 @@ namespace gui {
             m_onChange(m_textRaw);
     }
 
-    // -------------------------------------------------------------------------
-    // RemoveChar
-    // -------------------------------------------------------------------------
     void TextArea::RemoveChar(int i) {
         if (i < 0 || i >= (int)m_textRaw.size())
             return;
         m_textRaw.erase(i, 1);
-        if (i < (int)m_formats.size())
-            m_formats.erase(m_formats.begin() + i);
         Rebuild();
         Invalidate();
         if (m_onChange)
             m_onChange(m_textRaw);
     }
 
-    // -------------------------------------------------------------------------
-    // DeleteSelected
-    // -------------------------------------------------------------------------
     void TextArea::DeleteSelected() {
         if (!IsSelected())
             return;
@@ -64,10 +49,6 @@ namespace gui {
         a = std::max(0, a);
         b = std::min(b, (int)m_textRaw.size());
         m_textRaw.erase(a, b - a);
-        if (a < (int)m_formats.size()) {
-            int eraseEnd = std::min(b, (int)m_formats.size());
-            m_formats.erase(m_formats.begin() + a, m_formats.begin() + eraseEnd);
-        }
         m_caretIndex = a;
         Deselect();
         Rebuild();
@@ -76,54 +57,29 @@ namespace gui {
             m_onChange(m_textRaw);
     }
 
-    // -------------------------------------------------------------------------
-    // Rebuild
-    // -------------------------------------------------------------------------
     void TextArea::Rebuild() {
         if (!m_window)
             return;
-        auto textStyle = GetStyle()["DefaultText"];
+        auto textStyle = GetStyle();
         auto& g = GetWindow()->GetGraphics();
 
         m_lines = text::ComputeLines(g, textStyle, m_textRaw);
 
-        // Apply per-character formats across lines.
-        // Each line's chars has (text_length + 1) entries (the +1 is the sentinel '\0').
-        // The '\n' separator in m_textRaw occupies one slot in m_formats but is NOT
-        // represented as a char in any line — ComputeLines splits on '\n' and the
-        // sentinel absorbs the gap. So lineOffset advances by chars.size() per line,
-        // which accounts for both the visible chars and the implicit '\n'.
-        int lineOffset = 0;
         Color defaultColor = Color::FromStyle(textStyle["color"]);
-
         for (auto& line : m_lines) {
             for (auto& ch : line.chars) {
-                if (ch.value == '\0') {
-                    // sentinel — apply default color but don't advance global index
-                    ch.color = defaultColor;
-                    ch.style = FontStyle::Normal;
-                    continue;
-                }
-                int globalIdx = lineOffset + ch.index;
-                if (globalIdx < (int)m_formats.size()) {
-                    ch.color = m_formats[globalIdx].color;
-                    ch.style = m_formats[globalIdx].fontStyle;
-                } else {
-                    ch.color = defaultColor;
-                    ch.style = FontStyle::Normal;
-                }
+                ch.color = defaultColor;
+                ch.style = FontStyle::Normal;
             }
-            lineOffset += (int)line.chars.size();
         }
 
-        // Compute total text size
         if (!m_lines.empty()) {
             text::ApplyTextStyle(g, textStyle);
-            int lineHeight = static_cast<int>(g.GetFontExtents().height);
+            m_lineHeight = static_cast<int>(g.GetFontExtents().height);
             int maxW = 0;
             for (const auto& line : m_lines)
                 maxW = std::max(maxW, line.bounds.w);
-            m_textSize = {maxW, lineHeight * (int)m_lines.size()};
+            m_textSize = {maxW, m_lineHeight * (int)m_lines.size()};
         } else {
             m_textSize = {0, 0};
         }
@@ -144,9 +100,25 @@ namespace gui {
         return starts;
     }
 
-    // -------------------------------------------------------------------------
-    // GetCaretLineInfo
-    // -------------------------------------------------------------------------
+    int TextArea::HitTestIndex(int localX, int localY) const {
+        if (m_lines.empty() || m_lineHeight <= 0)
+            return 0;
+        EdgeInsets pad = EdgeInsets::FromStyle(GetStyle()["padding"]);
+        int tx = localX - (int)pad.left;
+        int ty = localY - (int)pad.top;
+        int lineIdx = ty / m_lineHeight;
+        lineIdx = std::max(0, std::min(lineIdx, (int)m_lines.size() - 1));
+        auto starts = ComputeLineStarts();
+        const auto& line = m_lines[lineIdx];
+        int lineStart = starts[lineIdx];
+        for (int i = 0; i < (int)line.chars.size() - 1; ++i) {
+            const auto& c = line.chars[i];
+            if (tx >= c.bounds.x && tx < c.bounds.x + c.bounds.w)
+                return lineStart + c.index;
+        }
+        return lineStart + (int)line.chars.size() - 1;
+    }
+
     TextArea::LineInfo TextArea::GetCaretLineInfo() const {
         auto starts = ComputeLineStarts();
         int lineIdx = 0;
@@ -161,9 +133,25 @@ namespace gui {
         return {lineIdx, lineStart, lineLen};
     }
 
-    // -------------------------------------------------------------------------
-    // OnDraw
-    // -------------------------------------------------------------------------
+    void TextArea::OnMouseDown(MouseEvent e) {
+        if (!m_editable || e.button != MouseButton::Left)
+            return;
+        m_caretIndex = HitTestIndex(e.x, e.y);
+        m_state = text::EditState::Selecting;
+        m_selectionStart = m_caretIndex;
+        m_selectionEnd = -1;
+        Invalidate();
+    }
+
+    void TextArea::OnMouseMove(MotionEvent e) {
+        if (m_state != text::EditState::Selecting)
+            return;
+        int idx = HitTestIndex(e.x, e.y);
+        m_selectionEnd = idx;
+        m_caretIndex = idx;
+        Invalidate();
+    }
+
     void TextArea::OnDraw(Graphics& g) {
         if (!m_window)
             return;
@@ -177,8 +165,8 @@ namespace gui {
             state = "hover";
         g.StyledRect(0, 0, sz.w, sz.h, GetStyle()[state]);
 
-        auto textStyle = GetStyle()["DefaultText"];
-        text::ApplyTextStyle(g, textStyle);
+        auto style = GetStyle();
+        text::ApplyTextStyle(g, style);
         auto fm = g.GetFontExtents();
         int lineHeight = static_cast<int>(fm.height);
 
@@ -196,12 +184,12 @@ namespace gui {
                 std::swap(selA, selB);
 
             auto starts = ComputeLineStarts();
+            std::vector<text::Line> selLines;
+
             for (int li = 0; li < (int)m_lines.size(); ++li) {
                 const auto& line = m_lines[li];
                 int lineStart = starts[li];
-                int lineEnd = lineStart + (int)line.chars.size() - 1; // before sentinel
 
-                // Does the selection overlap this line?
                 if (selB <= lineStart || selA >= lineStart + (int)line.chars.size())
                     continue;
 
@@ -213,19 +201,26 @@ namespace gui {
                 int x0 = line.chars[localA].bounds.x;
                 int x1 = line.chars[localB].bounds.x;
                 if (x1 <= x0 && localB > localA)
-                    x1 = x0 + 4; // ensure at least a sliver
+                    x1 = x0 + 4;
 
-                int lineY = li * lineHeight;
+                text::Line selLine;
+                selLine.bounds = {x0, li * lineHeight, x1 - x0, lineHeight};
+                selLines.push_back(selLine);
+            }
+
+            if (!selLines.empty()) {
+                auto hull = text::BuildOrthoHull(selLines);
                 g.BeginPath();
-                g.AddPathRect(x0, lineY, x1 - x0, lineHeight);
+                for (const auto& pt : hull)
+                    g.AddPathPoint(pt.x, pt.y);
                 g.EndPath(true);
-                g.StyledPaint(GetStyle()["Selection"]);
+                g.StyledPaint(GetWindow()->GetApp()->GetStyle()["Selection"]);
             }
         }
 
         // --- Text ---
-        const std::string fontName = textStyle.value("font", "Sans");
-        const double fontSize = textStyle.value("fontSize", 14.0);
+        const std::string fontName = style.value("font", "Sans");
+        const double fontSize = style.value("fontSize", 14.0);
         for (int li = 0; li < (int)m_lines.size(); ++li) {
             int lineY = li * lineHeight;
             const auto& line = m_lines[li];
@@ -239,7 +234,7 @@ namespace gui {
         }
 
         // --- Caret ---
-        if (IsFocused() && m_editable && !m_lines.empty()) {
+        if (IsFocused() && m_editable && !m_lines.empty() && m_showCaret) {
             auto info = GetCaretLineInfo();
             const auto& line = m_lines[info.lineIdx];
             int localCaretIdx = m_caretIndex - info.lineStart;
@@ -247,7 +242,7 @@ namespace gui {
             int caretX = line.chars[localCaretIdx].bounds.x;
             int caretY = info.lineIdx * lineHeight;
 
-            Color caretColor = Color::FromStyle(textStyle["color"]);
+            Color caretColor = Color::FromStyle(style["color"]);
             g.Color(caretColor.r, caretColor.g, caretColor.b, 1.0f);
             g.LineWidth(1.0f);
             g.Line(caretX, caretY, caretX, caretY + lineHeight + 1);
@@ -257,12 +252,20 @@ namespace gui {
         g.ClipPop();
     }
 
-    // -------------------------------------------------------------------------
-    // OnKeyDown
-    // -------------------------------------------------------------------------
     void TextArea::OnKeyDown(KeyEvent e) {
         if (!m_editable)
             return;
+
+        auto beginSel = [&]() {
+            if (e.mod.shift && m_selectionStart == -1)
+                m_selectionStart = m_caretIndex;
+        };
+        auto endSel = [&]() {
+            if (e.mod.shift)
+                m_selectionEnd = m_caretIndex;
+            else
+                Deselect();
+        };
 
         if (e.key == Key::Enter) {
             if (IsSelected())
@@ -273,6 +276,7 @@ namespace gui {
         }
 
         if (e.key == Key::Up) {
+            beginSel();
             auto info = GetCaretLineInfo();
             if (info.lineIdx > 0) {
                 auto starts = ComputeLineStarts();
@@ -281,11 +285,13 @@ namespace gui {
                 int prevLineLen = (int)m_lines[info.lineIdx - 1].chars.size() - 1;
                 m_caretIndex = prevLineStart + std::min(localCol, prevLineLen);
             }
+            endSel();
             Invalidate();
             return;
         }
 
         if (e.key == Key::Down) {
+            beginSel();
             auto info = GetCaretLineInfo();
             if (info.lineIdx < (int)m_lines.size() - 1) {
                 auto starts = ComputeLineStarts();
@@ -294,20 +300,25 @@ namespace gui {
                 int nextLineLen = (int)m_lines[info.lineIdx + 1].chars.size() - 1;
                 m_caretIndex = nextLineStart + std::min(localCol, nextLineLen);
             }
+            endSel();
             Invalidate();
             return;
         }
 
         if (e.key == Key::Home) {
+            beginSel();
             auto info = GetCaretLineInfo();
             m_caretIndex = info.lineStart;
+            endSel();
             Invalidate();
             return;
         }
 
         if (e.key == Key::End) {
+            beginSel();
             auto info = GetCaretLineInfo();
             m_caretIndex = info.lineStart + info.lineLen;
+            endSel();
             Invalidate();
             return;
         }
@@ -315,10 +326,9 @@ namespace gui {
         LineEdit::OnKeyDown(e);
     }
 
-    // -------------------------------------------------------------------------
-    // GetPreferredSize
-    // -------------------------------------------------------------------------
     Size TextArea::GetPreferredSize() const {
+        if (!IsAutoSize())
+            return Edit::GetPreferredSize();
         Size sz = GetSize();
         if (m_textSize.w > 0 || m_textSize.h > 0) {
             EdgeInsets pad = EdgeInsets::FromStyle(GetStyle()["padding"]);
@@ -330,18 +340,24 @@ namespace gui {
         return sz;
     }
 
-    // -------------------------------------------------------------------------
-    // Format
-    // -------------------------------------------------------------------------
     void TextArea::Format(int from, int len, FontStyle style, float r, float g, float b) {
-        int fmtSize = (int)m_formats.size();
-        from = std::max(0, std::min(from, fmtSize));
-        int to = std::max(0, std::min(from + len, fmtSize));
-        for (int i = from; i < to; ++i) {
-            m_formats[i].color = Color::FromRGB(r, g, b);
-            m_formats[i].fontStyle = style;
+        int textSize = (int)m_textRaw.size();
+        from = std::max(0, std::min(from, textSize));
+        int to = std::min(from + len, textSize);
+        Color color = Color::FromRGB(r, g, b);
+        int lineOffset = 0;
+        for (auto& line : m_lines) {
+            for (auto& ch : line.chars) {
+                if (ch.value != '\0') {
+                    int gi = lineOffset + ch.index;
+                    if (gi >= from && gi < to) {
+                        ch.color = color;
+                        ch.style = style;
+                    }
+                }
+            }
+            lineOffset += (int)line.chars.size();
         }
-        Rebuild();
         Invalidate();
     }
 

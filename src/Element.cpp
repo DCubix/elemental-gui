@@ -104,6 +104,8 @@ namespace gui {
                 return EventStatus::Consumed;
             };
             case EventType::Key: {
+                if (!m_focused)
+                    return EventStatus::Active;
                 KeyEvent eCopy = *dynamic_cast<KeyEvent*>(event);
                 if (eCopy.pressed) {
                     OnKeyDown(eCopy);
@@ -113,6 +115,8 @@ namespace gui {
                 return EventStatus::Consumed;
             }
             case EventType::TextInput: {
+                if (!m_focused)
+                    return EventStatus::Active;
                 TextInputEvent eCopy = *dynamic_cast<TextInputEvent*>(event);
                 OnTextInput(eCopy);
                 return EventStatus::Consumed;
@@ -120,12 +124,12 @@ namespace gui {
             case EventType::Focus: {
                 FocusEvent eCopy = *dynamic_cast<FocusEvent*>(event);
                 OnFocus(eCopy);
-                return EventStatus::Consumed;
+                return eCopy.element == this ? EventStatus::Consumed : EventStatus::Active;
             }
             case EventType::Blur: {
                 BlurEvent eCopy = *dynamic_cast<BlurEvent*>(event);
                 OnBlur(eCopy);
-                return EventStatus::Consumed;
+                return eCopy.element == this ? EventStatus::Consumed : EventStatus::Active;
             }
         }
 

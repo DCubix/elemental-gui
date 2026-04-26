@@ -20,6 +20,9 @@ namespace gui::text {
     Size ComputeTextSize(Graphics& g, Json style, const std::string& text) {
         ApplyTextStyle(g, style);
 
+        const auto fm = g.GetFontExtents();
+        const int lineHeight = static_cast<int>(fm.ascent + fm.descent);
+
         bool isMultiLine = text.find('\n') != std::string::npos;
 
         int maxW = 0, maxH = 0;
@@ -27,13 +30,13 @@ namespace gui::text {
             auto lines = utils::SplitString(text, "\n");
             for (auto&& text : lines) {
                 auto ex = g.MeasureText(text);
-                maxH += ex.size.h;
+                maxH += std::max(lineHeight, ex.size.h);
                 maxW = std::max(maxW, int(ex.size.w));
             }
         } else {
             auto ex = g.MeasureText(text);
             maxW = ex.size.w;
-            maxH = ex.size.h;
+            maxH = std::max(lineHeight, ex.size.h);
         }
 
         return Size(maxW, maxH);

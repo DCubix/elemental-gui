@@ -6,21 +6,28 @@
 #include <algorithm>
 
 namespace gui {
-    LineEdit::LineEdit() {
+    LineEdit::LineEdit()
+        : Element() {
         SetLocalBounds(Rectangle(0, 0, 120, 28));
+
+        m_blinkTimer.Start(500, [this]() {
+            m_showCaret = !m_showCaret;
+            if (IsFocused())
+                Invalidate();
+        });
     }
 
     void LineEdit::OnDraw(Graphics& g) {
         if (!m_window)
             return;
 
-        auto textStyle = GetStyle()["DefaultText"];
-        text::ApplyTextStyle(g, textStyle);
+        auto style = GetStyle();
+        text::ApplyTextStyle(g, style);
         auto fm = g.GetFontExtents();
-        int lineHeight = static_cast<int>(fm.height);
+        int lineHeight = static_cast<int>(fm.ascent + fm.descent);
 
         Size sz = GetSize();
-        EdgeInsets pad = EdgeInsets::FromStyle(GetStyle()["padding"]);
+        EdgeInsets pad = EdgeInsets::FromStyle(style["padding"]);
 
         int visW = sz.w - pad.left - pad.right;
         int ty = (sz.h - lineHeight) / 2; // vertical center
@@ -54,27 +61,27 @@ namespace gui {
             g.BeginPath();
             g.AddPathRect(x0, 0, x1 - x0, lineHeight);
             g.EndPath(true);
-            g.StyledPaint(GetStyle()["Selection"]);
+            g.StyledPaint(GetWindow()->GetApp()->GetStyle()["Selection"]);
         }
 
         // Text
-        const std::string fontName = textStyle.value("font", "Sans");
-        const double fontSize = textStyle.value("fontSize", 14.0);
+        const std::string fontName = style.value("font", "Sans");
+        const double fontSize = style.value("fontSize", 14.0);
         for (const text::Char& chr : m_text.chars) {
             if (chr.value == '\0')
                 continue;
             g.Color(chr.color.r, chr.color.g, chr.color.b, chr.color.a);
             g.Font(chr.style, fontName, fontSize);
-            g.DrawChar(m_masked ? '*' : chr.value, chr.bounds.x, chr.bounds.y + lineHeight);
+            g.DrawChar(m_masked ? '*' : chr.value, chr.bounds.x, chr.bounds.y + fm.ascent);
         }
 
         // Caret
-        if (IsFocused() && m_editable) {
+        if (IsFocused() && m_editable && m_showCaret) {
             int caretX =
                 m_text.chars.empty()
                     ? 0
                     : m_text.chars[std::min(m_caretIndex, (int)m_text.chars.size() - 1)].bounds.x;
-            Color caretColor = Color::FromStyle(textStyle["color"]);
+            Color caretColor = Color::FromStyle(style["color"]);
             g.Color(caretColor.r, caretColor.g, caretColor.b, 1.0f);
             g.LineWidth(1.0f);
             g.Line(caretX, 0, caretX, lineHeight + 1);
@@ -133,10 +140,25 @@ namespace gui {
         if (!m_editable)
             return;
 
+        auto beginSel = [&]() {
+            if (e.mod.shift && m_selectionStart == -1)
+                m_selectionStart = m_caretIndex;
+        };
+        auto endSel = [&]() {
+            if (e.mod.shift)
+                m_selectionEnd = m_caretIndex;
+            else
+                Deselect();
+        };
+
         if (e.key == Key::Home) {
+            beginSel();
             m_caretIndex = 0;
+            endSel();
         } else if (e.key == Key::End) {
+            beginSel();
             m_caretIndex = (int)m_textRaw.size();
+            endSel();
         } else if (e.key == Key::Backspace) {
             if (IsSelected())
                 DeleteSelected();
@@ -151,11 +173,15 @@ namespace gui {
                 RemoveChar(m_caretIndex);
             }
         } else if (e.key == Key::Left) {
+            beginSel();
             if (m_caretIndex > 0)
                 m_caretIndex--;
+            endSel();
         } else if (e.key == Key::Right) {
+            beginSel();
             if (m_caretIndex < (int)m_textRaw.size())
                 m_caretIndex++;
+            endSel();
         } else if (e.key == Key::C && e.mod.control && IsSelected()) {
             int a = m_selectionStart, b = m_selectionEnd;
             if (a > b)
@@ -181,23 +207,24 @@ namespace gui {
     void LineEdit::OnTextInput(TextInputEvent e) {
         if (!m_editable)
             return;
+        if (IsSelected())
+            DeleteSelected();
         InsertChar(e.inputChar);
         Invalidate();
     }
 
     void LineEdit::OnFocus(FocusEvent e) {
-        if (e.element == this)
-            m_window->StartInput();
         Invalidate();
     }
 
     void LineEdit::OnBlur(BlurEvent e) {
-        if (e.element == this)
-            m_window->StopInput();
         Invalidate();
     }
 
     Size LineEdit::GetPreferredSize() const {
+        if (!IsAutoSize()) {
+            return Element::GetPreferredSize();
+        }
         return m_textSize.w > 0 ? m_textSize : Size{120, 28};
     }
 
@@ -275,7 +302,7 @@ namespace gui {
     void LineEdit::Rebuild() {
         if (!m_window)
             return;
-        auto textStyle = GetStyle()["DefaultText"];
+        auto textStyle = GetStyle();
         const std::string display = m_masked ? std::string(m_textRaw.size(), '*') : m_textRaw;
         auto& g = GetWindow()->GetGraphics();
 

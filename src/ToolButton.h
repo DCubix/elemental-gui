@@ -4,7 +4,7 @@
 
 namespace gui {
     class ToolButton : public Label {
-      public:
+    public:
         enum class Mode { Normal = 0, Toggle, Radio };
 
         ToolButton();
@@ -31,7 +31,7 @@ namespace gui {
 
         void SetOnClick(const VoidCallback& cb) { m_onClick = cb; }
 
-      private:
+    private:
         VoidCallback m_onClick;
         ButtonState m_state;
         Mode m_mode;

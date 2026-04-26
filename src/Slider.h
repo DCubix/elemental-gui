@@ -6,7 +6,7 @@ namespace gui {
     constexpr int SliderThumbSize = 14;
 
     class Slider : public Element {
-      public:
+    public:
         Slider();
 
         void OnDraw(Graphics& g) override;
@@ -37,7 +37,7 @@ namespace gui {
 
         void SetOnValueChange(const ValueChanged<float>& cb) { m_onValueChange = cb; }
 
-      private:
+    private:
         enum class ButtonState { Normal = 0, Hover, Click };
 
         Direction m_direction;

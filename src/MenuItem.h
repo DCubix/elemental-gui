@@ -6,7 +6,7 @@
 namespace gui {
     class Menu;
     class MenuItem : public Element {
-      public:
+    public:
         MenuItem(const std::string& text = "");
 
         void OnDraw(Graphics& g) override;
@@ -53,7 +53,7 @@ namespace gui {
 
         Menu* GetParentMenu() const;
 
-      private:
+    private:
         std::string m_text;
         Image* m_icon{nullptr};
         Menu* m_subMenu{nullptr};

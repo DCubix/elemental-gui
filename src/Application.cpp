@@ -27,6 +27,12 @@ namespace gui {
             return 1;
         }
 
+        // Build all windows
+        for (auto& win : m_windows) {
+            auto* root = win->OnBuild()(*win);
+            win->SetRoot(root);
+        }
+
         m_running = true;
         while (m_running) {
             m_backend->PollEvents(*this);
@@ -174,6 +180,15 @@ namespace gui {
                     }
                     self(self, value);
                 }
+            } else if (node.is_string()) {
+                auto value = node.get<std::string>();
+                if (value.starts_with("$")) {
+                    auto vars = style["$variables"];
+                    auto varName = value.substr(1);
+                    if (vars.is_object() && vars.contains(varName)) {
+                        node = vars[varName];
+                    }
+                }
             } else if (node.is_array()) {
                 for (auto& item : node) {
                     self(self, item);
@@ -208,9 +223,6 @@ namespace gui {
         win->m_application = this;
         WindowHandle parentHandle = win->m_config.parent ? win->m_config.parent->m_handle : nullptr;
         win->m_handle = m_backend->CreateWindow(win->m_config, parentHandle);
-
-        auto* root = win->OnBuild()(*win);
-        win->SetRoot(root);
     }
 
 } // namespace gui

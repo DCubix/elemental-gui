@@ -3,30 +3,28 @@
 
 namespace gui {
     class TextArea : public Edit {
-      public:
+    public:
         TextArea();
         void OnCreate() override;
         void OnDraw(Graphics& g) override;
+        void OnMouseDown(MouseEvent e) override;
+        void OnMouseMove(MotionEvent e) override;
         void OnKeyDown(KeyEvent e) override;
         Size GetPreferredSize() const override;
 
         void Format(int from, int len, FontStyle style, float r, float g, float b);
         void Format(FontStyle style, float r, float g, float b);
 
-      protected:
-        struct CharFormat {
-            Color color{0.88f, 0.88f, 0.88f, 1.0f};
-            FontStyle fontStyle{FontStyle::Normal};
-        };
+    protected:
         std::vector<text::Line> m_lines;
-        std::vector<CharFormat> m_formats;
+        int m_lineHeight{0};
 
         void InsertChar(char c) override;
         void RemoveChar(int i) override;
         void DeleteSelected() override;
         void Rebuild() override;
 
-      private:
+    private:
         struct LineInfo {
             int lineIdx;
             int lineStart;
@@ -34,5 +32,6 @@ namespace gui {
         };
         std::vector<int> ComputeLineStarts() const;
         LineInfo GetCaretLineInfo() const;
+        int HitTestIndex(int localX, int localY) const;
     };
 } // namespace gui

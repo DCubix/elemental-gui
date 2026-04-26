@@ -23,7 +23,7 @@ namespace gui {
             m_pressed = false;
 
             auto* prev = m_window->Find<RadioButton>([this](RadioButton* rb) {
-                return rb != this && rb->GetGroup() == GetGroup();
+                return rb != this && rb->GetGroup() == GetGroup() && rb->IsChecked();
             });
             if (prev) {
                 prev->SetChecked(false);
@@ -44,8 +44,7 @@ namespace gui {
 
     void RadioButton::OnDraw(Graphics& g) {
         Size size = GetSize();
-        Json style = GetStyle()["RadioButton"];
-        Json textStyle = GetStyle()["DefaultText"];
+        Json style = GetStyle();
 
         int circleSize = style.value("size", size.h);
         int circleX = 0;
@@ -81,7 +80,7 @@ namespace gui {
             int textX = circleX + circleSize + 6;
             int textY = circleY;
 
-            g.StyledTextBegin(textStyle);
+            g.StyledTextBegin(style);
             auto ex = g.MeasureText(m_text);
             int textOffY = circleSize / 2 + static_cast<int>(ex.size.h) / 2;
             g.StyledTextEnd(m_text, textX, textY + textOffY);
@@ -89,7 +88,7 @@ namespace gui {
     }
 
     Size RadioButton::GetPreferredSize() const {
-        Json style = GetStyle()["RadioButton"];
+        Json style = GetStyle();
         int circleSize = style.value("size", m_bounds.h);
         return {m_bounds.w, circleSize};
     }

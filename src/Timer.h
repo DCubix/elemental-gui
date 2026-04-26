@@ -7,7 +7,7 @@
 
 namespace gui {
     class Timer {
-      public:
+    public:
         Timer()
             : m_running(false) {}
         ~Timer() { Stop(); }
@@ -15,7 +15,7 @@ namespace gui {
         void Start(int intervalMs, std::function<void()> callback);
         void Stop();
 
-      private:
+    private:
         std::thread m_thread;
         std::atomic<bool> m_running;
     };

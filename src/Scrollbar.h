@@ -5,7 +5,7 @@
 namespace gui {
     constexpr int ScrollbarButtonSize = 16;
     class Scrollbar : public Element {
-      public:
+    public:
         Scrollbar();
 
         void OnDraw(Graphics& g) override;
@@ -39,7 +39,7 @@ namespace gui {
 
         void SetOnValueChange(const ValueChanged<float>& cb) { m_onValueChange = cb; }
 
-      private:
+    private:
         Direction m_direction;
         Range m_range;
         float m_value;

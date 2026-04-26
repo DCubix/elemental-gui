@@ -5,7 +5,8 @@
 
 namespace gui {
 
-    Edit::Edit() {
+    Edit::Edit()
+        : LineEdit() {
         SetLocalBounds(Rectangle(0, 0, 120, 28));
     }
 
@@ -31,16 +32,6 @@ namespace gui {
     }
 
     void Edit::OnMouseLeave() {
-        Invalidate();
-    }
-
-    void Edit::OnFocus(FocusEvent e) {
-        LineEdit::OnFocus(e);
-        Invalidate();
-    }
-
-    void Edit::OnBlur(BlurEvent e) {
-        LineEdit::OnBlur(e);
         Invalidate();
     }
 

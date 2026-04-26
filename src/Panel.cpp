@@ -34,7 +34,7 @@ namespace gui {
     void Panel::OnDraw(Graphics& g) {
         Size size = GetSize();
         if (m_backgroundVisible)
-            g.StyledRect(0, 0, size.w, size.h, GetStyle()["Panel"]);
+            g.StyledRect(0, 0, size.w, size.h, GetStyle());
 
         if (m_layout)
             m_layout->Apply({0, 0, size.w, size.h});

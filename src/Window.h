@@ -11,7 +11,7 @@ namespace gui {
     class Window {
         friend class Application;
 
-      public:
+    public:
         Window() = default;
         ~Window();
 
@@ -86,7 +86,7 @@ namespace gui {
         Application* GetApp() { return m_application; }
         Graphics& GetGraphics() { return m_graphics; }
 
-      protected:
+    protected:
         Application* m_application{nullptr};
 
         WindowHandle m_handle{nullptr};

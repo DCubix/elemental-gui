@@ -64,10 +64,14 @@ namespace gui {
         if (m_focused != nullptr) {
             m_focused->m_focused = false;
             esys.Broadcast<BlurEvent>(m_focused);
+            if (m_focused->NeedsTextInput())
+                StopInput();
         }
         if (e != nullptr) {
             e->m_focused = true;
             esys.Broadcast<FocusEvent>(e);
+            if (e->NeedsTextInput())
+                StartInput();
         }
         m_focused = e;
     }

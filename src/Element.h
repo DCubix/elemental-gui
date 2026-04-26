@@ -25,7 +25,7 @@ namespace gui {
         template <typename>
         friend class List;
 
-      public:
+    public:
         Element();
         ~Element() = default;
 
@@ -107,13 +107,14 @@ namespace gui {
         }
 
         virtual std::string StyleKey() const { return ""; }
+        virtual bool NeedsTextInput() const { return false; }
 
         std::string GetTag() const { return m_tag; }
         void SetTag(const std::string& tag) { m_tag = tag; }
 
         Window* GetWindow() const { return m_window; }
 
-      protected:
+    protected:
         Window* m_window{nullptr};
         Element* m_parent{nullptr};
         Rectangle m_bounds;

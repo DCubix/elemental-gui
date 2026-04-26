@@ -17,7 +17,7 @@ namespace gui {
     concept DerivedFromWindow = std::derived_from<W, Window>;
 
     class Application : private BackendEventSink {
-      public:
+    public:
         Application() = default;
         ~Application() = default;
 
@@ -44,7 +44,7 @@ namespace gui {
         void LoadTheme(const std::string& themePath);
         void LoadThemeFromString(const std::string& themeJson);
 
-      private:
+    private:
         std::unique_ptr<Backend> m_backend;
         EventSystem m_eventSystem;
         std::vector<std::unique_ptr<Window>> m_windows;

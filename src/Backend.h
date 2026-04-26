@@ -14,7 +14,7 @@ namespace gui {
     // Application implements this; Backend calls it with already-translated events.
     // No platform types appear in this interface.
     class BackendEventSink {
-      public:
+    public:
         virtual ~BackendEventSink() = default;
 
         virtual void OnQuit() = 0;
@@ -33,7 +33,7 @@ namespace gui {
     };
 
     class Backend {
-      public:
+    public:
         virtual ~Backend() = default;
 
         // Lifecycle

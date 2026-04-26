@@ -24,14 +24,19 @@ namespace gui {
         int trackLen = (m_direction == Direction::Horizontal ? sz.w : sz.h) - thumb;
         m_thumbPos = int(m_range.Normalized(m_value) * float(trackLen));
 
+        // reverse when vertical to have min at bottom and max at top
+        if (m_direction == Direction::Vertical)
+            m_thumbPos = trackLen - m_thumbPos;
+
         // Draw thin track centered in the element
         Json trackStyle = GetStyle()["track"];
+        int trackSize = trackStyle.value("size", 8);
         if (m_direction == Direction::Horizontal) {
-            int trackH = std::max(4, sz.h / 3);
+            int trackH = trackSize;
             int trackY = (sz.h - trackH) / 2;
             g.StyledRect(0, trackY, sz.w, trackH, trackStyle);
         } else {
-            int trackW = std::max(4, sz.w / 3);
+            int trackW = trackSize;
             int trackX = (sz.w - trackW) / 2;
             g.StyledRect(trackX, 0, trackW, sz.h, trackStyle);
         }
@@ -132,6 +137,10 @@ namespace gui {
         Size size = GetSize();
         p -= thumb / 2;
         int axisLen = (m_direction == Direction::Horizontal ? size.w : size.h) - thumb;
+
+        // reverse when vertical to have min at bottom and max at top
+        if (m_direction == Direction::Vertical)
+            p = axisLen - p;
 
         Range vp{0, float(axisLen)};
         m_value = m_range.Constrain(m_range.Remap(vp, p));

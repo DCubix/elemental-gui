@@ -108,7 +108,7 @@ namespace gui {
         friend class Application;
         friend class Window;
 
-      public:
+    public:
         void Clear(float r, float g, float b, float a = 1.0f);
 
         void LineWidth(float w = 1.0f);
@@ -167,7 +167,7 @@ namespace gui {
         static Graphics CreateGraphics();
         static Graphics CreateGraphics(Image& image);
 
-      private:
+    private:
         Graphics();
 
         cairo_surface_t* m_surface{nullptr};

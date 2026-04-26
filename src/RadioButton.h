@@ -4,7 +4,7 @@
 
 namespace gui {
     class RadioButton : public Element {
-      public:
+    public:
         RadioButton();
 
         std::string StyleKey() const override { return "RadioButton"; }
@@ -31,7 +31,7 @@ namespace gui {
 
         void SetOnChanged(ValueChanged<bool> cb) { m_onChanged = cb; }
 
-      private:
+    private:
         std::string m_group{""}, m_text;
         bool m_checked{false};
         bool m_pressed{false};

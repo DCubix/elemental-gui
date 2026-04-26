@@ -6,3 +6,4 @@ include(${CPM_DOWNLOAD_LOCATION})
 
 add_subdirectory(custom-backend)
 add_subdirectory(drawing-pad)
+add_subdirectory(elements)

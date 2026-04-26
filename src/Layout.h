@@ -25,7 +25,7 @@ namespace gui {
     };
 
     class Layout {
-      public:
+    public:
         virtual ~Layout() = default;
         virtual void Apply(const Rectangle& bounds) = 0;
         virtual Size GetLaidOutSize() const = 0;
@@ -36,7 +36,7 @@ namespace gui {
         int GetGap() const { return m_gap; }
         void SetGap(int g) { m_gap = g; }
 
-      protected:
+    protected:
         EdgeInsets m_padding{0, 0, 0, 0};
         uint32_t m_gap{0};
     };

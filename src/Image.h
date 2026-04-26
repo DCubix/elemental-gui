@@ -15,7 +15,7 @@ namespace gui {
     class Image {
         friend class Graphics;
 
-      public:
+    public:
         enum class Type { Bitmap = 0, SVG };
 
         Image() = default;
@@ -42,7 +42,7 @@ namespace gui {
 
         bool IsValid() const;
 
-      protected:
+    protected:
         Type m_type{Type::Bitmap};
         int m_width{0}, m_height{0};
         cairo_surface_t* m_surface{nullptr};

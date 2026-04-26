@@ -79,7 +79,7 @@ namespace gui::declarative {
     // --- Image widget -------------------------------------
     struct ImageProps {
         ElementProps base{};
-        std::string fileName{""}; // TODO: support from memory, etc.
+        gui::Image* image{nullptr};
         ImageScalingMode scaling{ImageScalingMode::Stretch};
     };
     WidgetDesc Image(const ImageProps& props);

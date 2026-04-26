@@ -6,7 +6,7 @@
 
 namespace gui {
     class Switch : public Element {
-      public:
+    public:
         Switch();
 
         std::string StyleKey() const override { return "Switch"; }
@@ -25,7 +25,7 @@ namespace gui {
 
         void SetOnChanged(std::function<void(bool)> cb) { m_onChanged = cb; }
 
-      private:
+    private:
         enum class State { Unchecked, Checked, Indeterminate } m_state{State::Unchecked};
 
         bool m_pressed{false};

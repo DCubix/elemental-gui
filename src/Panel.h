@@ -11,7 +11,7 @@ namespace gui {
     concept DerivedFromLayout = std::derived_from<L, Layout>;
 
     class Panel : public Container {
-      public:
+    public:
         Panel();
 
         std::string StyleKey() const override { return "Panel"; }
@@ -35,7 +35,7 @@ namespace gui {
             Invalidate();
         }
 
-      private:
+    private:
         std::unique_ptr<Layout> m_layout;
         bool m_backgroundVisible;
     };

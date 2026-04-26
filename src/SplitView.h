@@ -4,7 +4,7 @@
 
 namespace gui {
     class SplitView : public Container {
-      public:
+    public:
         SplitView();
 
         void Add(Element* element) override;
@@ -29,7 +29,7 @@ namespace gui {
             Invalidate();
         }
 
-      private:
+    private:
         Direction m_direction{Direction::Horizontal};
         int m_splitPosition{100}; // px
         bool m_dragging{false};

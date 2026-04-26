@@ -12,7 +12,7 @@ namespace gui {
     enum class FlexAlign { Start, Center, End, Stretch };
 
     class FlexLayout : public Layout {
-      public:
+    public:
         FlexLayout(
             FlexDirection dir = FlexDirection::Row,
             FlexJustify justify = FlexJustify::Start,
@@ -33,7 +33,7 @@ namespace gui {
         void SetAlignItems(FlexAlign align) { m_align = align; }
         FlexAlign GetAlignItems() const { return m_align; }
 
-      private:
+    private:
         FlexDirection m_direction;
         FlexJustify m_justify;
         FlexAlign m_align;

@@ -4,7 +4,7 @@
 
 namespace gui {
     class Button : public Label {
-      public:
+    public:
         Button();
 
         void OnDraw(Graphics& g) override;
@@ -20,7 +20,7 @@ namespace gui {
 
         void SetOnClick(const VoidCallback& cb) { m_onClick = cb; }
 
-      private:
+    private:
         VoidCallback m_onClick;
         ButtonState m_state;
     };

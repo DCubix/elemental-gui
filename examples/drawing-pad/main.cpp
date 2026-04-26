@@ -10,7 +10,7 @@ using namespace gui;
 namespace decl = gui::declarative;
 
 class InfiniteCanvas : public Element {
-  public:
+public:
     enum class Mode { DrawPath, ErasePath, SegmentEdit };
 
     virtual void OnDraw(Graphics& g) override {
@@ -115,7 +115,7 @@ class InfiniteCanvas : public Element {
         Invalidate();
     }
 
-  private:
+private:
     bool m_dragging{false};
     Mode m_mode{Mode::DrawPath};
 
@@ -311,7 +311,7 @@ struct InfiniteCanvasProps {
 };
 
 class App : public Window {
-  public:
+public:
     App()
         : Window(WindowConfig{.title = "Drawing Pad", .width = 800, .height = 600}) {}
 

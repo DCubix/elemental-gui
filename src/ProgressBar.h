@@ -5,7 +5,7 @@
 
 namespace gui {
     class ProgressBar : public Element {
-      public:
+    public:
         ProgressBar();
 
         virtual void OnDraw(Graphics& g) override;
@@ -27,7 +27,7 @@ namespace gui {
         bool IsIndeterminate() const { return m_indeterminate; }
         void SetIndeterminate(bool indeterminate);
 
-      private:
+    private:
         Range m_range;
         float m_value;
         bool m_indeterminate{false};

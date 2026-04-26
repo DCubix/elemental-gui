@@ -15,7 +15,7 @@ namespace gui {
     };
 
     class SDL3Backend : public Backend {
-      public:
+    public:
         bool Init() override;
         void Shutdown() override;
 
@@ -53,7 +53,7 @@ namespace gui {
         void SetClipboardText(const std::string& text) override;
         std::string GetClipboardText() const override;
 
-      private:
+    private:
         std::unordered_map<SDL_Window*, SDL3WindowData> m_windows;
 
         SDL3WindowData& GetData(WindowHandle handle);

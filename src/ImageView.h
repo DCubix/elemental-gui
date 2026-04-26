@@ -6,12 +6,12 @@ namespace gui {
     enum class ImageScalingMode { Stretch, Contain, Cover };
 
     class ImageView : public Element {
-      public:
+    public:
         ImageView();
 
-        Image* GetImage() { return m_image.get(); }
+        Image* GetImage() { return m_image; }
         void SetImage(const Image* img) {
-            m_image.reset(const_cast<Image*>(img));
+            m_image = const_cast<Image*>(img);
             Invalidate();
         }
 
@@ -24,8 +24,8 @@ namespace gui {
         void OnDraw(Graphics& g) override;
         Size GetPreferredSize() const override;
 
-      private:
-        std::unique_ptr<Image> m_image;
+    private:
+        Image* m_image;
         ImageScalingMode m_scalingMode{ImageScalingMode::Stretch};
     };
 } // namespace gui

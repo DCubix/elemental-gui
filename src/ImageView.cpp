@@ -50,7 +50,7 @@ namespace gui {
         }
 
         g.ClipPushRect(clip.x, clip.y, clip.w, clip.h);
-        g.DrawImage(m_image.get(), imgRect.x, imgRect.y, imgRect.w, imgRect.h);
+        g.DrawImage(m_image, imgRect.x, imgRect.y, imgRect.w, imgRect.h);
         g.ClipPop();
     }
 

@@ -5,7 +5,7 @@
 namespace gui {
 
     class Label : public Element {
-      public:
+    public:
         Label();
 
         void OnDraw(Graphics& g) override;
@@ -38,7 +38,7 @@ namespace gui {
             Invalidate();
         }
 
-      protected:
+    protected:
         std::string m_text;
         Alignment m_alignment;
         Image* m_icon;

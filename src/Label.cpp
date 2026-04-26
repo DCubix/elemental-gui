@@ -116,17 +116,18 @@ namespace gui {
             }
 
             const auto textStyle = GetStyle();
-
             auto& g = m_window->GetGraphics();
             int maxW = 0, maxH = 0;
 
             g.Save();
             g.StyledTextBegin(textStyle);
 
+            const auto fm = g.GetFontExtents();
+            const int lineHeight = static_cast<int>(fm.ascent + fm.descent);
             auto&& lines = utils::SplitString(m_text, "\n");
             for (auto&& text : lines) {
                 auto&& ex = g.MeasureText(text);
-                maxH += ex.size.h;
+                maxH += std::max(lineHeight, ex.size.h);
                 maxW = std::max(maxW, static_cast<int>(ex.size.w));
             }
 

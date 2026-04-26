@@ -123,7 +123,7 @@ namespace gui::declarative {
             auto& imageView = window.Create<ImageView>();
             ElementSetup(imageView, props.base);
 
-            imageView.SetImage(new gui::Image(props.fileName));
+            imageView.SetImage(props.image);
             imageView.SetScalingMode(props.scaling);
 
             return &imageView;

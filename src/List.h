@@ -14,17 +14,18 @@ namespace gui {
 
     template <typename T>
     class List : public Element {
-      public:
+    public:
         List()
             : Element(),
               m_scrollbar(nullptr) {
             SetLocalBounds({0, 0, 200, 200});
         }
 
+        std::string StyleKey() const override { return "List"; }
+
         void OnDraw(Graphics& g) override {
-            auto style = GetStyle()["List"];
-            auto textStyle = GetStyle()["DefaultText"];
-            const int barsize = 12;
+            auto style = GetStyle();
+            const int barsize = 10;
 
             Size size = GetSize();
             g.StyledRect(0, 0, size.w, size.h, style);
@@ -84,8 +85,8 @@ namespace gui {
                         itemRect.h,
                         style["itemSelected"]
                     );
-                    Json newTextStyle = style["itemSelected"].value("text", textStyle);
-                    newTextStyle.update(textStyle);
+                    Json newTextStyle = style["itemSelected"].value("text", style);
+                    newTextStyle.update(style);
                     g.StyledTextBegin(newTextStyle);
                     auto sz = g.MeasureText(item.label);
                     g.StyledTextEnd(
@@ -94,8 +95,8 @@ namespace gui {
                         itemRect.y + (itemRect.h + sz.size.h) / 2
                     );
                 } else {
-                    Json newTextStyle = itemStyle.value("text", textStyle);
-                    newTextStyle.update(textStyle);
+                    Json newTextStyle = itemStyle.value("text", style);
+                    newTextStyle.update(style);
                     g.StyledTextBegin(newTextStyle);
                     auto sz = g.MeasureText(item.label);
                     g.StyledTextEnd(
@@ -131,7 +132,7 @@ namespace gui {
         void OnMouseDown(MouseEvent e) override {
             if (e.button != MouseButton::Left)
                 return;
-            Rectangle b = GetLocalBounds();
+            Rectangle b = GetLocalIntersectedBounds();
             int scrollOffset = m_scrollbar ? static_cast<int>(m_scrollbar->GetValue()) : 0;
             int contentWidth = GetContentWidth();
 
@@ -198,7 +199,7 @@ namespace gui {
 
         const std::vector<ListItem<T>>& GetItems() const { return m_items; }
 
-      private:
+    private:
         int m_selectedIndex{-1};
         std::vector<ListItem<T>> m_items;
         ValueChanged<int> m_onSelectionChanged;

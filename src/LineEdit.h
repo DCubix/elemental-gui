@@ -2,15 +2,17 @@
 
 #include "Element.h"
 #include "TextProcessing.h"
+#include "Timer.h"
 
 namespace gui {
     class LineEdit : public Element {
-      public:
+    public:
         LineEdit();
 
         void OnDraw(Graphics& g) override;
 
         std::string StyleKey() const override { return "DefaultText"; }
+        bool NeedsTextInput() const override { return true; }
 
         void OnMouseDown(MouseEvent e) override;
         void OnMouseUp(MouseEvent e) override;
@@ -41,7 +43,7 @@ namespace gui {
 
         void SetOnChange(const ValueChanged<std::string>& cb) { m_onChange = cb; }
 
-      protected:
+    protected:
         std::string m_textRaw;
         text::Line m_text;
 
@@ -53,6 +55,9 @@ namespace gui {
 
         text::EditState m_state{text::EditState::Normal};
         ValueChanged<std::string> m_onChange;
+
+        Timer m_blinkTimer;
+        bool m_showCaret{true};
 
         virtual void InsertChar(char c);
         virtual void RemoveChar(int i);
