@@ -5,8 +5,8 @@ code in this repository.
 
 ## Core Philosophy
 
-**Elemental GUI** is a C++20 desktop GUI framework that bridges immediate-mode
-and retained-mode UI paradigms. It provides:
+**Elemental GUI** (v0.5.1) is a C++20 desktop GUI framework that bridges
+immediate-mode and retained-mode UI paradigms. It provides:
 
 - **Hierarchical element tree** with parent-child relationships
 - **Event-driven architecture** with pub-sub event dispatch
@@ -24,19 +24,23 @@ and retained-mode UI paradigms. It provides:
 # Configure (first time or after CMakeLists changes)
 cmake -B build -G Ninja
 
-# Build library and test executable
+# Build library and examples
 cmake --build build
 
-# Run the demo app
-./build/tui_test
+# Run an example
+./build/examples/elements/elements
 ```
 
-**Dependencies:** SDL3, Cairo (system), nlohmann_json, nanosvg. All except Cairo
-are auto-fetched via CPM.cmake.
+**Dependencies:** SDL3, Cairo (system), nlohmann_json v3.12.0, nanosvg. All
+except Cairo are auto-fetched via CPM.cmake.
+
+**Build options:**
+- `ELEMENTAL_BUILD_EXAMPLES` (default: ON) — build example apps
+- `ELEMENTAL_BACKEND_SDL3` (default: ON) — enable SDL3 backend
 
 **Resource Embedding:** Files in `resources/` are embedded as C++ raw-string
-headers into `src/generated/` at configure time. Edit the `.json` source, never
-the generated headers.
+headers into `src/generated/` at configure time via `embed_resources.cmake`.
+Edit the `.json` source, never the generated headers.
 
 ## Architecture Overview
 
@@ -73,26 +77,58 @@ The framework follows a layered architecture with clear separation of concerns:
 └─────────────────────────────────────────────────────────┘
 ```
 
+### Widget Class Hierarchy
+
+```
+Subscriber (event interface)
+  └─ Element (base UI node — bounds, style, dirty tracking)
+      ├─ Label (text + optional icon display)
+      │   ├─ Button (clickable, state machine)
+      │   └─ ToolButton (toggle / radio / normal modes)
+      ├─ LineEdit (single-line text editor, no background)
+      │   └─ Edit (LineEdit + styled background)
+      │       └─ TextArea (multiline, per-char formatting)
+      ├─ CheckBox (checkbox + label)
+      ├─ RadioButton (radio + label, group mutual exclusion)
+      ├─ Switch (toggle switch, 3 states: off/on/indeterminate)
+      ├─ Slider (draggable range, horizontal or vertical)
+      ├─ Spinner (numeric +/- buttons with decimal support)
+      ├─ ProgressBar (progress indicator, indeterminate mode)
+      ├─ Scrollbar (internal — used by ScrollView and List)
+      ├─ ImageView (image display with scaling modes)
+      ├─ Menu (popup context menu, hierarchical submenus)
+      ├─ MenuItem (menu item with icon, checkbox, submenu)
+      ├─ ScrollView (single-child scrollable container)
+      └─ Container (element with managed children)
+          ├─ Panel (flex layout container with optional background)
+          ├─ SplitView (two-pane resizable divider)
+          └─ List<T> (typed item list with selection, lazy scrollbar)
+```
+
 ### Execution Flow
 
 ```
-Application::Start(adapter)
-  → ApplicationAdapter::OnCreate(app)      // user constructs UI
-    → app.CreateWindow(config)             // creates platform window
-      → window.SetRoot(widgetDesc)         // lazy instantiation via WidgetDesc
-        → WidgetDesc resolves to Element*  // builder function called
-          → element tree materialized
-  → Main loop (while m_running):
-    → Backend::PollEvents()                // SDL3 event pumping
-      → EventSystem::Broadcast<event>()   // pub-sub dispatch
-        → Subscriber::OnEvent()            // element tree receives events
-          → Virtual OnMouseDown/OnKey/etc.  // widget-specific handling
-    → For each dirty window:
-      → Window::Redraw()                    // incremental redraw
-        → Graphics::Clear()                 // clear background
-        → Element::OnDraw(Graphics&)        // recursive draw calls
-          → Cairo operations                // shapes, text, images
-      → Backend::PresentFrame()             // upload to GPU/display
+main()
+  → Application app{new SDL3Backend()}
+  → app.CreateWindow<MyWindow>()
+    → MyWindow::OnBuild()           // user builds declarative UI tree
+      → returns WidgetDesc          // lazy builder function
+  → app.Start()
+    → Application loads DefaultStyle.json (resolves $vars, inheritance)
+    → Backend::Init()
+    → For each window: OnBuild() → SetRoot(widgetDesc)
+    → Main loop (while m_running):
+      → Backend::PollEvents()               // SDL3 event pumping
+        → EventSystem::Broadcast<event>()  // pub-sub dispatch
+          → Subscriber::OnEvent()          // element tree receives events
+            → Virtual OnMouseDown/OnKey/etc.
+      → Remove closed windows
+      → For each dirty window:
+        → Window::Update()                   // incremental redraw
+          → Graphics::Clear()
+          → Element::OnDraw(Graphics&)       // recursive draw calls
+            → Cairo operations
+          → Backend::PresentFrame()          // upload to display
 ```
 
 ### Key Design Patterns
@@ -106,7 +142,31 @@ auto desc = decl::Column({...}, { decl::Button(...) });
 window.SetRoot(desc);  // ← instantiation happens here
 ```
 
-**2. Event Propagation**
+**2. Window as UI Entry Point**
+
+The preferred pattern is to subclass `Window` and override `OnBuild()`:
+
+```cpp
+class MyWindow : public Window {
+public:
+    MyWindow() : Window(WindowConfig{.title="App", .width=800, .height=600}) {}
+
+    WidgetDesc OnBuild() override {
+        Show();
+        return decl::Column({.gap=16, .padding=EdgeInsets::All(32)}, {
+            decl::Button("OK", {.onClick = []() { /* ... */ }})
+        });
+    }
+};
+
+int main() {
+    Application app{new SDL3Backend()};
+    app.CreateWindow<MyWindow>();
+    return app.Start();
+}
+```
+
+**3. Event Propagation**
 
 - Events flow: `Backend` → `Application` → `Window` → `Element::OnEvent()`
 - Two-phase handling: raw `OnEvent()` → typed virtuals (`OnMouseDown`,
@@ -114,20 +174,19 @@ window.SetRoot(desc);  // ← instantiation happens here
 - Return `EventStatus::Consumed` to stop propagation, `Active` to continue
 - Motion events always reach all subscribers (for hover state clearing)
 
-**3. Dirty Region Tracking**
+**4. Dirty Region Tracking**
 
 - `Invalidate()` marks element + ancestors as dirty
 - Only dirty windows redraw each frame (not per-element clipping)
-- Call `Invalidate()` whenever visual state changes (position, size, color,
-  etc.)
+- Call `Invalidate()` whenever visual state changes (position, size, color, etc.)
 
-**4. Resource Management**
+**5. Resource Management**
 
 - Elements owned by `Window` (unique_ptr storage)
 - Parent-child relationships are non-owning (raw pointers)
 - `Window::Create<T>()` factory ensures proper event hookup
 
-**5. Layout System**
+**6. Layout System**
 
 - `FlexLayout` computes bounds during `Apply()` based on container size
 - Children report preferred sizes via `GetPreferredSize()`
@@ -138,16 +197,95 @@ window.SetRoot(desc);  // ← instantiation happens here
 
 | Class         | Responsibility                                  | Key Methods                                      |
 | ------------- | ----------------------------------------------- | ------------------------------------------------ |
-| `Application` | App lifecycle, window management, event loop    | `Start()`, `CreateWindow()`, event dispatch      |
-| `Window`      | Element ownership, rendering, focus management  | `SetRoot()`, `Create<T>()`, `FindByTag<T>()`     |
-| `Element`     | Base UI node — bounds, visibility, focus, style | `OnDraw()`, `OnEvent()`, `Invalidate()`          |
-| `Container`   | Element with children — event propagation       | `Add()`, `Remove()`, `GetPreferredSize()`        |
+| `Application` | App lifecycle, window management, event loop    | `Start()`, `CreateWindow<W>()`, `LoadTheme()`    |
+| `Window`      | Element ownership, rendering, focus management  | `OnBuild()`, `Create<T>()`, `FindByTag<T>()`, `ShowPopup()` |
+| `Element`     | Base UI node — bounds, visibility, focus, style | `OnDraw()`, `OnEvent()`, `Invalidate()`, `GetIntersectedBounds()` |
+| `Container`   | Element with children — event propagation       | `Add()`, `Remove()`, `GetChildren()`             |
 | `EventSystem` | Pub-sub event bus — type-safe broadcast         | `Subscribe()`, `Broadcast<Event>()`              |
 | `Subscriber`  | Event receiver interface                        | `OnEvent()`, enabled/priority flags              |
-| `Graphics`    | Cairo wrapper — 2D rendering API                | `Rect()`, `Text()`, `Color()`, `ClipPush/Pop()`  |
+| `Graphics`    | Cairo wrapper — 2D rendering API                | `StyledRect()`, `DrawSVG()`, `ClipPush/Pop()`    |
 | `FlexLayout`  | Flexbox layout engine                           | `Apply()`, direction/justify/align properties    |
-| `Backend`     | Platform abstraction interface                  | Window/create/destroy, event pump, present       |
-| `Image`       | Raster/SVG image loading                        | `Image(file)`, used by `ImageView`, `ToolButton` |
+| `Backend`     | Platform abstraction interface                  | window create/destroy, event pump, present frame |
+| `Image`       | Raster/SVG image loading                        | `IsValid()`, used by `ImageView`, `ToolButton`   |
+| `Label`       | Text + optional icon display                    | `SetText()`, `SetIcon()`, base for Button        |
+| `Panel`       | Flex container with pluggable layout            | `SetLayout()`, `GetLayout<L>()`                  |
+| `Scrollbar`   | Interactive scrollbar (internal)                | lazy-created by `List<T>` and `ScrollView`       |
+
+## Application API
+
+```cpp
+class Application {
+    Application(Backend* backend);
+
+    // Window management
+    Window* CreateWindow(const WindowConfig& config);
+    template<typename W> W* CreateWindow();
+
+    // Lifecycle
+    int Start();
+
+    // Theming
+    void LoadTheme(const std::string& path);           // load .json file
+    void LoadThemeFromString(const std::string& json); // load from string
+    void ResetStyle();                                 // revert to DefaultStyle.json
+
+    // Clipboard
+    std::string GetClipboard();
+    void SetClipboard(const std::string& text);
+
+    // Access
+    Backend& GetBackend();
+    EventSystem& GetEventSystem();
+    Json& GetStyle();
+};
+```
+
+## Window API
+
+```cpp
+struct WindowConfig {
+    std::string title;
+    uint32_t width{800};
+    uint32_t height{600};
+    bool resizable{false};
+    WindowStyle style{WindowStyle::TopLevel};
+    Window* parent{nullptr};
+};
+
+enum class WindowStyle { TopLevel, Modal, Utility, Borderless, Fullscreen };
+
+class Window {
+    // UI construction
+    virtual WidgetDesc OnBuild();           // override to define UI
+    void SetRoot(Element* root);
+    Element& GetRoot();
+
+    // Element factory & lookup
+    template<typename E> E& Create();
+    template<typename E> E* FindByTag(const std::string& tag);
+    template<typename E> E* Find(std::function<bool(E*)> predicate = nullptr);
+
+    // Visibility & lifecycle
+    void Show();
+    void Hide();
+    void Close();
+
+    // Focus & text input
+    void Focus(Element* e);
+    void StartInput();
+    void StopInput();
+
+    // Overlays / popups
+    void ShowPopup(Element* popup);
+    void DismissPopup(Element* popup);
+
+    // Properties
+    std::string GetTitle(); void SetTitle(const std::string&);
+    Size GetSize();
+    Application* GetApp();
+    WindowId GetId();
+};
+```
 
 ### Adding a New Widget
 
@@ -162,10 +300,9 @@ window.SetRoot(desc);  // ← instantiation happens here
 namespace gui {
     class MyWidget : public Element {  // or Container for widgets with children
     public:
+        std::string StyleKey() const override { return "MyWidget"; }
         void OnDraw(Graphics& g) override;
         EventStatus OnEvent(Event* e) override;
-
-        // Custom properties
         void SetValue(int v) { m_value = v; Invalidate(); }
 
     private:
@@ -177,14 +314,9 @@ namespace gui {
 **Step 2: Implement Drawing & Event Handling**
 
 ```cpp
-// MyWidget.cpp
-#include "MyWidget.h"
-
 void MyWidget::OnDraw(Graphics& g) {
-    auto b = GetBounds();
-    g.Rect(b.x, b.y, b.w, b.h);
-    g.Color(0.2f, 0.4f, 0.8f);
-    g.Fill();
+    auto sz = GetSize();
+    g.StyledRect(0, 0, sz.w, sz.h, GetStyle()["normal"]);
 }
 
 EventStatus MyWidget::OnEvent(Event* e) {
@@ -202,7 +334,7 @@ EventStatus MyWidget::OnEvent(Event* e) {
 **Step 3: Add Declarative Builder**
 
 ```cpp
-// In Declarative.h - add props struct and function declaration
+// In Declarative.h
 struct MyWidgetProps {
     ElementProps base{};
     int initialValue{0};
@@ -210,50 +342,47 @@ struct MyWidgetProps {
 };
 WidgetDesc MyWidget(const MyWidgetProps& props);
 
-// In Declarative.cpp - implement builder
+// In Declarative.cpp
 WidgetDesc MyWidget(const MyWidgetProps& props) {
     return [props](Window& window) -> Element* {
         auto& w = window.Create<gui::MyWidget>();
         ElementSetup(w, props.base);
         w.SetValue(props.initialValue);
-        // ... wire up callbacks
         return &w;
     };
 }
 ```
 
 **Step 4: Add Styling (optional)** Add entries to `resources/DefaultStyle.json`
-under a key matching your widget class name.
+under a key matching `StyleKey()`.
 
-**Step 5: Override `StyleKey()`** so the framework auto-assigns your widget's
-JSON block when it is created:
-
-```cpp
-// MyWidget.h
-std::string StyleKey() const override { return "MyWidget"; }
-```
-
-### Styling System
+## Styling System
 
 Styles are JSON objects keyed by widget class name. The framework supports:
 
-- **State-aware styles**: `normal`, `hover`, `click`, `checked`, `selected`
+- **State-aware styles**: `normal`, `hover`, `click`, `checked`, `selected`,
+  `focused`, `indeterminate`, plus ON-state variants (`normalOn`, `hoverOn`,
+  `clickOn`)
 - **Visual properties**: background (solid/gradient), border
   (radius/color/width), elevation (shadow), padding
 - **Typography**: font, fontSize, fontWeight, fontSlant, color
-- **SVG icons**: embedded vector graphics for checkmarks, arrows
+- **SVG icons**: embedded vector graphics for checkmarks, arrows, dots
+- **Variable references**: `"$primaryColor"` resolves to a named color variable
+- **Style inheritance**: `"inherits": "BaseStyleKey"` merges parent style
 
 Style application flow:
 
-1. `Application` loads `DefaultStyle.json` at startup
-2. Widgets query `GetStyle()` which returns their default style fetched from the
-   root style using `StyleKey()` merged with `m_style` at the top level
+1. `Application` loads `DefaultStyle.json` at startup; resolves `$variables` and
+   `inherits` chains
+2. Widgets query `GetStyle()` which returns their style block (keyed by
+   `StyleKey()`) merged with any per-element `m_style`
 3. `Graphics::StyledRect()` and `StyledTextBegin()` consume style JSON directly
 
 **StyleKey conventions:**
 
-- `Label`, `LineEdit` → `"DefaultText"` (text-only styling)
+- `Label`, `LineEdit` → `"DefaultText"` (text-only styling, no padding)
 - `Edit`, `TextArea` → `"Edit"` (styled text field)
+- `Panel` → `"Panel"` (elevation, border, background)
 - All other widgets → their own class name key in `DefaultStyle.json`
 - Elements with no style → leave `StyleKey()` returning `""` (default)
 
@@ -264,21 +393,55 @@ on demand:
 EdgeInsets pad = EdgeInsets::FromStyle(GetStyle()["padding"]);
 ```
 
-`EdgeInsets::FromStyle` returns `EdgeInsets::Zero` when the key is absent, so
-`LineEdit` (no padding in `DefaultText`) naturally gets `{0,0,0,0}`.
+`EdgeInsets::FromStyle` accepts:
+- Single number: `10` → `All(10)`
+- Array [2]: `[h, v]` → `Symmetric(h, v)`
+- Array [4]: `[l, t, r, b]` → `Only(l, t, r, b)`
+- Object: `{"horizontal": 10, "vertical": 20}` or `{"left": 10, "top": 20, ...}`
 
-### Event System
+**Alternate theme:** `examples/assets/LightStyle.json` is a full light-mode
+theme. Load at runtime with `app.LoadTheme("path/to/LightStyle.json")` or
+revert with `app.ResetStyle()`.
+
+### Style Property Types
+
+```
+color        — hex string "#AARRGGBB" or array [r,g,b,a]
+elevation    — float shadow depth
+border       — {radius: float, color: ..., width: float}
+background   — {color: ...} or {linearGradient: {start, end, stops, colors}}
+padding      — number | [h,v] | [l,t,r,b] | {horizontal, vertical}
+font/fontSize/fontWeight/fontSlant — typography
+svg/stroke/lineCap/lineJoin — inline SVG paths
+```
+
+## Event System
 
 The event system uses a **pub-sub pattern** with type-safe broadcast:
 
 ```cpp
-// Event types: MouseButton, MouseMotion, Key, TextInput, Focus, Blur, Scroll
-// Define custom events by inheriting from Event:
-struct MyEvent : public Event {
-    EventType Type() const override { return EventType::Custom; }
-    int data;
-};
+// All event types
+enum class EventType { MouseButton, MouseMotion, Key, TextInput, Focus, Blur, Scroll };
 
+// Event structures
+struct MouseEvent  { int x, y; MouseButton button; bool pressed; };
+struct MotionEvent { int x, y; MouseButton button; };
+struct KeyEvent    { Key key; ModifierState mod; bool pressed; };
+struct TextInputEvent { char inputChar; };
+struct FocusEvent  { Subscriber* element; };
+struct BlurEvent   { Subscriber* element; };
+struct ScrollEvent { float scrollX, scrollY; int mouseX, mouseY; };
+
+struct ModifierState { bool shift, control, alt, meta; };
+
+enum class MouseButton { Unknown, Left, Right, Middle, X1, X2 };
+```
+
+The `Key` enum has 200+ values covering letters, digits, numpad, function keys
+(F1–F24), arrows, navigation (Home/End/PageUp/PageDown), modifiers
+(Shift/Ctrl/Alt/Meta), and media/browser keys.
+
+```cpp
 // Subscribe in element constructor
 EventSystem::Subscribe(EventType::MouseButton, this);
 
@@ -286,49 +449,197 @@ EventSystem::Subscribe(EventType::MouseButton, this);
 EventSystem::Broadcast<MouseEvent>(x, y, button, pressed);
 ```
 
+**Subscriber priority:** `SetHighPriority(true)` puts a subscriber at the front
+of the queue. Motion events are never consumed — all subscribers always receive
+them (required for hover state clearing).
+
 **Event Handling Strategy:**
 
 - Elements inherit `Subscriber` and implement `OnEvent()`
 - Two-phase dispatch: `OnEvent()` → typed virtual (`OnMouseDown`, `OnKeyDown`)
-- Coordinates in screen space; use `GetBounds()` / `GetIntersectedBounds()` for
-  hit testing
+- Coordinates in screen space; use `GetIntersectedBounds()` for hit testing
+  (clips by ancestor bounds); `GetBounds()` for unclipped global coords
 - Always check `GetIntersectedBounds().HasPoint(x, y)` before consuming mouse
   events
 
-### Declarative API
+## Graphics API
+
+```cpp
+// Basic shapes
+g.Clear(r, g, b, a);
+g.Rect(x, y, w, h);
+g.RoundRect(x, y, w, h, radius);
+g.Arc(x, y, radius, startAngle, endAngle);
+g.Line(x1, y1, x2, y2);
+
+// Rendering
+g.Color(r, g, b, a);
+g.Fill(preserve=false);
+g.Stroke(preserve=false);
+g.LineWidth(w);
+g.SetLineCap(LineCap::Butt|Round|Square);
+g.SetLineJoin(LineJoin::Miter|Round|Bevel);
+
+// Paths
+g.BeginPath();
+g.AddPathPoint(x, y);
+g.EndPath(close=false);
+
+// Images & SVG
+g.DrawImage(img, x, y, w, h);
+g.DrawSVG(svgStyleJson, x, y, w, h);
+g.DrawShadow(elevation, x, y, w, h, radius);
+
+// Styled rendering (JSON-driven, reads theme style blocks)
+g.StyledRect(x, y, w, h, styleJson);
+g.StyledPaint(paintJson);
+g.StyledTextBegin(styleJson);
+g.StyledTextEnd(text, x, y, rotation=0.0f);
+
+// Text
+g.Font(FontStyle::Normal|Bold|Italic|BoldItalic, family, size);
+g.MeasureText(text);   // → TextExtents {size, xBearing, yBearing, xAdvance}
+g.GetFontExtents();    // → FontExtents {ascent, descent, height}
+g.DrawChar(c, x, y);  // returns x advance
+
+// Clipping (stack-based)
+g.ClipPushRect(x, y, w, h);
+g.ClipPushRoundRect(x, y, w, h, radius);
+g.ClipPushPath(pathFunc);
+g.ClipPop();
+
+// Transforms
+g.Save(); g.Restore();
+g.Translate(tx, ty); g.Rotate(angle); g.Scale(sx, sy);
+
+// Escape hatch
+cairo_t* ctx = g.GetCairoContext();
+```
+
+**Color struct** (used internally; most APIs accept float r/g/b/a directly):
+
+```cpp
+Color c = Color::FromHex("#FF3859A6");  // #RGB, #RRGGBB, #AARRGGBB
+Color c = Color::FromRGBA(r, g, b, a);
+Color c = Color::FromHSLA(h, s, l, a);
+Color c = c.Darken(amount); // or Lighten(amount)
+Color::FromStyle(jsonValue); // accepts array or hex string
+```
+
+**JSON paint formats:**
+
+```json
+{"color": "#RRGGBB"}
+{"linearGradient": {"start": [x,y], "end": [x,y], "colors": [...], "stops": [...]}}
+{"radialGradient": {"center": [x,y], "radius": r, "colors": [...], "stops": [...]}}
+```
+
+## Layout
+
+```cpp
+enum class FlexDirection { Row, Column };
+enum class FlexJustify  { Start, Center, End, SpaceBetween, SpaceEvenly };
+enum class FlexAlign    { Start, Center, End, Stretch };
+
+// FlexLayout applies inside Panel/Column/Row containers
+layout.SetDirection(FlexDirection::Column);
+layout.SetJustifyContent(FlexJustify::SpaceBetween);
+layout.SetAlignItems(FlexAlign::Center);
+layout.SetPadding(EdgeInsets::All(16));
+layout.SetGap(8);
+
+// EdgeInsets factory methods
+EdgeInsets::All(v)
+EdgeInsets::Symmetric(horizontal, vertical)
+EdgeInsets::Only(left, top, right, bottom)
+EdgeInsets::FromStyle(json)     // parses number / [h,v] / [l,t,r,b] / object
+EdgeInsets::Zero
+```
+
+Elements with `flexGrow > 0` share free space proportionally. Invisible
+elements are skipped in layout calculations.
+
+## Declarative API
 
 The declarative API uses **builder functions** that return `WidgetDesc` (a
 `std::function<Element*(Window&)>`). Widgets are instantiated lazily when
 `SetRoot()` calls the function.
 
+**Type aliases:**
+
 ```cpp
-using namespace gui::declarative;
-
-auto ui = Column({
-    .gap = 16,
-    .padding = EdgeInsets::All(32),
-    .align = FlexAlign::Center
-}, {
-    Text("Hello, World!", { .align = Alignment::Center }),
-    Row({ .gap = 8 }, {
-        Button("OK", { .onClick = []() { /* ... */ } }),
-        Button("Cancel", { .onClick = []() { /* ... */ } })
-    }),
-    Slider({ .range = {0.0f, 100.0f}, .value = 50.0f })
-});
-
-window.SetRoot(ui(window));  // ← instantiation happens here
+using WidgetDesc = std::function<Element*(Window&)>;
+using MenuDesc   = std::function<gui::Menu*(Window&)>;
+using VoidCallback        = std::function<void()>;
+template<typename T>
+using ValueChanged        = std::function<void(const T&)>;
 ```
 
-**Available Widgets:**
+**ElementProps** (first member of every Props struct):
 
-- **Layout**: `Column` (vertical flex), `Row` (horizontal flex), `ScrollView`,
-  `SplitView`
-- **Input**: `Button`, `ToolButton`, `ToolRadioButton`, `ToolToggleButton`,
-  `CheckBox`, `RadioButton`, `Switch`, `Slider`, `TextEdit`
-- **Display**: `Text`, `Image`, `ProgressBar`, `List`, `BasicList`
-- **Containers**: `Panel`, `Menu`, `MenuItem`, `MenuSeparator`
-- **Custom**: `Custom<T, Props>()` for user-defined elements
+```cpp
+struct ElementProps {
+    std::string tag{""};      // for FindByTag<T>()
+    bool enabled{true};
+    bool autoSize{false};
+    float flexGrow{0.0f};
+    Rectangle bounds{0,0,0,0};
+    Json style;               // per-element style override
+};
+```
+
+**Available Widgets and Props:**
+
+```
+Layout:
+  Column(ColumnProps, children)   — gap, padding, align, justify, showBackground
+  Row(RowProps, children)         — gap, padding, align, justify, showBackground
+  ScrollView(child, ScrollViewProps) — scrollDirection: Direction
+  SplitView(SplitViewProps)       — direction, splitPosition (px), first, second
+  Spacer()                        — flexible empty space
+
+Input:
+  Button(text, ButtonProps)       — icon, onClick
+  ToolButton(text, ToolButtonProps)      — icon, iconSize, toggled, onClick, group
+  ToolRadioButton(text, ToolButtonProps) — radio behavior within group
+  ToolToggleButton(text, ToolButtonProps)— persistent toggle behavior
+  CheckBox(text, CheckBoxProps)   — checked, onChanged(bool)
+  RadioButton(text, RadioButtonProps) — group (string), checked, onChanged(bool)
+  Switch(SwitchProps)             — checked, onChanged(bool)
+  Slider(SliderProps)             — direction, range, value, step, onValueChange(float)
+  Spinner(SpinnerProps)           — range, value, step, decimals, onValueChange(float)
+  TextEdit(TextEditProps)         — text, onChanged, multiLine, masked
+
+Display:
+  Text(text, TextProps)           — align (Alignment enum), icon
+  Image(ImageProps)               — image (Image*), scaling (Stretch/Contain/Cover)
+  ProgressBar(ProgressBarProps)   — range, value, indeterminate, direction
+  BasicList(BasicListProps)       — items(vector<string>), selectedIndex, onSelectionChanged(int)
+  List<T>(ListProps<T>)           — items(vector<ListItem<T>>), selectedIndex, onSelectionChanged(int)
+
+Menus:
+  Menu(MenuProps, items)          — onDismiss
+  MenuItem(MenuItemProps)         — text, icon, checked, onClick, subMenu(MenuDesc)
+  MenuSeparator()
+
+Custom:
+  Custom<Elem, Props>(props, setup)  — template for arbitrary elements
+```
+
+**Supporting types:**
+
+```cpp
+struct Range { float minimum, maximum;
+    float Normalized(float v); float Remap(Range other, float v); float Constrain(float v); };
+
+template<typename T>
+struct ListItem { T value; std::string label; };
+
+enum class Direction       { Horizontal, Vertical };
+enum class Alignment       { TopLeft, TopCenter, TopRight, MiddleLeft, MiddleCenter,
+                             MiddleRight, BottomLeft, BottomCenter, BottomRight };
+enum class ImageScalingMode { Stretch, Contain, Cover };
+```
 
 ### Text Editing Widgets
 
@@ -342,19 +653,98 @@ The text editing hierarchy is built in three layers:
 
 **Key rules:**
 
-- Always call `Rebuild()` after mutating `m_textRaw` to keep `m_lines` in sync. `Rebuild()` resets all char styles to the default color, so re-apply `Format()` calls after each rebuild if per-character styling must be preserved.
-- `Format()` modifies `text::Char::color` and `text::Char::style` directly in `m_lines` and calls `Invalidate()` — no rebuild required.
-- In `TextArea::Rebuild` and `Format`, `globalIdx = lineOffset + ch.index` maps a visible char to its position in `m_textRaw`. `lineOffset` advances by `line.chars.size()` (visible chars + sentinel), which accounts for the `'\n'` separator.
+- Always call `Rebuild()` after mutating `m_textRaw` to keep `m_lines` in sync.
+  `Rebuild()` resets all char styles to the default color, so re-apply
+  `Format()` calls after each rebuild if per-character styling must be
+  preserved.
+- `Format()` modifies `text::Char::color` and `text::Char::style` directly in
+  `m_lines` and calls `Invalidate()` — no rebuild required.
+- In `TextArea::Rebuild` and `Format`, `globalIdx = lineOffset + ch.index` maps
+  a visible char to its position in `m_textRaw`. `lineOffset` advances by
+  `line.chars.size()` (visible chars + sentinel), which accounts for the `'\n'`
+  separator.
 
-**Props Pattern:** Every widget has a `Props` struct with `ElementProps base` as
-the first member:
+## Backend Interface
+
+Implement `Backend` to add a new windowing system:
 
 ```cpp
-struct ButtonProps {
-    ElementProps base{};   // tag, bounds, flexGrow, enabled, style
-    gui::Image* icon{nullptr};
-    VoidCallback onClick;
+class Backend {
+    virtual bool Init() = 0;
+    virtual void Shutdown() = 0;
+    virtual void PollEvents(BackendEventSink& sink) = 0;
+    // Window lifecycle
+    virtual WindowHandle CreateWindow(const WindowConfig&, WindowHandle parent) = 0;
+    virtual void DestroyWindow(WindowHandle) = 0;
+    virtual void ShowWindow(WindowHandle) = 0;
+    virtual void HideWindow(WindowHandle) = 0;
+    virtual void ResizeWindow(WindowHandle, uint32_t w, uint32_t h) = 0;
+    virtual void SetWindowTitle(WindowHandle, const std::string&) = 0;
+    // Rendering: Cairo ARGB32 pixel blit
+    virtual void CreateRenderBuffer(WindowHandle, uint32_t w, uint32_t h) = 0;
+    virtual void PresentFrame(WindowHandle, unsigned char* data, int stride,
+                              uint32_t w, uint32_t h) = 0;
+    // Text input (IME)
+    virtual void StartTextInput(WindowHandle) = 0;
+    virtual void StopTextInput(WindowHandle) = 0;
+    // Clipboard
+    virtual void SetClipboardText(const std::string&) = 0;
+    virtual std::string GetClipboardText() const = 0;
 };
+```
+
+The SDL3 reference implementation is in `src/backends/sdl3/SDL3Backend.h/.cpp`.
+See `examples/custom-backend/main.cpp` for a third-party backend example.
+
+## Project Structure
+
+```
+elemental-gui/
+├── src/
+│   ├── Application.h/cpp     — app lifecycle, theme loading, clipboard
+│   ├── Window.h/cpp          — element ownership, focus, popups, OnBuild
+│   ├── Element.h             — base UI node
+│   ├── Container.h           — children management
+│   ├── Declarative.h/cpp     — builder functions and Props structs
+│   ├── EventSystem.h/cpp     — pub-sub event bus
+│   ├── Backend.h             — backend interface
+│   ├── Graphics.h/cpp        — Cairo 2D rendering wrapper
+│   ├── FlexLayout.h/cpp      — flexbox layout engine
+│   ├── Layout.h/cpp          — EdgeInsets, Layout base class
+│   ├── Utils.h               — VoidCallback, ValueChanged, Range, enums
+│   ├── Button.h/cpp          — clickable button
+│   ├── Label.h               — text + icon display (base for Button)
+│   ├── LineEdit.h/cpp        — single-line text editor
+│   ├── Edit.h/cpp            — styled LineEdit
+│   ├── TextArea.h/cpp        — multiline text editor
+│   ├── CheckBox.h/cpp        — checkbox with label
+│   ├── RadioButton.h/cpp     — radio button with group
+│   ├── Switch.h/cpp          — toggle switch
+│   ├── Slider.h/cpp          — draggable range
+│   ├── Spinner.h/cpp         — numeric +/- input
+│   ├── ProgressBar.h/cpp     — progress indicator
+│   ├── Scrollbar.h/cpp       — scrollbar (internal)
+│   ├── ScrollView.h/cpp      — scrollable single-child container
+│   ├── SplitView.h/cpp       — two-pane resizable container
+│   ├── Panel.h/cpp           — flex layout container
+│   ├── List.h                — typed item list (template)
+│   ├── Menu.h/cpp            — context menu
+│   ├── MenuItem.h/cpp        — menu item
+│   ├── ImageView.h/cpp       — image display
+│   ├── Image.h/cpp           — image loading (raster + SVG)
+│   ├── ToolButton.h/cpp      — icon button (normal/toggle/radio)
+│   ├── WindowConfig.h        — WindowConfig struct and WindowStyle enum
+│   ├── backends/sdl3/        — SDL3 backend implementation
+│   └── generated/            — embedded resource headers (auto-generated)
+├── resources/
+│   └── DefaultStyle.json     — dark theme (edit this, not generated/)
+├── examples/
+│   ├── elements/main.cpp     — comprehensive widget showcase
+│   ├── drawing-pad/main.cpp  — custom element (infinite canvas) example
+│   ├── custom-backend/main.cpp — third-party backend implementation
+│   └── assets/LightStyle.json — light theme alternative
+├── cmake/                    — build helpers, CPM.cmake, embed_resources.cmake
+└── CMakeLists.txt
 ```
 
 ## Approach

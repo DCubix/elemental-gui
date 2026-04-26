@@ -1,11 +1,16 @@
 # Elemental GUI
 
-A C++20 desktop GUI framework combining declarative UI composition with immediate-mode 2D rendering. Built on SDL3 (windowing/input) and Cairo (graphics).
+A C++20 desktop GUI framework (v0.5.1) combining declarative UI composition
+with immediate-mode 2D rendering. Built on SDL3 (windowing/input) and Cairo
+(graphics).
 
 ## Philosophy
 
-Elemental GUI bridges the gap between retained-mode and immediate-mode UI paradigms:
-- **Retained**: Hierarchical element tree with event subscriptions, focus management, and dirty tracking
+Elemental GUI bridges the gap between retained-mode and immediate-mode UI
+paradigms:
+
+- **Retained**: Hierarchical element tree with event subscriptions, focus
+  management, and dirty tracking
 - **Immediate**: Direct Cairo drawing in `OnDraw()` with no retained draw lists
 - **Declarative**: Flutter-inspired builder API with lazy widget instantiation
 - **Flexbox**: CSS-inspired layout with gap, padding, align, justify, flexGrow
@@ -19,7 +24,7 @@ Elemental GUI bridges the gap between retained-mode and immediate-mode UI paradi
 | **Event System** | Type-safe pub-sub for mouse, keyboard, scroll, focus, text events |
 | **Multi-Window** | Parent/child relationships, modal dialogs, utility windows |
 | **Custom Widgets** | Extend via `Element` or `Container` subclasses |
-| **JSON Theming** | State-aware styles (normal/hover/click/checked) with gradients, shadows |
+| **JSON Theming** | State-aware styles (normal/hover/click/checked) with variables and inheritance |
 | **Immediate Graphics** | Cairo wrapper with shapes, paths, text, SVG, gradients, clipping |
 | **Backend Abstraction** | Pluggable backends (SDL3 reference implementation included) |
 
@@ -30,54 +35,53 @@ Elemental GUI bridges the gap between retained-mode and immediate-mode UI paradi
 cmake -B build -G Ninja
 cmake --build build
 
-# Run the demo
-./build/tui_test
+# Run the widget showcase
+./build/examples/elements/elements
 ```
 
 **Dependencies:**
+
 - **System**: Cairo (must be installed)
-- **Auto-fetched**: SDL3, nlohmann_json, nanosvg (via CPM.cmake)
+- **Auto-fetched**: SDL3, nlohmann_json v3.12.0, nanosvg (via CPM.cmake)
 
 ## Example
 
 ```cpp
-#include "tui/Application.h"
-#include "tui/SDL3Backend.h"
-#include "tui/Declarative.h"
+#include "Application.h"
+#include "Declarative.h"
+#include "backends/sdl3/SDL3Backend.h"
 
 using namespace gui;
 namespace decl = gui::declarative;
 
-class App : public ApplicationAdapter {
+class App : public Window {
 public:
-    void OnCreate(Application& app) {
-        auto* window = app.CreateWindow({
-            .title = "Hello",
-            .width = 400,
-            .height = 300
-        });
+    App() : Window(WindowConfig{.title = "Hello", .width = 400, .height = 300}) {}
 
-        auto ui = decl::Column({
+    WidgetDesc OnBuild() override {
+        Show();
+        return decl::Column({
             .gap = 16,
             .padding = EdgeInsets::All(32),
             .align = FlexAlign::Center
         }, {
-            decl::Text("Hello, World!", { .align = Alignment::Center }),
+            decl::Text("Hello, World!", {.align = Alignment::MiddleCenter}),
             decl::Button("Click Me", {
-                .onClick = []() { std::cout << "Clicked!\n"; }
+                .onClick = []() { printf("Clicked!\n"); }
+            }),
+            decl::Slider({
+                .range = {0.0f, 100.0f},
+                .value = 50.0f,
+                .onValueChange = [](float v) { printf("%.1f\n", v); }
             })
         });
-
-        window->SetRoot(ui(*window));
-        window->Show();
     }
-    void OnDestroy() {}
 };
 
 int main() {
-    gui::Application app;
-    app.SetBackend(std::make_unique<gui::SDL3Backend>());
-    return app.Start(new App());
+    Application app{new SDL3Backend()};
+    app.CreateWindow<App>();
+    return app.Start();
 }
 ```
 
@@ -85,30 +89,31 @@ int main() {
 
 | Category | Widgets |
 |----------|---------|
-| **Layout** | `Column`, `Row`, `ScrollView`, `SplitView`, `Panel` |
-| **Input** | `Button`, `ToolButton`, `ToolRadioButton`, `ToolToggleButton`, `CheckBox`, `RadioButton`, `Switch`, `Slider`, `TextEdit` |
-| **Display** | `Text`, `Image`, `ProgressBar`, `List`, `BasicList` |
+| **Layout** | `Column`, `Row`, `ScrollView`, `SplitView`, `Panel`, `Spacer` |
+| **Input** | `Button`, `ToolButton`, `ToolRadioButton`, `ToolToggleButton`, `CheckBox`, `RadioButton`, `Switch`, `Slider`, `Spinner`, `TextEdit` |
+| **Display** | `Text`, `Image`, `ProgressBar`, `List<T>`, `BasicList` |
 | **Menus** | `Menu`, `MenuItem`, `MenuSeparator` |
+| **Custom** | `Custom<T, Props>()` for user-defined elements |
 
 ## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  Declarative API (WidgetDesc)                             │
+│  Declarative API (WidgetDesc / builder functions)         │
 ├─────────────────────────────────────────────────────────┤
-│  Widgets (Button, Slider, Edit, etc.)                     │
+│  Widgets (Button, Slider, TextArea, Spinner, etc.)        │
 ├─────────────────────────────────────────────────────────┤
-│  Container → Element (hierarchy)                          │
+│  Container → Element (hierarchy, event propagation)       │
 ├─────────────────────────────────────────────────────────┤
 │  FlexLayout (CSS-inspired flexbox)                        │
 ├─────────────────────────────────────────────────────────┤
-│  Graphics (Cairo wrapper)                                 │
+│  Graphics (Cairo wrapper — shapes, SVG, text, gradients)  │
 ├─────────────────────────────────────────────────────────┤
-│  EventSystem (pub-sub events)                             │
+│  EventSystem (type-safe pub-sub)                          │
 ├─────────────────────────────────────────────────────────┤
-│  Window / Application                                     │
+│  Window / Application (multi-window, theme, clipboard)    │
 ├─────────────────────────────────────────────────────────┤
-│  Backend (SDL3 - swappable)                               │
+│  Backend interface (SDL3 reference — swappable)           │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -119,18 +124,18 @@ Inherit from `Element` (simple widgets) or `Container` (widgets with children):
 ```cpp
 class MyWidget : public Element {
 public:
+    std::string StyleKey() const override { return "MyWidget"; }
+
     void OnDraw(Graphics& g) override {
-        auto b = GetBounds();
-        g.Rect(b.x, b.y, b.w, b.h);
-        g.Color(0.2f, 0.4f, 0.8f);
-        g.Fill();
+        auto sz = GetSize();
+        g.StyledRect(0, 0, sz.w, sz.h, GetStyle()["normal"]);
     }
 
     EventStatus OnEvent(Event* e) override {
         if (e->Type() == EventType::MouseButton) {
             auto* me = static_cast<MouseEvent*>(e);
             if (me->pressed && GetIntersectedBounds().HasPoint(me->x, me->y)) {
-                Invalidate();  // Mark for redraw
+                Invalidate();
                 return EventStatus::Consumed;
             }
         }
@@ -139,7 +144,8 @@ public:
 };
 ```
 
-Add to declarative API:
+Add to the declarative API:
+
 ```cpp
 struct MyWidgetProps {
     ElementProps base{};
@@ -158,52 +164,79 @@ WidgetDesc MyWidget(const MyWidgetProps& props) {
 ## Graphics API
 
 ```cpp
-// Shapes
+// Shapes & paths
 g.Rect(x, y, w, h);
 g.RoundRect(x, y, w, h, radius);
 g.Arc(x, y, radius, startAngle, endAngle);
 g.Line(x1, y1, x2, y2);
-
-// Paths
-g.BeginPath();
-g.AddPathPoint(x, y);
-g.EndPath(close);
+g.BeginPath(); g.AddPathPoint(x, y); g.EndPath(close);
 g.Stroke();  // or g.Fill();
 
 // Styling
 g.Color(r, g, b, a);
-g.Color(Color::FromHex("#FF5733"));
 g.LineWidth(w);
 g.SetLineCap(LineCap::Round);
 g.SetLineJoin(LineJoin::Round);
 
-// Transforms & Clipping
+// Transforms & clipping
 g.Save(); g.Restore();
 g.Translate(x, y); g.Rotate(angle); g.Scale(sx, sy);
 g.ClipPushRect(x, y, w, h); g.ClipPop();
 
 // Text
-g.Font("Sans", 14);
-g.Text("Hello", x, y);
-auto extents = g.MeasureText("Hello");
+g.Font(FontStyle::Bold, "Sans", 14);
+g.MeasureText("Hello");  // TextExtents
+g.GetFontExtents();      // FontExtents
 
-// Images
-g.DrawImage(&img, x, y, w, h);
+// Images & SVG
+g.DrawImage(img, x, y, w, h);
+g.DrawSVG(svgStyleJson, x, y, w, h);
+g.DrawShadow(elevation, x, y, w, h, radius);
 
-// Styled rendering (JSON from theme)
+// JSON-driven styled rendering (reads from theme)
 g.StyledRect(x, y, w, h, styleJson);
-g.StyledPaint(paintJson);
+g.StyledTextBegin(styleJson);
+g.StyledTextEnd(text, x, y);
 ```
+
+## Theming
+
+Styles are JSON files with widget keys, state variants, and variable references:
+
+```json
+{
+  "$primary": "#FF3859A6",
+  "Button": {
+    "padding": {"horizontal": 16, "vertical": 8},
+    "normal": {"background": {"color": "$primary"}, "elevation": 2},
+    "hover":  {"background": {"color": "$primaryHover"}, "elevation": 4},
+    "click":  {"background": {"color": "$primaryClick"}, "elevation": 1}
+  }
+}
+```
+
+Load a custom theme at runtime:
+
+```cpp
+app.LoadTheme("path/to/LightStyle.json");  // load from file
+app.ResetStyle();                           // revert to default dark theme
+```
+
+A `LightStyle.json` is included in `examples/assets/`.
 
 ## Project Structure
 
 | Path | Description |
 |------|-------------|
-| `src/tui/*.h,*.cpp` | Core framework source |
-| `src/tui/generated/` | Embedded resources (auto-generated) |
-| `resources/*.json` | Theme definitions (edit these) |
-| `cmake/` | Build configuration, CPM.cmake, resource embedding |
-| `src/main.cpp` | Demo application |
+| `src/*.h,*.cpp` | Core framework + all widget implementations |
+| `src/backends/sdl3/` | SDL3 backend implementation |
+| `src/generated/` | Embedded resources (auto-generated at configure time) |
+| `resources/DefaultStyle.json` | Default dark theme (edit this, not `generated/`) |
+| `examples/elements/` | Comprehensive widget showcase |
+| `examples/drawing-pad/` | Custom element (infinite canvas) |
+| `examples/custom-backend/` | Implementing a third-party backend |
+| `examples/assets/LightStyle.json` | Light theme |
+| `cmake/` | Build helpers, CPM.cmake, resource embedding |
 
 ## License
 
