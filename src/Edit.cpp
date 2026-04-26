@@ -1,10 +1,9 @@
 #include "Edit.h"
 
-#include "Window.h"
 #include "Layout.h"
+#include "Window.h"
 
-namespace gui
-{
+namespace gui {
 
     Edit::Edit() {
         SetLocalBounds(Rectangle(0, 0, 120, 28));
@@ -18,8 +17,10 @@ namespace gui
         auto sz = GetSize();
 
         std::string state = "normal";
-        if (IsFocused())    state = "focused";
-        else if (m_hovered) state = "hover";
+        if (IsFocused())
+            state = "focused";
+        else if (m_hovered)
+            state = "hover";
 
         g.StyledRect(0, 0, sz.w, sz.h, GetStyle()[state]);
         LineEdit::OnDraw(g);
@@ -43,4 +44,4 @@ namespace gui
         Invalidate();
     }
 
-}
+} // namespace gui

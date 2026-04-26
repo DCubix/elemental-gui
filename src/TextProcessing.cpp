@@ -1,16 +1,18 @@
 #include "TextProcessing.h"
 
-namespace gui::text
-{
+namespace gui::text {
     void ApplyTextStyle(Graphics& g, Json style) {
         const std::string font = style.value("font", "Sans");
         const double fontSize = style.value("fontSize", 14.0);
         FontStyle fontStyle = FontStyle::Normal;
 
         const std::string fontStyleStr = style.value("fontStyle", "normal");
-        if (fontStyleStr == "bold") fontStyle = FontStyle::Bold;
-        else if (fontStyleStr == "italic") fontStyle = FontStyle::Italic;
-        else if (fontStyleStr == "bolditalic") fontStyle = FontStyle::BoldItalic;
+        if (fontStyleStr == "bold")
+            fontStyle = FontStyle::Bold;
+        else if (fontStyleStr == "italic")
+            fontStyle = FontStyle::Italic;
+        else if (fontStyleStr == "bolditalic")
+            fontStyle = FontStyle::BoldItalic;
 
         g.Font(fontStyle, font, fontSize);
     }
@@ -28,8 +30,7 @@ namespace gui::text
                 maxH += ex.size.h;
                 maxW = std::max(maxW, int(ex.size.w));
             }
-        }
-        else {
+        } else {
             auto ex = g.MeasureText(text);
             maxW = ex.size.w;
             maxH = ex.size.h;
@@ -38,7 +39,8 @@ namespace gui::text
         return Size(maxW, maxH);
     }
 
-    static std::vector<Char> ComputeChars(Graphics& g, int y, const std::string& text, int lineHeight, int indentSize) {
+    static std::vector<Char>
+    ComputeChars(Graphics& g, int y, const std::string& text, int lineHeight, int indentSize) {
         std::vector<Char> out;
 
         const int spaceWidth = static_cast<int>(g.MeasureText(" ").size.w);
@@ -48,30 +50,23 @@ namespace gui::text
             int prevCx = cx;
             char c = text[i];
 
-            if (c == '\r') continue;
+            if (c == '\r')
+                continue;
 
             auto ex = g.MeasureText(std::string(1, c));
-            Rectangle rect{
-                cx,
-                y,
-                0,
-                lineHeight
-            };
+            Rectangle rect{cx, y, 0, lineHeight};
 
-            if (c == '\t') cx += spaceWidth * indentSize;
-            else cx += static_cast<int>(ex.xAdvance);
+            if (c == '\t')
+                cx += spaceWidth * indentSize;
+            else
+                cx += static_cast<int>(ex.xAdvance);
 
             rect.w = (cx - prevCx) + 1;
-            out.push_back(Char{ static_cast<int>(i), rect, c });
+            out.push_back(Char{static_cast<int>(i), rect, c});
         }
 
-        Rectangle lastRect{
-            cx,
-            y,
-            9999,
-            lineHeight
-        };
-        out.push_back(Char{ static_cast<int>(text.size()), lastRect, '\0' });
+        Rectangle lastRect{cx, y, 9999, lineHeight};
+        out.push_back(Char{static_cast<int>(text.size()), lastRect, '\0'});
 
         return out;
     }
@@ -85,7 +80,11 @@ namespace gui::text
         bool isMultiLine = text.find('\n') != std::string::npos;
         if (!isMultiLine) {
             auto ex = g.MeasureText(text);
-            return { Line{ 0, Rectangle{ 0, 0, ex.size.w, ex.size.h }, ComputeChars(g, 0, text, lineHeight, indentSize) } };
+            return {Line{
+                0,
+                Rectangle{0, 0, ex.size.w, ex.size.h},
+                ComputeChars(g, 0, text, lineHeight, indentSize)
+            }};
         }
 
         auto lines = utils::SplitString(text, "\n");
@@ -95,9 +94,9 @@ namespace gui::text
             auto ex = g.MeasureText(lines[i]);
             lineRects.push_back(Line{
                 static_cast<int>(i),
-                Rectangle{ 0, y, ex.size.w, lineHeight },
+                Rectangle{0, y, ex.size.w, lineHeight},
                 ComputeChars(g, y, lines[i], lineHeight, indentSize)
-                });
+            });
             y += lineHeight;
         }
 
@@ -107,7 +106,8 @@ namespace gui::text
     std::vector<PointI> BuildOrthoHull(const std::vector<Line>& lines) {
         std::vector<PointI> out;
 
-        if (lines.empty()) return out;
+        if (lines.empty())
+            return out;
 
         std::vector<Rectangle> lineRects;
         lineRects.reserve(lines.size());
@@ -116,9 +116,9 @@ namespace gui::text
         }
 
         // 1. Add the first 3 points from the first line
-        out.push_back({ lineRects[0].x, lineRects[0].y }); // 1st
-        out.push_back({ lineRects[0].x + lineRects[0].w, lineRects[0].y }); // 2nd
-        out.push_back({ lineRects[0].x + lineRects[0].w, lineRects[0].y + lineRects[0].h }); // 3rd
+        out.push_back({lineRects[0].x, lineRects[0].y});                                   // 1st
+        out.push_back({lineRects[0].x + lineRects[0].w, lineRects[0].y});                  // 2nd
+        out.push_back({lineRects[0].x + lineRects[0].w, lineRects[0].y + lineRects[0].h}); // 3rd
 
         // 2. While theres any other lines, add the
         //    second and the third points, and push the lines
@@ -129,12 +129,12 @@ namespace gui::text
             std::stack<PointI> points;
             for (int i = 1; i < lineRects.size(); i++) {
                 Rectangle lr = lineRects[i];
-                out.push_back({ lr.x + lr.w, lr.y }); // 2nd
-                out.push_back({ lr.x + lr.w, lr.y + lr.h }); // 3rd
+                out.push_back({lr.x + lr.w, lr.y});        // 2nd
+                out.push_back({lr.x + lr.w, lr.y + lr.h}); // 3rd
 
                 // Push the points to be added later
-                points.push({ lr.x, lr.y }); // 1st
-                points.push({ lr.x, lr.y + lr.h }); // 4th
+                points.push({lr.x, lr.y});        // 1st
+                points.push({lr.x, lr.y + lr.h}); // 4th
             }
 
             // Push the rest of the points
@@ -146,8 +146,8 @@ namespace gui::text
         }
 
         // 3. Add the 4th point of the first line
-        out.push_back({ lineRects[0].x, lineRects[0].y + lineRects[0].h }); // 4th
+        out.push_back({lineRects[0].x, lineRects[0].y + lineRects[0].h}); // 4th
 
         return out;
     }
-}
+} // namespace gui::text

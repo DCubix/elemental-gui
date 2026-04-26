@@ -1,17 +1,16 @@
 #include "ProgressBar.h"
 
 namespace gui {
-    ProgressBar::ProgressBar() : Element()
-    {
+    ProgressBar::ProgressBar()
+        : Element() {
         m_range.minimum = 0.0f;
         m_range.maximum = 100.0f;
         m_value = 0.0f;
         m_indeterminate = false;
-        SetLocalBounds({ 0, 0, 100, 20 });
+        SetLocalBounds({0, 0, 100, 20});
     }
 
-    void ProgressBar::OnDraw(Graphics &g)
-    {
+    void ProgressBar::OnDraw(Graphics& g) {
         auto style = GetStyle()["ProgressBar"];
         Size size = GetSize();
 
@@ -42,21 +41,18 @@ namespace gui {
         }
     }
 
-    void ProgressBar::SetRange(float min, float max)
-    {
+    void ProgressBar::SetRange(float min, float max) {
         m_range.minimum = min;
         m_range.maximum = max;
         Invalidate();
     }
-    
-    void ProgressBar::SetValue(float v)
-    {
+
+    void ProgressBar::SetValue(float v) {
         m_value = v;
         Invalidate();
     }
-    
-    void ProgressBar::SetIndeterminate(bool indeterminate)
-    {
+
+    void ProgressBar::SetIndeterminate(bool indeterminate) {
         m_indeterminate = indeterminate;
         if (indeterminate) {
             int size = (m_direction == Direction::Horizontal ? GetBounds().w : GetBounds().h) / 2;
@@ -70,4 +66,4 @@ namespace gui {
         }
         Invalidate();
     }
-}
+} // namespace gui

@@ -4,10 +4,10 @@
 
 namespace gui {
     class SplitView : public Container {
-    public:
+      public:
         SplitView();
 
-        void Add(Element *element) override;
+        void Add(Element* element) override;
 
         void OnDraw(Graphics& g) override;
 
@@ -18,15 +18,21 @@ namespace gui {
         Size GetPreferredSize() const override;
 
         Direction GetDirection() const { return m_direction; }
-        void SetDirection(Direction dir) { m_direction = dir; Invalidate(); }
+        void SetDirection(Direction dir) {
+            m_direction = dir;
+            Invalidate();
+        }
 
         int GetSplitPosition() const { return m_splitPosition; }
-        void SetSplitPosition(int pos) { m_splitPosition = pos; Invalidate(); }
+        void SetSplitPosition(int pos) {
+            m_splitPosition = pos;
+            Invalidate();
+        }
 
-    private:
-        Direction m_direction{ Direction::Horizontal };
-        int m_splitPosition{ 100 }; // px
-        bool m_dragging{ false };
+      private:
+        Direction m_direction{Direction::Horizontal};
+        int m_splitPosition{100}; // px
+        bool m_dragging{false};
 
         Element* GetFirst() { return m_children.size() > 0 ? m_children[0] : nullptr; }
         Element* GetSecond() { return m_children.size() > 1 ? m_children[1] : nullptr; }
@@ -41,4 +47,4 @@ namespace gui {
         Rectangle GripRectVertical() const;
         Rectangle GripRect() const;
     };
-}
+} // namespace gui

@@ -212,7 +212,11 @@ class InfiniteCanvas : public Element {
     void RemovePath(Path* path) {
         m_hoveredPath = nullptr;
         m_paths.erase(
-            std::remove_if(m_paths.begin(), m_paths.end(), [path](const Path& p) { return &p == path; }),
+            std::remove_if(
+                m_paths.begin(),
+                m_paths.end(),
+                [path](const Path& p) { return &p == path; }
+            ),
             m_paths.end()
         );
         Invalidate();

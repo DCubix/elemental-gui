@@ -1,13 +1,12 @@
 #pragma once
 
-#include <string>
-#include <cstdint>
-
 #include "EventSystem.h"
 #include "WindowConfig.h"
 
-namespace gui
-{
+#include <cstdint>
+#include <string>
+
+namespace gui {
 
     using WindowHandle = void*;
     using WindowId = uint64_t;
@@ -15,7 +14,7 @@ namespace gui
     // Application implements this; Backend calls it with already-translated events.
     // No platform types appear in this interface.
     class BackendEventSink {
-    public:
+      public:
         virtual ~BackendEventSink() = default;
 
         virtual void OnQuit() = 0;
@@ -34,7 +33,7 @@ namespace gui
     };
 
     class Backend {
-    public:
+      public:
         virtual ~Backend() = default;
 
         // Lifecycle
@@ -46,7 +45,8 @@ namespace gui
 
         // Window management
         // parentHandle is the handle of config.parent (null if no parent).
-        virtual WindowHandle CreateWindow(const WindowConfig& config, WindowHandle parentHandle) = 0;
+        virtual WindowHandle
+        CreateWindow(const WindowConfig& config, WindowHandle parentHandle) = 0;
         virtual void DestroyWindow(WindowHandle handle) = 0;
 
         virtual void ShowWindow(WindowHandle handle) = 0;
@@ -70,12 +70,17 @@ namespace gui
         // data and stride come directly from cairo_image_surface_get_data/stride.
         virtual void CreateRenderBuffer(WindowHandle handle, uint32_t width, uint32_t height) = 0;
         virtual void DestroyRenderBuffer(WindowHandle handle) = 0;
-        virtual void PresentFrame(WindowHandle handle, unsigned char* data, int stride,
-            uint32_t width, uint32_t height) = 0;
+        virtual void PresentFrame(
+            WindowHandle handle,
+            unsigned char* data,
+            int stride,
+            uint32_t width,
+            uint32_t height
+        ) = 0;
 
         // Clipboard
         virtual void SetClipboardText(const std::string& text) = 0;
         virtual std::string GetClipboardText() const = 0;
     };
 
-}
+} // namespace gui

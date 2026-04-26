@@ -1,4 +1,5 @@
 #include "Spinner.h"
+
 #include "Application.h"
 
 #include <cmath>
@@ -7,7 +8,8 @@
 
 namespace gui {
 
-    Spinner::Spinner() : Element() {
+    Spinner::Spinner()
+        : Element() {
         SetLocalBounds(Rectangle(0, 0, 90, 24));
     }
 
@@ -76,7 +78,7 @@ namespace gui {
             int cy = upRect.y + upRect.h / 2;
             g.BeginPath();
             g.AddPathPoint(cx - 4, cy + 2);
-            g.AddPathPoint(cx,     cy - 2);
+            g.AddPathPoint(cx, cy - 2);
             g.AddPathPoint(cx + 4, cy + 2);
             g.EndPath(true);
             g.Fill();
@@ -88,7 +90,7 @@ namespace gui {
             int cy = downRect.y + downRect.h / 2;
             g.BeginPath();
             g.AddPathPoint(cx - 4, cy - 2);
-            g.AddPathPoint(cx,     cy + 2);
+            g.AddPathPoint(cx, cy + 2);
             g.AddPathPoint(cx + 4, cy - 2);
             g.EndPath(true);
             g.Fill();
@@ -96,7 +98,8 @@ namespace gui {
     }
 
     void Spinner::OnMouseDown(MouseEvent e) {
-        if (e.button != MouseButton::Left) return;
+        if (e.button != MouseButton::Left)
+            return;
 
         if (GetUpButtonRect().HasPoint(e.x, e.y)) {
             m_upState = PartState::Click;
@@ -109,13 +112,15 @@ namespace gui {
     }
 
     void Spinner::OnMouseUp(MouseEvent e) {
-        if (e.button != MouseButton::Left) return;
+        if (e.button != MouseButton::Left)
+            return;
         if (m_upState == PartState::Click) {
             m_upState = GetUpButtonRect().HasPoint(e.x, e.y) ? PartState::Hover : PartState::Normal;
             Invalidate();
         }
         if (m_downState == PartState::Click) {
-            m_downState = GetDownButtonRect().HasPoint(e.x, e.y) ? PartState::Hover : PartState::Normal;
+            m_downState =
+                GetDownButtonRect().HasPoint(e.x, e.y) ? PartState::Hover : PartState::Normal;
             Invalidate();
         }
     }
@@ -131,11 +136,19 @@ namespace gui {
     }
 
     void Spinner::OnMouseMove(MotionEvent e) {
-        PartState newUp   = GetUpButtonRect().HasPoint(e.x, e.y)   ? PartState::Hover : PartState::Normal;
-        PartState newDown = GetDownButtonRect().HasPoint(e.x, e.y)  ? PartState::Hover : PartState::Normal;
+        PartState newUp =
+            GetUpButtonRect().HasPoint(e.x, e.y) ? PartState::Hover : PartState::Normal;
+        PartState newDown =
+            GetDownButtonRect().HasPoint(e.x, e.y) ? PartState::Hover : PartState::Normal;
 
-        if (m_upState != PartState::Click && newUp != m_upState)     { m_upState = newUp;     Invalidate(); }
-        if (m_downState != PartState::Click && newDown != m_downState) { m_downState = newDown; Invalidate(); }
+        if (m_upState != PartState::Click && newUp != m_upState) {
+            m_upState = newUp;
+            Invalidate();
+        }
+        if (m_downState != PartState::Click && newDown != m_downState) {
+            m_downState = newDown;
+            Invalidate();
+        }
     }
 
     void Spinner::OnScroll(ScrollEvent e) {
@@ -143,7 +156,8 @@ namespace gui {
     }
 
     Size Spinner::GetPreferredSize() const {
-        if (IsAutoSize()) return { 90, 24 };
+        if (IsAutoSize())
+            return {90, 24};
         return Element::GetPreferredSize();
     }
 
@@ -156,9 +170,10 @@ namespace gui {
 
     void Spinner::SetValue(float v) {
         float clamped = m_range.Constrain(v);
-        if (m_onValueChange && m_value != clamped) m_onValueChange(clamped);
+        if (m_onValueChange && m_value != clamped)
+            m_onValueChange(clamped);
         m_value = clamped;
         Invalidate();
     }
 
-}
+} // namespace gui

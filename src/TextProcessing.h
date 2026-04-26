@@ -3,19 +3,15 @@
 #include "Graphics.h"
 #include "Utils.h"
 
-namespace gui::text
-{
-    enum class EditState {
-        Normal = 0,
-        Selecting
-    };
+namespace gui::text {
+    enum class EditState { Normal = 0, Selecting };
 
     struct Char {
         int index;
         Rectangle bounds;
-        char value{ '\0' };
-        Color color{ 1.0f, 1.0f, 1.0f, 1.0f };
-        FontStyle style{ FontStyle::Normal };
+        char value{'\0'};
+        Color color{1.0f, 1.0f, 1.0f, 1.0f};
+        FontStyle style{FontStyle::Normal};
     };
 
     struct Line {
@@ -28,4 +24,4 @@ namespace gui::text
     Size ComputeTextSize(Graphics& g, Json style, const std::string& text);
     std::vector<Line> ComputeLines(Graphics& g, Json style, const std::string& text);
     std::vector<PointI> BuildOrthoHull(const std::vector<Line>& lines);
-}
+} // namespace gui::text

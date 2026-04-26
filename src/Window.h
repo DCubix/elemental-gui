@@ -31,7 +31,8 @@ namespace gui {
         void StartInput();
         void StopInput();
 
-        template <DerivedFromElement E> E& Create() {
+        template <DerivedFromElement E>
+        E& Create() {
             m_elements.push_back(std::make_unique<E>());
             auto* el = m_elements.back().get();
             el->m_window = this;
@@ -40,7 +41,8 @@ namespace gui {
             return *dynamic_cast<E*>(el);
         }
 
-        template <DerivedFromElement E> E* FindByTag(const std::string& tag) {
+        template <DerivedFromElement E>
+        E* FindByTag(const std::string& tag) {
             for (auto&& el : m_elements) {
                 if (el->GetTag() == tag) {
                     return dynamic_cast<E*>(el.get());
@@ -49,7 +51,8 @@ namespace gui {
             return nullptr;
         }
 
-        template <DerivedFromElement E> E* Find(std::function<bool(E*)> predicate = nullptr) {
+        template <DerivedFromElement E>
+        E* Find(std::function<bool(E*)> predicate = nullptr) {
             for (auto&& el : m_elements) {
                 E* casted = dynamic_cast<E*>(el.get());
                 if (casted && (predicate == nullptr || predicate(casted))) {
@@ -107,7 +110,8 @@ namespace gui {
 
         void HookEventsUp(Element* el);
 
-        template <DerivedFromEvent E, typename... Args> void DispatchEvent(Args&&... args) {
+        template <DerivedFromEvent E, typename... Args>
+        void DispatchEvent(Args&&... args) {
             E event(std::forward<Args>(args)...);
             for (auto it = m_popups.rbegin(); it != m_popups.rend(); ++it) {
                 if ((*it)->OnEvent(&event) == EventStatus::Consumed)

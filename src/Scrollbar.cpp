@@ -2,18 +2,16 @@
 
 #include "Application.h"
 
-
-namespace gui
-{
+namespace gui {
 
     Scrollbar::Scrollbar()
         : Element(),
-        m_direction(Direction::Horizontal),
-        m_range(Range(0, 100)),
-        m_value(0),
-        m_step(1),
-        m_state(ButtonState::Normal),
-        m_dragOffset(0) {
+          m_direction(Direction::Horizontal),
+          m_range(Range(0, 100)),
+          m_value(0),
+          m_step(1),
+          m_state(ButtonState::Normal),
+          m_dragOffset(0) {
         SetLocalBounds(Rectangle(0, 0, 120, 22));
     }
 
@@ -27,22 +25,28 @@ namespace gui
 
         std::string state = "normal";
         switch (m_state) {
-            case ButtonState::Normal: state = "normal"; break;
-            case ButtonState::Hover: state = "hover"; break;
-            case ButtonState::Click: state = "click"; break;
+            case ButtonState::Normal:
+                state = "normal";
+                break;
+            case ButtonState::Hover:
+                state = "hover";
+                break;
+            case ButtonState::Click:
+                state = "click";
+                break;
         }
 
         Json thumbStyle = GetStyle()["thumb"][state];
         if (m_direction == Direction::Horizontal) {
             g.StyledRect(m_buttonPos, 0, btn, size.h, thumbStyle);
-        }
-        else {
+        } else {
             g.StyledRect(0, m_buttonPos, size.w, btn, thumbStyle);
         }
     }
 
     void Scrollbar::OnMouseDown(MouseEvent e) {
-        if (e.button != MouseButton::Left) return;
+        if (e.button != MouseButton::Left)
+            return;
         Rectangle c = GetLocalBounds();
         int p = (m_direction == Direction::Horizontal ? e.x : e.y);
         int btn = GetButtonSize();
@@ -52,8 +56,7 @@ namespace gui
             // If clicking on the thumb, track offset; otherwise center thumb on click
             if (p >= m_buttonPos && p < m_buttonPos + btn) {
                 m_dragOffset = p - m_buttonPos - btn / 2;
-            }
-            else {
+            } else {
                 m_dragOffset = 0;
                 UpdateValue(p);
             }
@@ -62,7 +65,8 @@ namespace gui
     }
 
     void Scrollbar::OnMouseUp(MouseEvent e) {
-        if (e.button != MouseButton::Left) return;
+        if (e.button != MouseButton::Left)
+            return;
         if (m_state == ButtonState::Click) {
             Rectangle b = GetLocalBounds();
             m_state = b.HasPoint(e.x, e.y) ? ButtonState::Hover : ButtonState::Normal;
@@ -105,8 +109,10 @@ namespace gui
     }
 
     void Scrollbar::SetValue(float v) {
-        if (m_onValueChange && m_value != v) m_onValueChange(m_value);
-        m_value = v; Invalidate();
+        if (m_onValueChange && m_value != v)
+            m_onValueChange(m_value);
+        m_value = v;
+        Invalidate();
     }
 
     void Scrollbar::UpdateValue(int p) {
@@ -115,7 +121,7 @@ namespace gui
         p -= btn / 2;
         int axisLen = (m_direction == Direction::Horizontal ? size.w : size.h) - btn;
 
-        Range vp{ 0, float(axisLen) };
+        Range vp{0, float(axisLen)};
         m_value = m_range.Constrain(m_range.Remap(vp, p));
         SetValue(std::floor(m_value / m_step) * m_step);
         Invalidate();
@@ -130,4 +136,4 @@ namespace gui
         return btnSize < ScrollbarButtonSize ? ScrollbarButtonSize : btnSize;
     }
 
-}
+} // namespace gui

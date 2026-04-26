@@ -1,27 +1,29 @@
 #include "Declarative.h"
 
-#include "Panel.h"
-#include "FlexLayout.h"
 #include "Button.h"
+#include "CheckBox.h"
 #include "Edit.h"
-#include "TextArea.h"
+#include "FlexLayout.h"
+#include "Menu.h"
+#include "Panel.h"
+#include "ProgressBar.h"
+#include "RadioButton.h"
 #include "ScrollView.h"
 #include "Slider.h"
-#include "Switch.h"
-#include "CheckBox.h"
-#include "Menu.h"
-#include "RadioButton.h"
-#include "SplitView.h"
-#include "ToolButton.h"
-#include "ProgressBar.h"
 #include "Spinner.h"
+#include "SplitView.h"
+#include "Switch.h"
+#include "TextArea.h"
+#include "ToolButton.h"
 
 namespace gui::declarative {
 
     void ElementSetup(Element& element, const ElementProps& props) {
-        if (props.bounds.w > 0) element.SetSize({ props.bounds.w, element.GetSize().h });
-        if (props.bounds.h > 0) element.SetSize({ element.GetSize().w, props.bounds.h });
-        element.SetPosition({ props.bounds.x, props.bounds.y });
+        if (props.bounds.w > 0)
+            element.SetSize({props.bounds.w, element.GetSize().h});
+        if (props.bounds.h > 0)
+            element.SetSize({element.GetSize().w, props.bounds.h});
+        element.SetPosition({props.bounds.x, props.bounds.y});
         element.SetTag(props.tag);
         element.SetAutoSize(props.autoSize);
         element.SetFlexGrow(props.flexGrow);
@@ -52,8 +54,7 @@ namespace gui::declarative {
         };
     }
 
-    WidgetDesc Row(const RowProps &props, const std::vector<WidgetDesc> &children)
-    {
+    WidgetDesc Row(const RowProps& props, const std::vector<WidgetDesc>& children) {
         return [props, children](Window& window) -> Element* {
             auto& panel = window.Create<Panel>();
             ElementSetup(panel, props.base);
@@ -75,9 +76,8 @@ namespace gui::declarative {
             return &panel;
         };
     }
-    
-    WidgetDesc Text(const std::string &text, const TextProps &props)
-    {
+
+    WidgetDesc Text(const std::string& text, const TextProps& props) {
         return [text, props](Window& window) -> Element* {
             auto& label = window.Create<Label>();
             ElementSetup(label, props.base);
@@ -87,9 +87,8 @@ namespace gui::declarative {
             return &label;
         };
     }
-    
-    WidgetDesc Button(const std::string &text, const ButtonProps &props)
-    {
+
+    WidgetDesc Button(const std::string& text, const ButtonProps& props) {
         return [text, props](Window& window) -> Element* {
             auto& button = window.Create<gui::Button>();
             ElementSetup(button, props.base);
@@ -100,8 +99,7 @@ namespace gui::declarative {
         };
     }
 
-    WidgetDesc TextEdit(const TextEditProps &props)
-    {
+    WidgetDesc TextEdit(const TextEditProps& props) {
         return [props](Window& window) -> Element* {
             if (props.multiLine) {
                 auto& edit = window.Create<TextArea>();
@@ -120,21 +118,19 @@ namespace gui::declarative {
         };
     }
 
-    WidgetDesc Image(const ImageProps &props)
-    {
+    WidgetDesc Image(const ImageProps& props) {
         return [props](Window& window) -> Element* {
             auto& imageView = window.Create<ImageView>();
             ElementSetup(imageView, props.base);
-            
+
             imageView.SetImage(new gui::Image(props.fileName));
             imageView.SetScalingMode(props.scaling);
 
             return &imageView;
         };
     }
-    
-    WidgetDesc ScrollView(const WidgetDesc &child, const ScrollViewProps& props)
-    {
+
+    WidgetDesc ScrollView(const WidgetDesc& child, const ScrollViewProps& props) {
         return [child, props](Window& window) -> Element* {
             auto& sv = window.Create<gui::ScrollView>();
             ElementSetup(sv, props.base);
@@ -144,9 +140,8 @@ namespace gui::declarative {
             return &sv;
         };
     }
-    
-    WidgetDesc CheckBox(const std::string &text, const CheckBoxProps &props)
-    {
+
+    WidgetDesc CheckBox(const std::string& text, const CheckBoxProps& props) {
         return [props, text](Window& window) -> Element* {
             auto& cb = window.Create<gui::CheckBox>();
             ElementSetup(cb, props.base);
@@ -157,8 +152,7 @@ namespace gui::declarative {
         };
     }
 
-    WidgetDesc RadioButton(const std::string &text, const RadioButtonProps &props)
-    {
+    WidgetDesc RadioButton(const std::string& text, const RadioButtonProps& props) {
         return [props, text](Window& window) -> Element* {
             auto& rb = window.Create<gui::RadioButton>();
             ElementSetup(rb, props.base);
@@ -170,8 +164,7 @@ namespace gui::declarative {
         };
     }
 
-    WidgetDesc Switch(const SwitchProps &props)
-    {
+    WidgetDesc Switch(const SwitchProps& props) {
         return [props](Window& window) -> Element* {
             auto& sw = window.Create<gui::Switch>();
             ElementSetup(sw, props.base);
@@ -181,8 +174,7 @@ namespace gui::declarative {
         };
     }
 
-    WidgetDesc Slider(const SliderProps &props)
-    {
+    WidgetDesc Slider(const SliderProps& props) {
         return [props](Window& window) -> Element* {
             auto& slider = window.Create<gui::Slider>();
             ElementSetup(slider, props.base);
@@ -195,8 +187,7 @@ namespace gui::declarative {
         };
     }
 
-    WidgetDesc MenuItem(const MenuItemProps &props)
-    {
+    WidgetDesc MenuItem(const MenuItemProps& props) {
         return [props](Window& window) -> Element* {
             auto& item = window.Create<gui::MenuItem>();
             ElementSetup(item, props.base);
@@ -212,8 +203,7 @@ namespace gui::declarative {
         };
     }
 
-    WidgetDesc MenuSeparator()
-    {
+    WidgetDesc MenuSeparator() {
         return [](Window& window) -> Element* {
             auto& item = window.Create<gui::MenuItem>();
             item.SetSeparator(true);
@@ -222,8 +212,7 @@ namespace gui::declarative {
         };
     }
 
-    MenuDesc Menu(const MenuProps &props, const std::vector<WidgetDesc> &items)
-    {
+    MenuDesc Menu(const MenuProps& props, const std::vector<WidgetDesc>& items) {
         return [props, items](Window& window) -> gui::Menu* {
             auto& menu = window.Create<gui::Menu>();
             ElementSetup(menu, props.base);
@@ -241,9 +230,8 @@ namespace gui::declarative {
             return &menu;
         };
     }
-    
-    WidgetDesc SplitView(const SplitViewProps &props)
-    {
+
+    WidgetDesc SplitView(const SplitViewProps& props) {
         return [props](Window& window) -> Element* {
             auto& splitView = window.Create<gui::SplitView>();
             ElementSetup(splitView, props.base);
@@ -260,9 +248,8 @@ namespace gui::declarative {
             return &splitView;
         };
     }
-    
-    WidgetDesc BasicList(const BasicListProps &props)
-    {
+
+    WidgetDesc BasicList(const BasicListProps& props) {
         return [props](Window& window) -> Element* {
             auto& list = window.Create<gui::List<std::string>>();
             ElementSetup(list, props.base);
@@ -274,9 +261,8 @@ namespace gui::declarative {
             return &list;
         };
     }
-    
-    WidgetDesc ToolButton(const std::string &text, const ToolButtonProps &props)
-    {
+
+    WidgetDesc ToolButton(const std::string& text, const ToolButtonProps& props) {
         return [text, props](Window& window) -> Element* {
             auto& button = window.Create<gui::ToolButton>();
             ElementSetup(button, props.base);
@@ -290,8 +276,7 @@ namespace gui::declarative {
         };
     }
 
-    WidgetDesc ToolRadioButton(const std::string &text, const ToolButtonProps &props)
-    {
+    WidgetDesc ToolRadioButton(const std::string& text, const ToolButtonProps& props) {
         return [text, props](Window& window) -> Element* {
             auto& button = window.Create<gui::ToolButton>();
             ElementSetup(button, props.base);
@@ -306,8 +291,7 @@ namespace gui::declarative {
         };
     }
 
-    WidgetDesc ToolToggleButton(const std::string &text, const ToolButtonProps &props)
-    {
+    WidgetDesc ToolToggleButton(const std::string& text, const ToolButtonProps& props) {
         return [text, props](Window& window) -> Element* {
             auto& button = window.Create<gui::ToolButton>();
             ElementSetup(button, props.base);
@@ -320,9 +304,8 @@ namespace gui::declarative {
             return &button;
         };
     }
-    
-    WidgetDesc ProgressBar(const ProgressBarProps &props)
-    {
+
+    WidgetDesc ProgressBar(const ProgressBarProps& props) {
         return [props](Window& window) -> Element* {
             auto& progressBar = window.Create<gui::ProgressBar>();
             ElementSetup(progressBar, props.base);
@@ -334,8 +317,7 @@ namespace gui::declarative {
         };
     }
 
-    WidgetDesc Spinner(const SpinnerProps& props)
-    {
+    WidgetDesc Spinner(const SpinnerProps& props) {
         return [props](Window& window) -> Element* {
             auto& spinner = window.Create<gui::Spinner>();
             ElementSetup(spinner, props.base);
@@ -343,8 +325,9 @@ namespace gui::declarative {
             spinner.SetValue(props.value);
             spinner.SetStep(props.step);
             spinner.SetDecimals(props.decimals);
-            if (props.onValueChange) spinner.SetOnValueChange(props.onValueChange);
+            if (props.onValueChange)
+                spinner.SetOnValueChange(props.onValueChange);
             return &spinner;
         };
     }
-}
+} // namespace gui::declarative

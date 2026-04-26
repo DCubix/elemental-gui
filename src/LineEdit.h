@@ -3,10 +3,9 @@
 #include "Element.h"
 #include "TextProcessing.h"
 
-namespace gui
-{
+namespace gui {
     class LineEdit : public Element {
-    public:
+      public:
         LineEdit();
 
         void OnDraw(Graphics& g) override;
@@ -27,7 +26,11 @@ namespace gui
         void SetText(const std::string& txt);
 
         bool IsMasked() const { return m_masked; }
-        void SetMasked(bool m) { m_masked = m; Rebuild(); Invalidate(); }
+        void SetMasked(bool m) {
+            m_masked = m;
+            Rebuild();
+            Invalidate();
+        }
 
         bool IsEditable() const { return m_editable; }
         void SetEditable(bool m) { m_editable = m; }
@@ -38,17 +41,17 @@ namespace gui
 
         void SetOnChange(const ValueChanged<std::string>& cb) { m_onChange = cb; }
 
-    protected:
+      protected:
         std::string m_textRaw;
         text::Line m_text;
 
-        bool m_masked{ false }, m_editable{ true };
-        int m_caretIndex{ 0 };
-        int m_selectionStart{ -1 }, m_selectionEnd{ -1 };
-        int m_offsetX{ 0 };
-        Size m_textSize{ 0, 0 };
+        bool m_masked{false}, m_editable{true};
+        int m_caretIndex{0};
+        int m_selectionStart{-1}, m_selectionEnd{-1};
+        int m_offsetX{0};
+        Size m_textSize{0, 0};
 
-        text::EditState m_state{ text::EditState::Normal };
+        text::EditState m_state{text::EditState::Normal};
         ValueChanged<std::string> m_onChange;
 
         virtual void InsertChar(char c);
@@ -56,4 +59,4 @@ namespace gui
         virtual void DeleteSelected();
         virtual void Rebuild();
     };
-}
+} // namespace gui

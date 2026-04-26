@@ -5,15 +5,15 @@
 namespace gui {
     class Application;
     class Menu : public Element {
-    public:
+      public:
         Menu();
         ~Menu() = default;
 
         void OnDraw(Graphics& g) override;
         std::string StyleKey() const override { return "Menu"; }
-        EventStatus OnEvent(Event *event) override;
+        EventStatus OnEvent(Event* event) override;
 
-		Size GetPreferredSize() const override;
+        Size GetPreferredSize() const override;
 
         void Add(MenuItem* item);
 
@@ -32,7 +32,7 @@ namespace gui {
         Menu* GetParentMenu() const { return m_parentMenu; }
         void SetParentMenu(Menu* parent) { m_parentMenu = parent; }
 
-    private:
+      private:
         std::vector<MenuItem*> m_items;
         bool m_open{false};
         VoidCallback m_onDismiss;
@@ -42,4 +42,4 @@ namespace gui {
         void PlaceItems();
     };
 
-}
+} // namespace gui

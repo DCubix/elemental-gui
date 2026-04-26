@@ -15,7 +15,7 @@ IndentPPDirectives: None
 NamespaceIndentation: All
 
 # Column limit
-ColumnLimit: 120
+ColumnLimit: 100
 
 # Brace style
 # All braces attach (same line) — functions, classes, namespaces, control flow

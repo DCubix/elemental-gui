@@ -1,39 +1,42 @@
 #pragma once
 
 #include "Layout.h"
+
 #include <vector>
 
 namespace gui {
-	class Element;
+    class Element;
 
-	enum class FlexDirection { Row, Column };
-	enum class FlexJustify { Start, Center, End, SpaceBetween, SpaceEvenly };
-	enum class FlexAlign { Start, Center, End, Stretch };
+    enum class FlexDirection { Row, Column };
+    enum class FlexJustify { Start, Center, End, SpaceBetween, SpaceEvenly };
+    enum class FlexAlign { Start, Center, End, Stretch };
 
-	class FlexLayout : public Layout {
-	public:
-		FlexLayout(FlexDirection dir = FlexDirection::Row,
-				   FlexJustify justify = FlexJustify::Start,
-				   FlexAlign align = FlexAlign::Stretch);
+    class FlexLayout : public Layout {
+      public:
+        FlexLayout(
+            FlexDirection dir = FlexDirection::Row,
+            FlexJustify justify = FlexJustify::Start,
+            FlexAlign align = FlexAlign::Stretch
+        );
 
-		void Add(Element* element);
-		void Remove(Element* element);
-		void Apply(const Rectangle& bounds) override;
-		Size GetLaidOutSize() const override;
+        void Add(Element* element);
+        void Remove(Element* element);
+        void Apply(const Rectangle& bounds) override;
+        Size GetLaidOutSize() const override;
 
-		void SetDirection(FlexDirection dir) { m_direction = dir; }
-		FlexDirection GetDirection() const { return m_direction; }
+        void SetDirection(FlexDirection dir) { m_direction = dir; }
+        FlexDirection GetDirection() const { return m_direction; }
 
-		void SetJustifyContent(FlexJustify justify) { m_justify = justify; }
-		FlexJustify GetJustifyContent() const { return m_justify; }
+        void SetJustifyContent(FlexJustify justify) { m_justify = justify; }
+        FlexJustify GetJustifyContent() const { return m_justify; }
 
-		void SetAlignItems(FlexAlign align) { m_align = align; }
-		FlexAlign GetAlignItems() const { return m_align; }
+        void SetAlignItems(FlexAlign align) { m_align = align; }
+        FlexAlign GetAlignItems() const { return m_align; }
 
-	private:
-		FlexDirection m_direction;
-		FlexJustify m_justify;
-		FlexAlign m_align;
-		std::vector<Element*> m_items;
-	};
-}
+      private:
+        FlexDirection m_direction;
+        FlexJustify m_justify;
+        FlexAlign m_align;
+        std::vector<Element*> m_items;
+    };
+} // namespace gui

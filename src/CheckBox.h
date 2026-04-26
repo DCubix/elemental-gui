@@ -3,33 +3,36 @@
 #include "Element.h"
 
 namespace gui {
-	class CheckBox : public Element {
-	public:
-		CheckBox();
+    class CheckBox : public Element {
+      public:
+        CheckBox();
 
-		std::string StyleKey() const override { return "CheckBox"; }
+        std::string StyleKey() const override { return "CheckBox"; }
 
-		void OnMouseDown(MouseEvent e) override;
-		void OnMouseUp(MouseEvent e) override;
-		void OnMouseEnter() override;
-		void OnMouseLeave() override;
-		void OnDraw(Graphics& g) override;
+        void OnMouseDown(MouseEvent e) override;
+        void OnMouseUp(MouseEvent e) override;
+        void OnMouseEnter() override;
+        void OnMouseLeave() override;
+        void OnDraw(Graphics& g) override;
 
-		Size GetPreferredSize() const override;
+        Size GetPreferredSize() const override;
 
-		bool IsChecked() const { return m_checked; }
-		void SetChecked(bool checked);
+        bool IsChecked() const { return m_checked; }
+        void SetChecked(bool checked);
 
-		std::string GetText() const { return m_text; }
-		void SetText(const std::string& text) { m_text = text; Invalidate(); }
+        std::string GetText() const { return m_text; }
+        void SetText(const std::string& text) {
+            m_text = text;
+            Invalidate();
+        }
 
-		void SetOnChanged(ValueChanged<bool> cb) { m_onChanged = cb; }
+        void SetOnChanged(ValueChanged<bool> cb) { m_onChanged = cb; }
 
-	private:
-		std::string m_text;
-		bool m_checked{ false };
-		bool m_pressed{ false };
+      private:
+        std::string m_text;
+        bool m_checked{false};
+        bool m_pressed{false};
 
-		ValueChanged<bool> m_onChanged;
-	};
-}
+        ValueChanged<bool> m_onChanged;
+    };
+} // namespace gui

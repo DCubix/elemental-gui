@@ -203,10 +203,22 @@ class SmolBackend : public Backend {
                         );
                         break;
                     case SMOL_FRAME_EVENT_MOUSE_VER_WHEEL:
-                        sink.OnMouseWheel(windowId, 0.0f, (float)ev.mouse.z, ev.mouse.x, ev.mouse.y);
+                        sink.OnMouseWheel(
+                            windowId,
+                            0.0f,
+                            (float)ev.mouse.z,
+                            ev.mouse.x,
+                            ev.mouse.y
+                        );
                         break;
                     case SMOL_FRAME_EVENT_MOUSE_HOR_WHEEL:
-                        sink.OnMouseWheel(windowId, (float)ev.mouse.w, 0.0f, ev.mouse.x, ev.mouse.y);
+                        sink.OnMouseWheel(
+                            windowId,
+                            (float)ev.mouse.w,
+                            0.0f,
+                            ev.mouse.x,
+                            ev.mouse.y
+                        );
                         break;
                     case SMOL_FRAME_EVENT_TEXT_INPUT:
                         sink.OnTextInput(windowId, (char)ev.input.codepoint);
@@ -261,7 +273,10 @@ class SmolBackend : public Backend {
 
     void DestroyWindow(WindowHandle handle) {
         // Remove frame from vector
-        m_frames.erase(std::remove(m_frames.begin(), m_frames.end(), (smol_frame_t*)handle), m_frames.end());
+        m_frames.erase(
+            std::remove(m_frames.begin(), m_frames.end(), (smol_frame_t*)handle),
+            m_frames.end()
+        );
         smol_frame_destroy((smol_frame_t*)handle);
     }
 
@@ -330,7 +345,13 @@ class SmolBackend : public Backend {
         // No-op, smol_frame doesn't need a separate render buffer.
     }
 
-    void PresentFrame(WindowHandle handle, unsigned char* data, int stride, uint32_t width, uint32_t height) {
+    void PresentFrame(
+        WindowHandle handle,
+        unsigned char* data,
+        int stride,
+        uint32_t width,
+        uint32_t height
+    ) {
         uint32_t* pixels = reinterpret_cast<uint32_t*>(data);
 
         // Convert ARGB to RGBA (LSB order)
@@ -343,7 +364,20 @@ class SmolBackend : public Backend {
             pixels[i] = (a << 24) | (b << 16) | (g << 8) | r;
         }
 
-        smol_frame_blit_pixels((smol_frame_t*)handle, pixels, width, height, 0, 0, width, height, 0, 0, width, height);
+        smol_frame_blit_pixels(
+            (smol_frame_t*)handle,
+            pixels,
+            width,
+            height,
+            0,
+            0,
+            width,
+            height,
+            0,
+            0,
+            width,
+            height
+        );
     }
 
     // Clipboard
@@ -408,7 +442,8 @@ int main() {
         .width = 800,
         .height = 600,
         .title = "Cryptid Rampage",
-        .flags = SMOL_FRAME_DEFAULT_CONFIG | SMOL_FRAME_CONFIG_HAS_MAXIMIZE_BUTTON | SMOL_FRAME_CONFIG_BORDERLESS,
+        .flags = SMOL_FRAME_DEFAULT_CONFIG | SMOL_FRAME_CONFIG_HAS_MAXIMIZE_BUTTON |
+                 SMOL_FRAME_CONFIG_BORDERLESS,
         .gl_spec = &spec,
     };
 

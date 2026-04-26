@@ -1,5 +1,3 @@
 #include "List.h"
 
-namespace gui {
-    
-}
+namespace gui {}

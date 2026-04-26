@@ -4,18 +4,17 @@
 
 #include <cmath>
 
-namespace gui
-{
+namespace gui {
 
     Slider::Slider()
         : Element(),
-        m_direction(Direction::Horizontal),
-        m_range(Range(0, 100)),
-        m_value(0),
-        m_step(1),
-        m_state(ButtonState::Normal),
-        m_thumbPos(0),
-        m_dragOffset(0) {
+          m_direction(Direction::Horizontal),
+          m_range(Range(0, 100)),
+          m_value(0),
+          m_step(1),
+          m_state(ButtonState::Normal),
+          m_thumbPos(0),
+          m_dragOffset(0) {
         SetLocalBounds(Rectangle(0, 0, 120, 22));
     }
 
@@ -31,8 +30,7 @@ namespace gui
             int trackH = std::max(4, sz.h / 3);
             int trackY = (sz.h - trackH) / 2;
             g.StyledRect(0, trackY, sz.w, trackH, trackStyle);
-        }
-        else {
+        } else {
             int trackW = std::max(4, sz.w / 3);
             int trackX = (sz.w - trackW) / 2;
             g.StyledRect(trackX, 0, trackW, sz.h, trackStyle);
@@ -41,22 +39,28 @@ namespace gui
         // Draw fixed-size thumb
         std::string state = "normal";
         switch (m_state) {
-            case ButtonState::Normal: state = "normal"; break;
-            case ButtonState::Hover: state = "hover"; break;
-            case ButtonState::Click: state = "click"; break;
+            case ButtonState::Normal:
+                state = "normal";
+                break;
+            case ButtonState::Hover:
+                state = "hover";
+                break;
+            case ButtonState::Click:
+                state = "click";
+                break;
         }
 
         Json thumbStyle = GetStyle()["thumb"][state];
         if (m_direction == Direction::Horizontal) {
             g.StyledRect(m_thumbPos, 0, thumb, sz.h, thumbStyle);
-        }
-        else {
+        } else {
             g.StyledRect(0, m_thumbPos, sz.w, thumb, thumbStyle);
         }
     }
 
     void Slider::OnMouseDown(MouseEvent e) {
-        if (e.button != MouseButton::Left) return;
+        if (e.button != MouseButton::Left)
+            return;
         int p = (m_direction == Direction::Horizontal ? e.x : e.y);
         int thumb = SliderThumbSize;
 
@@ -64,8 +68,7 @@ namespace gui
             m_state = ButtonState::Click;
             if (p >= m_thumbPos && p < m_thumbPos + thumb) {
                 m_dragOffset = p - m_thumbPos - thumb / 2;
-            }
-            else {
+            } else {
                 m_dragOffset = 0;
                 UpdateValue(p);
             }
@@ -74,7 +77,8 @@ namespace gui
     }
 
     void Slider::OnMouseUp(MouseEvent e) {
-        if (e.button != MouseButton::Left) return;
+        if (e.button != MouseButton::Left)
+            return;
         if (m_state == ButtonState::Click) {
             Rectangle b = GetLocalBounds();
             m_state = b.HasPoint(e.x, e.y) ? ButtonState::Hover : ButtonState::Normal;
@@ -117,8 +121,10 @@ namespace gui
     }
 
     void Slider::SetValue(float v) {
-        if (m_onValueChange && m_value != v) m_onValueChange(m_value);
-        m_value = v; Invalidate();
+        if (m_onValueChange && m_value != v)
+            m_onValueChange(m_value);
+        m_value = v;
+        Invalidate();
     }
 
     void Slider::UpdateValue(int p) {
@@ -127,10 +133,10 @@ namespace gui
         p -= thumb / 2;
         int axisLen = (m_direction == Direction::Horizontal ? size.w : size.h) - thumb;
 
-        Range vp{ 0, float(axisLen) };
+        Range vp{0, float(axisLen)};
         m_value = m_range.Constrain(m_range.Remap(vp, p));
         SetValue(std::floor(m_value / m_step) * m_step);
         Invalidate();
     }
 
-}
+} // namespace gui

@@ -3,10 +3,10 @@
 #include "EventSystem.h"
 #include "Layout.h"
 
-namespace gui
-{
+namespace gui {
 
-    Button::Button() : Label() {
+    Button::Button()
+        : Label() {
         SetLocalBounds(Rectangle(0, 0, 50, 22));
         m_alignment = Alignment::MiddleCenter;
         m_text = "Button";
@@ -20,9 +20,15 @@ namespace gui
 
         std::string state = "normal";
         switch (m_state) {
-            case ButtonState::Normal: state = "normal"; break;
-            case ButtonState::Hover: state = "hover"; break;
-            case ButtonState::Click: state = "click"; break;
+            case ButtonState::Normal:
+                state = "normal";
+                break;
+            case ButtonState::Hover:
+                state = "hover";
+                break;
+            case ButtonState::Click:
+                state = "click";
+                break;
         }
 
         g.StyledRect(0, 0, sz.w, sz.h, GetStyle()[state]);
@@ -30,7 +36,8 @@ namespace gui
     }
 
     void Button::OnMouseDown(MouseEvent e) {
-        if (e.button != MouseButton::Left) return;
+        if (e.button != MouseButton::Left)
+            return;
         if (m_state == ButtonState::Hover) {
             m_state = ButtonState::Click;
             Invalidate();
@@ -38,7 +45,8 @@ namespace gui
     }
 
     void Button::OnMouseUp(MouseEvent e) {
-        if (e.button != MouseButton::Left) return;
+        if (e.button != MouseButton::Left)
+            return;
         if (m_state == ButtonState::Click) {
             if (m_onClick)
                 m_onClick();
@@ -58,8 +66,7 @@ namespace gui
         if (m_state == ButtonState::Hover) {
             m_state = ButtonState::Normal;
             Invalidate();
-        }
-        else if (m_state == ButtonState::Click) {
+        } else if (m_state == ButtonState::Click) {
             m_state = ButtonState::Normal;
             Invalidate();
         }
@@ -75,4 +82,4 @@ namespace gui
         }
         return Element::GetPreferredSize();
     }
-}
+} // namespace gui

@@ -5,9 +5,8 @@
 #include "Scrollbar.h"
 #include "Window.h"
 
-namespace gui
-{
-    template<typename T>
+namespace gui {
+    template <typename T>
     struct ListItem {
         T value;
         std::string label;
@@ -15,9 +14,11 @@ namespace gui
 
     template <typename T>
     class List : public Element {
-    public:
-        List() : Element(), m_scrollbar(nullptr) {
-            SetLocalBounds({ 0, 0, 200, 200 });
+      public:
+        List()
+            : Element(),
+              m_scrollbar(nullptr) {
+            SetLocalBounds({0, 0, 200, 200});
         }
 
         void OnDraw(Graphics& g) override {
@@ -39,9 +40,10 @@ namespace gui
             EdgeInsets pad = EdgeInsets::FromStyle(style["padding"]);
             EdgeInsets itemPad = EdgeInsets::FromStyle(style["item"]["padding"]);
             int itemHeight = style["item"].value("height", 22);
-            int totalContentHeight = static_cast<int>(m_items.size()) * (itemHeight + itemPad.GetVertical());
+            int totalContentHeight =
+                static_cast<int>(m_items.size()) * (itemHeight + itemPad.GetVertical());
 
-            Rectangle local{ 0, 0, size.w, size.h };
+            Rectangle local{0, 0, size.w, size.h};
             Rectangle padB = pad.Apply(local);
 
             // Determine if scrollbar is needed
@@ -54,8 +56,7 @@ namespace gui
                 contentWidth -= barsize;
                 m_scrollbar->SetRange(0, totalContentHeight - padB.h);
                 m_scrollbar->SetLocalBounds(Rectangle(size.w - barsize, 0, barsize, size.h));
-            }
-            else {
+            } else {
                 m_scrollbar->SetValue(0);
             }
 
@@ -69,14 +70,18 @@ namespace gui
                 Rectangle itemRect = GetItemRect(static_cast<int>(i), scrollOffset, contentWidth);
 
                 // Skip items outside visible area
-                if (itemRect.y + itemRect.h < padB.y || itemRect.y > padB.y + padB.h) continue;
+                if (itemRect.y + itemRect.h < padB.y || itemRect.y > padB.y + padB.h)
+                    continue;
 
                 auto itemStyle = style["item"];
 
                 // Highlight selected item
                 if (static_cast<int>(i) == m_selectedIndex) {
                     g.StyledRect(
-                        itemRect.x, itemRect.y, itemRect.w, itemRect.h,
+                        itemRect.x,
+                        itemRect.y,
+                        itemRect.w,
+                        itemRect.h,
                         style["itemSelected"]
                     );
                     Json newTextStyle = style["itemSelected"].value("text", textStyle);
@@ -84,16 +89,19 @@ namespace gui
                     g.StyledTextBegin(newTextStyle);
                     auto sz = g.MeasureText(item.label);
                     g.StyledTextEnd(
-                        item.label, itemRect.x + itemPad.left, itemRect.y + (itemRect.h + sz.size.h) / 2
+                        item.label,
+                        itemRect.x + itemPad.left,
+                        itemRect.y + (itemRect.h + sz.size.h) / 2
                     );
-                }
-                else {
+                } else {
                     Json newTextStyle = itemStyle.value("text", textStyle);
                     newTextStyle.update(textStyle);
                     g.StyledTextBegin(newTextStyle);
                     auto sz = g.MeasureText(item.label);
                     g.StyledTextEnd(
-                        item.label, itemRect.x + itemPad.left, itemRect.y + (itemRect.h + sz.size.h) / 2
+                        item.label,
+                        itemRect.x + itemPad.left,
+                        itemRect.y + (itemRect.h + sz.size.h) / 2
                     );
                 }
             }
@@ -109,16 +117,20 @@ namespace gui
         }
 
         void OnScroll(ScrollEvent e) override {
-            if (m_scrollbar == nullptr || !m_scrollbar->IsEnabled()) return;
+            if (m_scrollbar == nullptr || !m_scrollbar->IsEnabled())
+                return;
             const float scrollSpeed = 30.0f;
             float newVal = m_scrollbar->GetValue() - e.scrollY * scrollSpeed;
-            newVal = std::max(m_scrollbar->GetRange().minimum,
-                std::min(newVal, m_scrollbar->GetRange().maximum));
+            newVal = std::max(
+                m_scrollbar->GetRange().minimum,
+                std::min(newVal, m_scrollbar->GetRange().maximum)
+            );
             m_scrollbar->SetValue(newVal);
         }
 
         void OnMouseDown(MouseEvent e) override {
-            if (e.button != MouseButton::Left) return;
+            if (e.button != MouseButton::Left)
+                return;
             Rectangle b = GetLocalBounds();
             int scrollOffset = m_scrollbar ? static_cast<int>(m_scrollbar->GetValue()) : 0;
             int contentWidth = GetContentWidth();
@@ -152,9 +164,7 @@ namespace gui
             return EventStatus::Active;
         }
 
-        void AddItem(const T& data, const std::string& label) {
-            m_items.push_back({ data, label });
-        }
+        void AddItem(const T& data, const std::string& label) { m_items.push_back({data, label}); }
 
         void RemoveItem(size_t index) {
             if (index < m_items.size()) {
@@ -188,8 +198,8 @@ namespace gui
 
         const std::vector<ListItem<T>>& GetItems() const { return m_items; }
 
-    private:
-        int m_selectedIndex{ -1 };
+      private:
+        int m_selectedIndex{-1};
         std::vector<ListItem<T>> m_items;
         ValueChanged<int> m_onSelectionChanged;
         Scrollbar* m_scrollbar;
@@ -198,10 +208,11 @@ namespace gui
             const int barsize = 16;
             Size size = GetSize();
             EdgeInsets pad = EdgeInsets::FromStyle(GetStyle()["padding"]);
-            Rectangle padB = pad.Apply({ 0, 0, size.w, size.h });
+            Rectangle padB = pad.Apply({0, 0, size.w, size.h});
             EdgeInsets itemPad = EdgeInsets::FromStyle(GetStyle()["item"]["padding"]);
             int itemHeight = GetStyle()["item"].value("height", 22);
-            int totalContentHeight = static_cast<int>(m_items.size()) * (itemHeight + itemPad.GetVertical());
+            int totalContentHeight =
+                static_cast<int>(m_items.size()) * (itemHeight + itemPad.GetVertical());
             bool needsScrollbar = totalContentHeight > padB.h;
             return needsScrollbar ? padB.w - barsize : padB.w;
         }
@@ -209,17 +220,19 @@ namespace gui
         Rectangle GetItemRect(int index, int scrollOffset, int contentWidth) const {
             Size size = GetSize();
             EdgeInsets pad = EdgeInsets::FromStyle(GetStyle()["padding"]);
-            Rectangle padB = pad.Apply({ 0, 0, size.w, size.h });
+            Rectangle padB = pad.Apply({0, 0, size.w, size.h});
 
             EdgeInsets itemPad = EdgeInsets::FromStyle(GetStyle()["item"]["padding"]);
             int itemHeight = GetStyle()["item"].value("height", 22);
 
             return {
                 padB.x,
-                static_cast<int>(padB.y + index * (itemHeight + itemPad.GetVertical()) - scrollOffset),
+                static_cast<int>(
+                    padB.y + index * (itemHeight + itemPad.GetVertical()) - scrollOffset
+                ),
                 contentWidth,
                 static_cast<int>(itemHeight + itemPad.GetVertical())
             };
         }
     };
-}
+} // namespace gui

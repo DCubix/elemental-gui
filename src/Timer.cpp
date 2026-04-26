@@ -21,4 +21,4 @@ namespace gui {
             m_thread.join();
         }
     }
-}
+} // namespace gui

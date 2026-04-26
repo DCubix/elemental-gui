@@ -6,7 +6,7 @@ namespace gui {
     constexpr int SpinnerButtonWidth = 20;
 
     class Spinner : public Element {
-    public:
+      public:
         Spinner();
 
         void OnDraw(Graphics& g) override;
@@ -32,11 +32,14 @@ namespace gui {
         void SetStep(float s) { m_step = s; }
 
         int GetDecimals() const { return m_decimals; }
-        void SetDecimals(int d) { m_decimals = d; Invalidate(); }
+        void SetDecimals(int d) {
+            m_decimals = d;
+            Invalidate();
+        }
 
         void SetOnValueChange(const ValueChanged<float>& cb) { m_onValueChange = cb; }
 
-    private:
+      private:
         enum class PartState { Normal, Hover, Click };
 
         Range m_range{0.0f, 100.0f};
@@ -54,4 +57,4 @@ namespace gui {
         std::string FormatValue() const;
         void Step(float direction);
     };
-}
+} // namespace gui

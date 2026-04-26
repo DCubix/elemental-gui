@@ -2,8 +2,7 @@
 
 #include "Application.h"
 
-namespace gui
-{
+namespace gui {
 
     Backend& Window::GetBackend() {
         return m_application->GetBackend();
@@ -39,7 +38,8 @@ namespace gui
             int x, y, pw, ph;
             b.GetWindowPosition(m_config.parent->m_handle, x, y);
             b.GetWindowSize(m_config.parent->m_handle, pw, ph);
-            b.SetWindowPosition(m_handle,
+            b.SetWindowPosition(
+                m_handle,
                 x + pw / 2 - (int)m_config.width / 2,
                 y + ph / 2 - (int)m_config.height / 2
             );
@@ -82,7 +82,8 @@ namespace gui
 
     void Window::ShowPopup(Element* popup) {
         for (auto* p : m_popups) {
-            if (p == popup) return;
+            if (p == popup)
+                return;
         }
         popup->m_window = this;
         m_popups.push_back(popup);
@@ -90,10 +91,7 @@ namespace gui
     }
 
     void Window::DismissPopup(Element* popup) {
-        m_popups.erase(
-            std::remove(m_popups.begin(), m_popups.end(), popup),
-            m_popups.end()
-        );
+        m_popups.erase(std::remove(m_popups.begin(), m_popups.end(), popup), m_popups.end());
         RequestRedraw();
     }
 
@@ -125,7 +123,7 @@ namespace gui
     Size Window::GetSize() const {
         int w, h;
         m_application->GetBackend().GetWindowSize(m_handle, w, h);
-        return { w, h };
+        return {w, h};
     }
 
     WindowId Window::GetId() const {
@@ -134,7 +132,8 @@ namespace gui
 
     void Window::Update() {
         if (m_shouldRedraw) {
-            if (m_root) m_root->SetLocalBounds(Rectangle(0, 0, m_config.width, m_config.height));
+            if (m_root)
+                m_root->SetLocalBounds(Rectangle(0, 0, m_config.width, m_config.height));
             Redraw();
             m_shouldRedraw = false;
         }
@@ -154,8 +153,10 @@ namespace gui
 
         for (size_t i = 0; i < m_elements.size(); i++) {
             auto* el = m_elements[i].get();
-            if (el->GetParent() != nullptr) continue;
-            if (!el->IsVisible()) continue;
+            if (el->GetParent() != nullptr)
+                continue;
+            if (!el->IsVisible())
+                continue;
             if (el->IsDirty()) {
                 const auto& lb = el->GetLocalBounds();
                 m_graphics.Save();
@@ -166,7 +167,8 @@ namespace gui
             }
         }
         for (auto* popup : m_popups) {
-            if (!popup->IsVisible()) continue;
+            if (!popup->IsVisible())
+                continue;
             const auto& lb = popup->GetLocalBounds();
             m_graphics.Save();
             m_graphics.Translate(lb.x, lb.y);
@@ -199,4 +201,4 @@ namespace gui
         esys.Subscribe(el, EventType::Scroll);
     }
 
-}
+} // namespace gui

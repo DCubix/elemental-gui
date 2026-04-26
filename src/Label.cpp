@@ -4,14 +4,13 @@
 
 #include <algorithm>
 
-namespace gui
-{
+namespace gui {
 
     Label::Label()
         : Element(),
-        m_text(""),
-        m_alignment(Alignment::TopLeft),
-        m_icon(nullptr) {}
+          m_text(""),
+          m_alignment(Alignment::TopLeft),
+          m_icon(nullptr) {}
 
     void Label::OnDraw(Graphics& g) {
         const auto textStyle = GetStyle();
@@ -52,23 +51,29 @@ namespace gui
             case Alignment::TopCenter:
             case Alignment::MiddleCenter:
             case Alignment::BottomCenter:
-                cx += sz.w / 2 - totalW / 2; break;
+                cx += sz.w / 2 - totalW / 2;
+                break;
             case Alignment::TopRight:
             case Alignment::MiddleRight:
             case Alignment::BottomRight:
-                cx += sz.w - totalW; break;
-            default: break;
+                cx += sz.w - totalW;
+                break;
+            default:
+                break;
         }
         switch (m_alignment) {
             case Alignment::MiddleLeft:
             case Alignment::MiddleCenter:
             case Alignment::MiddleRight:
-                cy += sz.h / 2 - totalH / 2; break;
+                cy += sz.h / 2 - totalH / 2;
+                break;
             case Alignment::BottomLeft:
             case Alignment::BottomCenter:
             case Alignment::BottomRight:
-                cy += sz.h - totalH; break;
-            default: break;
+                cy += sz.h - totalH;
+                break;
+            default:
+                break;
         }
 
         if (m_icon) {
@@ -84,12 +89,15 @@ namespace gui
                 case Alignment::TopCenter:
                 case Alignment::MiddleCenter:
                 case Alignment::BottomCenter:
-                    tx += maxW / 2 - static_cast<int>(ex.size.w) / 2; break;
+                    tx += maxW / 2 - static_cast<int>(ex.size.w) / 2;
+                    break;
                 case Alignment::TopRight:
                 case Alignment::MiddleRight:
                 case Alignment::BottomRight:
-                    tx += maxW - static_cast<int>(ex.size.w); break;
-                default: break;
+                    tx += maxW - static_cast<int>(ex.size.w);
+                    break;
+                default:
+                    break;
             }
             g.StyledTextEnd(text, tx, textY + ex.size.h);
             textY += ex.size.h;
@@ -104,7 +112,7 @@ namespace gui
             int iconSz = m_icon ? m_iconSize : 0;
 
             if (m_text.empty()) {
-                return { iconSz, iconSz };
+                return {iconSz, iconSz};
             }
 
             const auto textStyle = GetStyle();
@@ -125,8 +133,8 @@ namespace gui
             g.Restore();
 
             int gap = m_icon ? 4 : 0;
-            return { iconSz + gap + maxW, std::max(iconSz, maxH) };
+            return {iconSz + gap + maxW, std::max(iconSz, maxH)};
         }
         return Element::GetPreferredSize();
     }
-}
+} // namespace gui

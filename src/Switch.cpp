@@ -3,38 +3,40 @@
 #include "Application.h"
 
 namespace gui {
-    Switch::Switch() : Element()
-    {
+    Switch::Switch()
+        : Element() {
         SetLocalBounds(Rectangle(0, 0, 40, 22));
     }
 
     void Switch::OnMouseDown(MouseEvent e) {
-		if (e.button != MouseButton::Left) return;
-		m_pressed = true;
-		Invalidate();
+        if (e.button != MouseButton::Left)
+            return;
+        m_pressed = true;
+        Invalidate();
     }
 
-	void Switch::OnMouseUp(MouseEvent e) {
-		if (e.button != MouseButton::Left) return;
-		if (m_pressed) {
-			m_pressed = false;
-			bool newChecked = (m_state != State::Checked);
-			m_state = newChecked ? State::Checked : State::Unchecked;
-			if (m_onChanged) m_onChanged(newChecked);
-			Invalidate();
-		}
-	}
+    void Switch::OnMouseUp(MouseEvent e) {
+        if (e.button != MouseButton::Left)
+            return;
+        if (m_pressed) {
+            m_pressed = false;
+            bool newChecked = (m_state != State::Checked);
+            m_state = newChecked ? State::Checked : State::Unchecked;
+            if (m_onChanged)
+                m_onChanged(newChecked);
+            Invalidate();
+        }
+    }
 
-	void Switch::OnMouseEnter() {
-		Invalidate();
-	}
+    void Switch::OnMouseEnter() {
+        Invalidate();
+    }
 
-	void Switch::OnMouseLeave() {
-		Invalidate();
-	}
+    void Switch::OnMouseLeave() {
+        Invalidate();
+    }
 
-    void Switch::OnDraw(Graphics &g)
-    {
+    void Switch::OnDraw(Graphics& g) {
         Size size = GetSize();
         Json style = GetStyle()["Switch"];
 
@@ -63,15 +65,22 @@ namespace gui {
 
         // Draw thumb
         std::string thumbState = "normal";
-        if (m_pressed) thumbState = "click";
-        else if (m_hovered) thumbState = "hover";
-        if (m_state == State::Checked) thumbState += "On";
-        g.StyledRect(thumbCX - thumbRadius, thumbCY - thumbRadius,
-                     thumbRadius * 2, thumbRadius * 2, style["thumb"][thumbState]);
+        if (m_pressed)
+            thumbState = "click";
+        else if (m_hovered)
+            thumbState = "hover";
+        if (m_state == State::Checked)
+            thumbState += "On";
+        g.StyledRect(
+            thumbCX - thumbRadius,
+            thumbCY - thumbRadius,
+            thumbRadius * 2,
+            thumbRadius * 2,
+            style["thumb"][thumbState]
+        );
     }
 
-    void Switch::SetChecked(bool checked)
-    {
+    void Switch::SetChecked(bool checked) {
         if (checked) {
             m_state = State::Checked;
         } else {
@@ -80,8 +89,7 @@ namespace gui {
         Invalidate();
     }
 
-    void Switch::SetIndeterminate(bool indeterminate)
-    {
+    void Switch::SetIndeterminate(bool indeterminate) {
         if (indeterminate) {
             m_state = State::Indeterminate;
         } else {
@@ -89,4 +97,4 @@ namespace gui {
         }
         Invalidate();
     }
-}
+} // namespace gui

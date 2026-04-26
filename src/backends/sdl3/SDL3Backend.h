@@ -1,22 +1,21 @@
 #pragma once
 
+#include "Backend.h"
+
 #include <unordered_map>
 
 #include <SDL3/SDL.h>
 
-#include "Backend.h"
-
-namespace gui
-{
+namespace gui {
 
     struct SDL3WindowData {
-        SDL_Window* window{ nullptr };
-        SDL_Renderer* renderer{ nullptr };
-        SDL_Texture* buffer{ nullptr };
+        SDL_Window* window{nullptr};
+        SDL_Renderer* renderer{nullptr};
+        SDL_Texture* buffer{nullptr};
     };
 
     class SDL3Backend : public Backend {
-    public:
+      public:
         bool Init() override;
         void Shutdown() override;
 
@@ -43,17 +42,22 @@ namespace gui
 
         void CreateRenderBuffer(WindowHandle handle, uint32_t width, uint32_t height) override;
         void DestroyRenderBuffer(WindowHandle handle) override;
-        void PresentFrame(WindowHandle handle, unsigned char* data, int stride,
-            uint32_t width, uint32_t height) override;
+        void PresentFrame(
+            WindowHandle handle,
+            unsigned char* data,
+            int stride,
+            uint32_t width,
+            uint32_t height
+        ) override;
 
         void SetClipboardText(const std::string& text) override;
         std::string GetClipboardText() const override;
 
-    private:
+      private:
         std::unordered_map<SDL_Window*, SDL3WindowData> m_windows;
 
         SDL3WindowData& GetData(WindowHandle handle);
         const SDL3WindowData& GetData(WindowHandle handle) const;
     };
 
-}
+} // namespace gui

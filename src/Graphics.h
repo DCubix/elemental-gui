@@ -1,20 +1,19 @@
 #pragma once
 
-#include "cairo/cairo.h"
-#include <nlohmann/json.hpp>
-
 #include "Image.h"
+#include "cairo/cairo.h"
 
 #include <functional>
 #include <optional>
 #include <vector>
 
+#include <nlohmann/json.hpp>
+
 #define PI 3.141592654
 
 using Json = nlohmann::json;
 
-namespace gui
-{
+namespace gui {
     template <typename T>
     concept IsNumber = std::is_arithmetic_v<T>;
 
@@ -34,13 +33,9 @@ namespace gui
             return Point<T>(x - other.x, y - other.y);
         }
 
-        Point<T> operator*(T scalar) const {
-            return Point<T>(x * scalar, y * scalar);
-        }
+        Point<T> operator*(T scalar) const { return Point<T>(x * scalar, y * scalar); }
 
-        Point<T> operator/(T scalar) const {
-            return Point<T>(x / scalar, y / scalar);
-        }
+        Point<T> operator/(T scalar) const { return Point<T>(x / scalar, y / scalar); }
     };
 
     using PointF = Point<float>;
@@ -55,7 +50,10 @@ namespace gui
 
         Rectangle() = default;
         Rectangle(int x, int y, int w, int h)
-            : x(x), y(y), w(w), h(h) {}
+            : x(x),
+              y(y),
+              w(w),
+              h(h) {}
 
         bool HasPoint(int x, int y);
         bool Intersects(Rectangle b);
@@ -97,24 +95,11 @@ namespace gui
         float yAdvance;
     };
 
-    enum class FontStyle {
-        Normal = 0,
-        Bold,
-        Italic,
-        BoldItalic
-    };
+    enum class FontStyle { Normal = 0, Bold, Italic, BoldItalic };
 
-    enum class LineCap {
-        Butt = 0,
-        Round,
-        Square
-    };
+    enum class LineCap { Butt = 0, Round, Square };
 
-    enum class LineJoin {
-        Miter = 0,
-        Round,
-        Bevel
-    };
+    enum class LineJoin { Miter = 0, Round, Bevel };
 
     class Graphics;
     using DrawFunction = std::function<void(Graphics&)>;
@@ -122,7 +107,8 @@ namespace gui
     class Graphics {
         friend class Application;
         friend class Window;
-    public:
+
+      public:
         void Clear(float r, float g, float b, float a = 1.0f);
 
         void LineWidth(float w = 1.0f);
@@ -181,25 +167,26 @@ namespace gui
         static Graphics CreateGraphics();
         static Graphics CreateGraphics(Image& image);
 
-    private:
+      private:
         Graphics();
 
-        cairo_surface_t* m_surface{ nullptr };
-        cairo_t* m_context{ nullptr };
-        bool m_isImageGraphics{ false };
+        cairo_surface_t* m_surface{nullptr};
+        cairo_t* m_context{nullptr};
+        bool m_isImageGraphics{false};
 
-        cairo_surface_t* m_measureSurface{ nullptr };
-        cairo_t* m_measureContext{ nullptr };
+        cairo_surface_t* m_measureSurface{nullptr};
+        cairo_t* m_measureContext{nullptr};
 
         cairo_t* Ctx() const { return m_context ? m_context : m_measureContext; }
 
-        uint32_t m_clipDepth{ 0 };
+        uint32_t m_clipDepth{0};
         std::vector<PointI> m_pathPoints;
 
         // Parses a JSON paint object ({"color": [...]} or {"gradient": {...}})
         // and sets it as the cairo source. Returns a pattern that must be destroyed
         // by the caller, or nullptr for solid colors.
         cairo_pattern_t* ApplyPaint(Json paint, int x = 0, int y = 0, int w = 0, int h = 0);
-        cairo_pattern_t* CreateRoundShadowPattern(float elevation, int x, int y, int w, int h, float radius);
+        cairo_pattern_t*
+        CreateRoundShadowPattern(float elevation, int x, int y, int w, int h, float radius);
     };
-}
+} // namespace gui

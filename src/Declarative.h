@@ -150,7 +150,8 @@ namespace gui::declarative {
 
     // --- Custom widget ------------------------------------
     template <DerivedFromElement Elem, HasBaseProps Props>
-    WidgetDesc Custom(const Props& props, std::function<void(Elem&, const Props&)> setup = nullptr) {
+    WidgetDesc
+    Custom(const Props& props, std::function<void(Elem&, const Props&)> setup = nullptr) {
         return [props, setup](Window& window) -> Element* {
             auto& element = window.Create<Elem>();
             ElementSetup(element, props.base);
@@ -172,14 +173,16 @@ namespace gui::declarative {
     WidgetDesc SplitView(const SplitViewProps& props);
 
     // --- List widget -------------------------------------
-    template <typename T> struct ListProps {
+    template <typename T>
+    struct ListProps {
         ElementProps base{};
         std::vector<ListItem<T>> items;
         int selectedIndex{-1};
         ValueChanged<int> onSelectionChanged;
     };
 
-    template <typename T> WidgetDesc List(const ListProps<T>& props) {
+    template <typename T>
+    WidgetDesc List(const ListProps<T>& props) {
         return [props](Window& window) -> Element* {
             auto& list = window.Create<gui::List<T>>();
             ElementSetup(list, props.base);

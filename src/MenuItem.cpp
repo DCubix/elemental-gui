@@ -1,7 +1,7 @@
 #include "MenuItem.h"
-#include "Menu.h"
 
 #include "Layout.h"
+#include "Menu.h"
 #include "Window.h"
 
 static constexpr int CHECK_AREA = 20;
@@ -9,17 +9,18 @@ static constexpr int ICON_SIZE = 16;
 static constexpr int ICON_GAP = 4;
 static constexpr int SUBMENU_ARROW_AREA = 16;
 
-namespace gui
-{
+namespace gui {
 
     MenuItem::MenuItem(const std::string& text)
-        : Element(), m_text(text) {
-        SetLocalBounds({ 0, 0, 100, 20 });
+        : Element(),
+          m_text(text) {
+        SetLocalBounds({0, 0, 100, 20});
         SetAutoSize(true);
     }
 
     void MenuItem::OnDraw(Graphics& g) {
-        if (m_separator) return;
+        if (m_separator)
+            return;
 
         Json style = GetStyle()["MenuItem"];
         EdgeInsets padding = EdgeInsets::FromStyle(style["padding"]);
@@ -29,9 +30,15 @@ namespace gui
         // Background
         Json bgStyle;
         switch (m_state) {
-            case ButtonState::Normal: bgStyle = style["normal"]; break;
-            case ButtonState::Hover:  bgStyle = style["hover"]; break;
-            case ButtonState::Click:  bgStyle = style["click"]; break;
+            case ButtonState::Normal:
+                bgStyle = style["normal"];
+                break;
+            case ButtonState::Hover:
+                bgStyle = style["hover"];
+                break;
+            case ButtonState::Click:
+                bgStyle = style["click"];
+                break;
         }
         g.StyledRect(0, 0, size.w, size.h, bgStyle);
 
@@ -67,8 +74,10 @@ namespace gui
     }
 
     void MenuItem::OnMouseDown(MouseEvent e) {
-        if (m_separator) return;
-        if (e.button != MouseButton::Left) return;
+        if (m_separator)
+            return;
+        if (e.button != MouseButton::Left)
+            return;
 
         if (m_state == ButtonState::Hover) {
             if (!m_subMenu) {
@@ -79,13 +88,16 @@ namespace gui
     }
 
     void MenuItem::OnMouseUp(MouseEvent e) {
-        if (m_separator) return;
-        if (e.button != MouseButton::Left) return;
+        if (m_separator)
+            return;
+        if (e.button != MouseButton::Left)
+            return;
 
         if (m_state == ButtonState::Click) {
             Rectangle b = GetLocalBounds();
             if (b.HasPoint(e.x, e.y)) {
-                if (m_onClick) m_onClick();
+                if (m_onClick)
+                    m_onClick();
                 m_state = ButtonState::Normal;
                 if (auto* menu = GetParentMenu())
                     menu->HideAll();
@@ -95,7 +107,8 @@ namespace gui
     }
 
     void MenuItem::OnMouseMove(MotionEvent e) {
-        if (m_separator) return;
+        if (m_separator)
+            return;
         Rectangle b = GetLocalBounds();
 
         if (b.HasPoint(e.x, e.y)) {
@@ -104,11 +117,9 @@ namespace gui
                 Invalidate();
                 NotifyParentMenuHover();
             }
-        }
-        else {
+        } else {
             // Don't leave hover if mouse is in our open submenu
-            bool inSubMenu = m_subMenu && m_subMenu->IsOpen()
-                && m_subMenu->HitTest(e.x, e.y);
+            bool inSubMenu = m_subMenu && m_subMenu->IsOpen() && m_subMenu->HitTest(e.x, e.y);
             if (!inSubMenu && m_state != ButtonState::Normal) {
                 m_state = ButtonState::Normal;
                 Invalidate();
@@ -122,7 +133,8 @@ namespace gui
 
     void MenuItem::NotifyParentMenuHover() {
         auto* menu = GetParentMenu();
-        if (!menu) return;
+        if (!menu)
+            return;
 
         if (m_subMenu)
             menu->OpenSubMenu(this);
@@ -135,7 +147,8 @@ namespace gui
         EdgeInsets padding = EdgeInsets::FromStyle(style["padding"]);
 
         if (IsAutoSize()) {
-            if (m_separator) return { 0, 8 };
+            if (m_separator)
+                return {0, 8};
 
             auto& g = m_window->GetGraphics();
             const auto textStyle = GetStyle()["DefaultText"];
@@ -156,9 +169,9 @@ namespace gui
                 w += SUBMENU_ARROW_AREA;
             }
 
-            return { w, h };
+            return {w, h};
         }
         return Element::GetPreferredSize();
     }
 
-}
+} // namespace gui

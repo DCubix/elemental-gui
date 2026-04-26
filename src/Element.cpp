@@ -1,18 +1,20 @@
 #include "Element.h"
 
-#include <cmath>
-
 #include "Application.h"
 #include "EventSystem.h"
 #include "Window.h"
 
-namespace gui
-{
+#include <cmath>
+
+namespace gui {
 
     Element::Element()
-        : m_parent(nullptr), m_bounds(0, 0, 50, 50),
-        m_dirty(true), m_visible(true),
-        m_focused(false), m_autoSize(false) {}
+        : m_parent(nullptr),
+          m_bounds(0, 0, 50, 50),
+          m_dirty(true),
+          m_visible(true),
+          m_focused(false),
+          m_autoSize(false) {}
 
     void Element::OnDraw(Graphics& g) {}
 
@@ -23,15 +25,14 @@ namespace gui
         // Handle focus on mouse click
         if (event->Type() == EventType::MouseButton) {
             MouseEvent* e = dynamic_cast<MouseEvent*>(event);
-            if (intersectedBounds.HasPoint(e->x, e->y) &&
-                e->pressed && e->button == MouseButton::Left) {
+            if (intersectedBounds.HasPoint(e->x, e->y) && e->pressed &&
+                e->button == MouseButton::Left) {
                 RequestFocus();
             }
         }
 
         switch (event->Type()) {
-            case EventType::MouseButton:
-            {
+            case EventType::MouseButton: {
                 MouseEvent eCopy = *dynamic_cast<MouseEvent*>(event);
 
                 // Only accept clicks within bounds, but always accept releases if we're tracking a drag
@@ -48,15 +49,13 @@ namespace gui
                 if (eCopy.pressed) {
                     m_mouseDown = true;
                     OnMouseDown(eCopy);
-                }
-                else {
+                } else {
                     m_mouseDown = false;
                     OnMouseUp(eCopy);
                 }
                 return EventStatus::Consumed;
             };
-            case EventType::MouseMotion:
-            {
+            case EventType::MouseMotion: {
                 MotionEvent eCopy = *dynamic_cast<MotionEvent*>(event);
 
                 bool isInBounds = intersectedBounds.HasPoint(eCopy.x, eCopy.y);
@@ -71,8 +70,7 @@ namespace gui
                     if (!m_mouseDown) {
                         return EventStatus::Active;
                     }
-                }
-                else {
+                } else {
                     if (!m_hovered) {
                         m_hovered = true;
                         OnMouseEnter();
@@ -95,8 +93,7 @@ namespace gui
                 }
                 return EventStatus::Consumed;
             };
-            case EventType::Scroll:
-            {
+            case EventType::Scroll: {
                 ScrollEvent eCopy = *dynamic_cast<ScrollEvent*>(event);
                 if (!intersectedBounds.HasPoint(eCopy.mouseX, eCopy.mouseY)) {
                     return EventStatus::Active;
@@ -106,31 +103,26 @@ namespace gui
                 OnScroll(eCopy);
                 return EventStatus::Consumed;
             };
-            case EventType::Key:
-            {
+            case EventType::Key: {
                 KeyEvent eCopy = *dynamic_cast<KeyEvent*>(event);
                 if (eCopy.pressed) {
                     OnKeyDown(eCopy);
-                }
-                else {
+                } else {
                     OnKeyUp(eCopy);
                 }
                 return EventStatus::Consumed;
             }
-            case EventType::TextInput:
-            {
+            case EventType::TextInput: {
                 TextInputEvent eCopy = *dynamic_cast<TextInputEvent*>(event);
                 OnTextInput(eCopy);
                 return EventStatus::Consumed;
             }
-            case EventType::Focus:
-            {
+            case EventType::Focus: {
                 FocusEvent eCopy = *dynamic_cast<FocusEvent*>(event);
                 OnFocus(eCopy);
                 return EventStatus::Consumed;
             }
-            case EventType::Blur:
-            {
+            case EventType::Blur: {
                 BlurEvent eCopy = *dynamic_cast<BlurEvent*>(event);
                 OnBlur(eCopy);
                 return EventStatus::Consumed;
@@ -142,7 +134,8 @@ namespace gui
 
     void Element::Invalidate() {
         m_dirty = true;
-        if (m_window) m_window->RequestRedraw();
+        if (m_window)
+            m_window->RequestRedraw();
     }
 
     void Element::RequestFocus() {
@@ -177,7 +170,7 @@ namespace gui
     Rectangle Element::GetLocalIntersectedBounds() const {
         Rectangle b = GetBounds();
         Rectangle c = GetIntersectedBounds();
-        return { c.x - b.x, c.y - b.y, c.w, c.h };
+        return {c.x - b.x, c.y - b.y, c.w, c.h};
     }
 
     Rectangle Element::GetIntersectedBounds() const {
@@ -185,9 +178,10 @@ namespace gui
             // Returns only the visible part of the element
             // by intersecting it with the parent's intersected bounds
             return m_parent->GetIntersectedBounds()
-                .Intersect(GetBounds()).value_or(Rectangle(0, 0, 0, 0));
+                .Intersect(GetBounds())
+                .value_or(Rectangle(0, 0, 0, 0));
         }
         return GetBounds();
     }
 
-}
+} // namespace gui

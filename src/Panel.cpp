@@ -1,12 +1,13 @@
 #include "Panel.h"
-#include "FlexLayout.h"
 
 #include "Application.h"
+#include "FlexLayout.h"
 
-namespace gui
-{
+namespace gui {
 
-    Panel::Panel() : Container(), m_backgroundVisible(true) {
+    Panel::Panel()
+        : Container(),
+          m_backgroundVisible(true) {
         m_layout = std::make_unique<FlexLayout>();
         m_layout->SetGap(4);
         m_layout->SetPadding(EdgeInsets::All(6));
@@ -36,7 +37,7 @@ namespace gui
             g.StyledRect(0, 0, size.w, size.h, GetStyle()["Panel"]);
 
         if (m_layout)
-            m_layout->Apply({ 0, 0, size.w, size.h });
+            m_layout->Apply({0, 0, size.w, size.h});
 
         EdgeInsets pad = m_layout ? m_layout->GetPadding() : EdgeInsets();
         Rectangle clip = GetLocalIntersectedBounds();
@@ -52,8 +53,9 @@ namespace gui
     }
 
     Size Panel::GetPreferredSize() const {
-        if (!IsAutoSize()) return Element::GetPreferredSize();
+        if (!IsAutoSize())
+            return Element::GetPreferredSize();
         return m_layout->GetLaidOutSize();
     }
 
-}
+} // namespace gui

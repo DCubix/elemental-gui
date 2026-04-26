@@ -1,8 +1,9 @@
 #pragma once
 
 #include "cairo/cairo.h"
-#include <string>
+
 #include <cstdint>
+#include <string>
 
 struct NSVGimage;
 struct NSVGrasterizer;
@@ -12,41 +13,39 @@ namespace gui {
     class Graphics;
 
     class Image {
-		friend class Graphics;
-	public:
-        enum class Type {
-            Bitmap = 0,
-            SVG
-        };
+        friend class Graphics;
 
-		Image() = default;
-		~Image();
+      public:
+        enum class Type { Bitmap = 0, SVG };
 
-		Image(const Image&) = delete;
-		Image& operator=(const Image&) = delete;
+        Image() = default;
+        ~Image();
 
-		Image(Image&& other) noexcept;
-		Image& operator=(Image&& other) noexcept;
+        Image(const Image&) = delete;
+        Image& operator=(const Image&) = delete;
 
-		Image(const std::string& fileName);
-		Image(int width, int height);
+        Image(Image&& other) noexcept;
+        Image& operator=(Image&& other) noexcept;
 
-		int GetWidth() const { return m_width; }
-		int GetHeight() const { return m_height; }
+        Image(const std::string& fileName);
+        Image(int width, int height);
+
+        int GetWidth() const { return m_width; }
+        int GetHeight() const { return m_height; }
         Type GetType() const { return m_type; }
 
         Color GetPixel(int x, int y) const;
         void SetPixel(int x, int y, const Color& color);
 
-		void SetPixels(const unsigned char* data, int stride);
-		void Resize(int w, int h);
+        void SetPixels(const unsigned char* data, int stride);
+        void Resize(int w, int h);
 
         bool IsValid() const;
 
-	protected:
+      protected:
         Type m_type{Type::Bitmap};
-		int m_width{0}, m_height{0};
-		cairo_surface_t *m_surface{nullptr};
+        int m_width{0}, m_height{0};
+        cairo_surface_t* m_surface{nullptr};
 
         // SVG-specific
         NSVGimage* m_svgImage{nullptr};
@@ -59,6 +58,7 @@ namespace gui {
         void RasterizeSVG(int w, int h, uint32_t strokeOverride = 0, uint32_t fillOverride = 0);
 
         bool IsSVGFile(const std::string& fileName) const;
-        void RebuildSurfaceFromSVG(int w, int h, uint32_t strokeOverride = 0, uint32_t fillOverride = 0);
-	};
-}
+        void
+        RebuildSurfaceFromSVG(int w, int h, uint32_t strokeOverride = 0, uint32_t fillOverride = 0);
+    };
+} // namespace gui

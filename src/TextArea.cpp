@@ -1,11 +1,11 @@
 #include "TextArea.h"
 
-#include <algorithm>
-#include "Window.h"
 #include "Layout.h"
+#include "Window.h"
 
-namespace gui
-{
+#include <algorithm>
+
+namespace gui {
 
     TextArea::TextArea() {
         SetLocalBounds(Rectangle(0, 0, 200, 120));
@@ -19,8 +19,10 @@ namespace gui
     // InsertChar
     // -------------------------------------------------------------------------
     void TextArea::InsertChar(char c) {
-        if (m_caretIndex < 0) m_caretIndex = 0;
-        if (m_caretIndex > (int)m_textRaw.size()) m_caretIndex = (int)m_textRaw.size();
+        if (m_caretIndex < 0)
+            m_caretIndex = 0;
+        if (m_caretIndex > (int)m_textRaw.size())
+            m_caretIndex = (int)m_textRaw.size();
 
         CharFormat fmt;
         if (m_caretIndex > 0 && m_caretIndex - 1 < (int)m_formats.size())
@@ -31,29 +33,34 @@ namespace gui
         m_caretIndex++;
         Rebuild();
         Invalidate();
-        if (m_onChange) m_onChange(m_textRaw);
+        if (m_onChange)
+            m_onChange(m_textRaw);
     }
 
     // -------------------------------------------------------------------------
     // RemoveChar
     // -------------------------------------------------------------------------
     void TextArea::RemoveChar(int i) {
-        if (i < 0 || i >= (int)m_textRaw.size()) return;
+        if (i < 0 || i >= (int)m_textRaw.size())
+            return;
         m_textRaw.erase(i, 1);
         if (i < (int)m_formats.size())
             m_formats.erase(m_formats.begin() + i);
         Rebuild();
         Invalidate();
-        if (m_onChange) m_onChange(m_textRaw);
+        if (m_onChange)
+            m_onChange(m_textRaw);
     }
 
     // -------------------------------------------------------------------------
     // DeleteSelected
     // -------------------------------------------------------------------------
     void TextArea::DeleteSelected() {
-        if (!IsSelected()) return;
+        if (!IsSelected())
+            return;
         int a = m_selectionStart, b = m_selectionEnd;
-        if (a > b) std::swap(a, b);
+        if (a > b)
+            std::swap(a, b);
         a = std::max(0, a);
         b = std::min(b, (int)m_textRaw.size());
         m_textRaw.erase(a, b - a);
@@ -65,14 +72,16 @@ namespace gui
         Deselect();
         Rebuild();
         Invalidate();
-        if (m_onChange) m_onChange(m_textRaw);
+        if (m_onChange)
+            m_onChange(m_textRaw);
     }
 
     // -------------------------------------------------------------------------
     // Rebuild
     // -------------------------------------------------------------------------
     void TextArea::Rebuild() {
-        if (!m_window) return;
+        if (!m_window)
+            return;
         auto textStyle = GetStyle()["DefaultText"];
         auto& g = GetWindow()->GetGraphics();
 
@@ -99,8 +108,7 @@ namespace gui
                 if (globalIdx < (int)m_formats.size()) {
                     ch.color = m_formats[globalIdx].color;
                     ch.style = m_formats[globalIdx].fontStyle;
-                }
-                else {
+                } else {
                     ch.color = defaultColor;
                     ch.style = FontStyle::Normal;
                 }
@@ -115,10 +123,9 @@ namespace gui
             int maxW = 0;
             for (const auto& line : m_lines)
                 maxW = std::max(maxW, line.bounds.w);
-            m_textSize = { maxW, lineHeight * (int)m_lines.size() };
-        }
-        else {
-            m_textSize = { 0, 0 };
+            m_textSize = {maxW, lineHeight * (int)m_lines.size()};
+        } else {
+            m_textSize = {0, 0};
         }
     }
 
@@ -151,20 +158,23 @@ namespace gui
         }
         int lineStart = starts[lineIdx];
         int lineLen = (int)m_lines[lineIdx].chars.size() - 1; // exclude sentinel
-        return { lineIdx, lineStart, lineLen };
+        return {lineIdx, lineStart, lineLen};
     }
 
     // -------------------------------------------------------------------------
     // OnDraw
     // -------------------------------------------------------------------------
     void TextArea::OnDraw(Graphics& g) {
-        if (!m_window) return;
+        if (!m_window)
+            return;
 
         // Draw styled background (same logic as Edit::OnDraw)
         auto sz = GetSize();
         std::string state = "normal";
-        if (IsFocused())    state = "focused";
-        else if (m_hovered) state = "hover";
+        if (IsFocused())
+            state = "focused";
+        else if (m_hovered)
+            state = "hover";
         g.StyledRect(0, 0, sz.w, sz.h, GetStyle()[state]);
 
         auto textStyle = GetStyle()["DefaultText"];
@@ -182,7 +192,8 @@ namespace gui
         // --- Selection background (multi-line aware) ---
         if (IsSelected()) {
             int selA = m_selectionStart, selB = m_selectionEnd;
-            if (selA > selB) std::swap(selA, selB);
+            if (selA > selB)
+                std::swap(selA, selB);
 
             auto starts = ComputeLineStarts();
             for (int li = 0; li < (int)m_lines.size(); ++li) {
@@ -201,7 +212,8 @@ namespace gui
 
                 int x0 = line.chars[localA].bounds.x;
                 int x1 = line.chars[localB].bounds.x;
-                if (x1 <= x0 && localB > localA) x1 = x0 + 4; // ensure at least a sliver
+                if (x1 <= x0 && localB > localA)
+                    x1 = x0 + 4; // ensure at least a sliver
 
                 int lineY = li * lineHeight;
                 g.BeginPath();
@@ -218,7 +230,8 @@ namespace gui
             int lineY = li * lineHeight;
             const auto& line = m_lines[li];
             for (const text::Char& chr : line.chars) {
-                if (chr.value == '\0') continue;
+                if (chr.value == '\0')
+                    continue;
                 g.Color(chr.color.r, chr.color.g, chr.color.b, chr.color.a);
                 g.Font(chr.style, fontName, fontSize);
                 g.DrawChar(chr.value, chr.bounds.x, lineY + lineHeight);
@@ -248,10 +261,12 @@ namespace gui
     // OnKeyDown
     // -------------------------------------------------------------------------
     void TextArea::OnKeyDown(KeyEvent e) {
-        if (!m_editable) return;
+        if (!m_editable)
+            return;
 
         if (e.key == Key::Enter) {
-            if (IsSelected()) DeleteSelected();
+            if (IsSelected())
+                DeleteSelected();
             InsertChar('\n');
             Invalidate();
             return;
@@ -331,10 +346,12 @@ namespace gui
     }
 
     void TextArea::Format(FontStyle style, float r, float g, float b) {
-        if (!IsSelected()) return;
+        if (!IsSelected())
+            return;
         int selA = m_selectionStart, selB = m_selectionEnd;
-        if (selA > selB) std::swap(selA, selB);
+        if (selA > selB)
+            std::swap(selA, selB);
         Format(selA, selB - selA, style, r, g, b);
     }
 
-}
+} // namespace gui

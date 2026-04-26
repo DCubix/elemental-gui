@@ -1,16 +1,19 @@
 #include "Menu.h"
-#include "Window.h"
+
 #include "Layout.h"
+#include "Window.h"
 
 namespace gui {
 
-    Menu::Menu() : Element() {
+    Menu::Menu()
+        : Element() {
         SetAutoSize(true);
         SetVisible(false);
     }
 
-    void Menu::OnDraw(Graphics &g) {
-        if (!m_open) return;
+    void Menu::OnDraw(Graphics& g) {
+        if (!m_open)
+            return;
 
         Json style = GetStyle()["Menu"];
         EdgeInsets pad = EdgeInsets::FromStyle(style["padding"]);
@@ -27,7 +30,8 @@ namespace gui {
         };
         g.ClipPushRect(padded.x, padded.y, padded.w, padded.h);
         for (auto* item : m_items) {
-            if (item == nullptr) continue;
+            if (item == nullptr)
+                continue;
             if (item->IsSeparator()) {
                 Json sepStyle = GetStyle()["MenuSeparator"];
                 float mx = sepStyle.value("margin", Json::object()).value("horizontal", 8.0f);
@@ -51,8 +55,9 @@ namespace gui {
         // Submenu is a window-level popup; Window::Redraw draws it via the popup loop.
     }
 
-    EventStatus Menu::OnEvent(Event *event) {
-        if (!m_open) return EventStatus::Active;
+    EventStatus Menu::OnEvent(Event* event) {
+        if (!m_open)
+            return EventStatus::Active;
 
         // Forward events to open submenu first
         if (HasOpenSubMenu()) {
@@ -91,16 +96,16 @@ namespace gui {
     }
 
     bool Menu::HitTest(int x, int y) const {
-        if (GetBounds().HasPoint(x, y)) return true;
+        if (GetBounds().HasPoint(x, y))
+            return true;
         if (HasOpenSubMenu())
             return m_activeSubMenuItem->GetSubMenu()->HitTest(x, y);
         return false;
     }
 
     bool Menu::HasOpenSubMenu() const {
-        return m_activeSubMenuItem
-            && m_activeSubMenuItem->GetSubMenu()
-            && m_activeSubMenuItem->GetSubMenu()->IsOpen();
+        return m_activeSubMenuItem && m_activeSubMenuItem->GetSubMenu() &&
+               m_activeSubMenuItem->GetSubMenu()->IsOpen();
     }
 
     Size Menu::GetPreferredSize() const {
@@ -113,12 +118,12 @@ namespace gui {
                 maxW = std::max(maxW, s.w);
                 totalH += s.h;
             }
-            return { maxW + (int)pad.GetHorizontal(), totalH + (int)pad.GetVertical() };
+            return {maxW + (int)pad.GetHorizontal(), totalH + (int)pad.GetVertical()};
         }
         return Element::GetPreferredSize();
     }
 
-    void Menu::Add(MenuItem *item) {
+    void Menu::Add(MenuItem* item) {
         item->m_parent = this;
         item->m_window = m_window;
         m_items.push_back(item);
@@ -138,7 +143,8 @@ namespace gui {
         CloseSubMenu();
         m_open = false;
         SetVisible(false);
-        if (m_onDismiss) m_onDismiss();
+        if (m_onDismiss)
+            m_onDismiss();
         Invalidate();
     }
 
@@ -152,11 +158,13 @@ namespace gui {
     }
 
     void Menu::OpenSubMenu(MenuItem* item) {
-        if (m_activeSubMenuItem == item) return;
+        if (m_activeSubMenuItem == item)
+            return;
         CloseSubMenu();
 
         auto* subMenu = item->GetSubMenu();
-        if (!subMenu) return;
+        if (!subMenu)
+            return;
 
         m_activeSubMenuItem = item;
 
@@ -168,7 +176,8 @@ namespace gui {
     }
 
     void Menu::CloseSubMenu() {
-        if (!m_activeSubMenuItem) return;
+        if (!m_activeSubMenuItem)
+            return;
         auto* subMenu = m_activeSubMenuItem->GetSubMenu();
         if (subMenu && subMenu->IsOpen()) {
             subMenu->CloseSubMenu();
@@ -193,4 +202,4 @@ namespace gui {
         }
     }
 
-}
+} // namespace gui
