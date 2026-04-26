@@ -1,12 +1,12 @@
 #pragma once
 
-#include "Utils.h"
 #include "Element.h"
-#include "Window.h"
 #include "FlexLayout.h"
 #include "ImageView.h"
-#include "Menu.h"
 #include "List.h"
+#include "Menu.h"
+#include "Utils.h"
+#include "Window.h"
 
 namespace gui::declarative {
     using WidgetDesc = std::function<Element*(Window&)>;
@@ -172,16 +172,14 @@ namespace gui::declarative {
     WidgetDesc SplitView(const SplitViewProps& props);
 
     // --- List widget -------------------------------------
-    template <typename T>
-    struct ListProps {
+    template <typename T> struct ListProps {
         ElementProps base{};
         std::vector<ListItem<T>> items;
         int selectedIndex{-1};
         ValueChanged<int> onSelectionChanged;
     };
-    
-    template <typename T>
-    WidgetDesc List(const ListProps<T>& props) {
+
+    template <typename T> WidgetDesc List(const ListProps<T>& props) {
         return [props](Window& window) -> Element* {
             auto& list = window.Create<gui::List<T>>();
             ElementSetup(list, props.base);
@@ -235,4 +233,4 @@ namespace gui::declarative {
         ValueChanged<float> onValueChange;
     };
     WidgetDesc Spinner(const SpinnerProps& props = {});
-}
+} // namespace gui::declarative

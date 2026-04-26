@@ -3,7 +3,8 @@
 #include <SDL3/SDL_keycode.h>
 #include <unordered_map>
 
-namespace gui {
+namespace gui
+{
 
     static const std::unordered_map<SDL_Keycode, Key> SDLtoKey = {
         // Letters
@@ -91,10 +92,10 @@ namespace gui {
 
     static inline ModifierState SDLModToModifierState(Uint16 mod) {
         return {
-            .shift   = (mod & SDL_KMOD_SHIFT) != 0,
-            .control = (mod & SDL_KMOD_CTRL)  != 0,
-            .alt     = (mod & SDL_KMOD_ALT)   != 0,
-            .meta    = (mod & SDL_KMOD_GUI)   != 0
+            .shift = (mod & SDL_KMOD_SHIFT) != 0,
+            .control = (mod & SDL_KMOD_CTRL) != 0,
+            .alt = (mod & SDL_KMOD_ALT) != 0,
+            .meta = (mod & SDL_KMOD_GUI) != 0
         };
     }
 
@@ -260,6 +261,18 @@ namespace gui {
         SDL_SetWindowPosition(static_cast<SDL_Window*>(handle), x, y);
     }
 
+    void SDL3Backend::SetWindowResizable(WindowHandle handle, bool resizable) {
+        SDL_SetWindowResizable(static_cast<SDL_Window*>(handle), resizable);
+    }
+
+    void SDL3Backend::SetWindowStyle(WindowHandle handle, WindowStyle style) {
+        // No-op since style is only used at window creation time in SDL.
+    }
+
+    void SDL3Backend::SetWindowParent(WindowHandle handle, WindowHandle parentHandle) {
+        SDL_SetWindowParent(static_cast<SDL_Window*>(handle), static_cast<SDL_Window*>(parentHandle));
+    }
+
     WindowId SDL3Backend::GetWindowId(WindowHandle handle) const {
         return SDL_GetWindowID(static_cast<SDL_Window*>(handle));
     }
@@ -294,7 +307,7 @@ namespace gui {
     }
 
     void SDL3Backend::PresentFrame(WindowHandle handle, unsigned char* data,
-                                    int stride, uint32_t width, uint32_t height) {
+        int stride, uint32_t width, uint32_t height) {
         auto& wd = GetData(handle);
         SDL_UpdateTexture(wd.buffer, nullptr, data, stride);
         SDL_RenderTexture(wd.renderer, wd.buffer, nullptr, nullptr);

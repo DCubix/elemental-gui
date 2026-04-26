@@ -3,5 +3,5 @@
         "cwd": "${workspaceFolder}/examples/assets"
     },
     "editor.formatOnSave": true,
-    "C_Cpp.formatting": "vcFormat"
+    "C_Cpp.formatting": "clangFormat"
 }

@@ -2,45 +2,41 @@
 
 #include "Window.h"
 
-#include <unordered_map>
 #include <fstream>
 #include <iostream>
+#include <unordered_map>
 
-namespace gui
-{
+namespace gui {
 
     static const std::string DefaultStyleJson =
 #include "generated/DefaultStyle.h"
         ;
 
-    void Application::SetBackend(std::unique_ptr<Backend> backend) {
-        m_backend = std::move(backend);
+    Application::Application(Backend* backend) {
+        m_backend = std::unique_ptr<Backend>(backend);
     }
 
-    Backend& Application::GetBackend() {
-        return *m_backend;
-    }
-
-    int Application::Start(ApplicationAdapter* adapter) {
+    int Application::Start() {
         m_style = Json::parse(DefaultStyleJson);
         ProcessStyle(m_style);
 
-        if (!adapter || !m_backend) {
+        if (!m_backend) {
             return 1;
         }
         if (!m_backend->Init()) {
             return 1;
         }
 
-        adapter->OnCreate(*this);
-
         m_running = true;
         while (m_running) {
             m_backend->PollEvents(*this);
 
             m_windows.erase(
-                std::remove_if(m_windows.begin(), m_windows.end(),
-                    [](const auto& win) { return win->m_closeRequested; }),
+                std::remove_if(
+                    m_windows.begin(),
+                    m_windows.end(),
+                    [](const auto& win) { return win->m_closeRequested; }
+                ),
                 m_windows.end()
             );
 
@@ -49,9 +45,6 @@ namespace gui
             }
         }
 
-        adapter->OnDestroy();
-        delete adapter;
-
         m_windows.clear();
         m_backend->Shutdown();
 
@@ -59,13 +52,9 @@ namespace gui
     }
 
     Window* Application::CreateWindow(const WindowConfig& config) {
-        auto window = std::make_unique<Window>(config);
-        m_windows.push_back(std::move(window));
-        auto* win = m_windows.back().get();
-        win->m_application = this;
-        WindowHandle parentHandle = config.parent ? config.parent->m_handle : nullptr;
-        win->m_handle = m_backend->CreateWindow(config, parentHandle);
-        return win;
+        m_windows.push_back(std::make_unique<Window>(config));
+        InitWindow(m_windows.back().get());
+        return m_windows.back().get();
     }
 
     void Application::SetClipboard(const std::string& str) {
@@ -80,8 +69,7 @@ namespace gui
         try {
             m_style = Json::parse(std::ifstream(themePath));
             ProcessStyle(m_style);
-        }
-        catch (const std::exception& e) {
+        } catch (const std::exception& e) {
             // If parsing fails, keep the existing style and print an error.
             std::cerr << "Failed to load theme: " << e.what() << std::endl;
         }
@@ -91,8 +79,7 @@ namespace gui
         try {
             m_style = Json::parse(themeJson);
             ProcessStyle(m_style);
-        }
-        catch (const std::exception& e) {
+        } catch (const std::exception& e) {
             // If parsing fails, keep the existing style and print an error.
             std::cerr << "Failed to load theme: " << e.what() << std::endl;
         }
@@ -187,13 +174,12 @@ namespace gui
                     }
                     self(self, value);
                 }
-            }
-            else if (node.is_array()) {
+            } else if (node.is_array()) {
                 for (auto& item : node) {
                     self(self, item);
                 }
             }
-            };
+        };
 
         // Allow styles to inherit from a base style using an "inherits" property
         auto fnVisitInheritance = [&](auto&& self, Json& node) -> void {
@@ -203,13 +189,12 @@ namespace gui
                     Json baseStyle = style[baseStyleName];
                     node.update(baseStyle);
                 }
-            }
-            else if (node.is_array()) {
+            } else if (node.is_array()) {
                 for (auto& item : node) {
                     self(self, item);
                 }
             }
-            };
+        };
 
         // recursively resolve references in the style (e.g., "$textPrimary" -> actual color value)
         // from the $variables section of the style
@@ -219,4 +204,13 @@ namespace gui
         fnVisitInheritance(fnVisitInheritance, style);
     }
 
-}
+    void Application::InitWindow(Window* win) {
+        win->m_application = this;
+        WindowHandle parentHandle = win->m_config.parent ? win->m_config.parent->m_handle : nullptr;
+        win->m_handle = m_backend->CreateWindow(win->m_config, parentHandle);
+
+        auto* root = win->OnBuild()(*win);
+        win->SetRoot(root);
+    }
+
+} // namespace gui

@@ -1,21 +1,17 @@
+#include <cmath>
+
 #include <Application.h>
-#include <backends/sdl3/SDL3Backend.h>
+#include <Declarative.h>
 #include <EventSystem.h>
 #include <FlexLayout.h>
-#include <Declarative.h>
-
-#include <cmath>
+#include <backends/sdl3/SDL3Backend.h>
 
 using namespace gui;
 namespace decl = gui::declarative;
 
 class InfiniteCanvas : public Element {
-public:
-    enum class Mode {
-        DrawPath,
-        ErasePath,
-        SegmentEdit
-    };
+  public:
+    enum class Mode { DrawPath, ErasePath, SegmentEdit };
 
     virtual void OnDraw(Graphics& g) override {
         auto b = GetBounds();
@@ -33,9 +29,8 @@ public:
             if (m_hoveredPath == &path) {
                 g.Color(0.2f, 1.0f, 0.05f);
                 g.BeginPath();
-                for (const auto& p : path.points) {
+                for (const auto& p : path.points)
                     g.AddPathPoint(p.x, p.y);
-                }
                 g.EndPath();
                 g.LineWidth(7.0f);
                 g.Stroke();
@@ -43,9 +38,8 @@ public:
 
             g.Color(path.color.r, path.color.g, path.color.b);
             g.BeginPath();
-            for (const auto& p : path.points) {
+            for (const auto& p : path.points)
                 g.AddPathPoint(p.x, p.y);
-            }
             g.EndPath();
             g.LineWidth(5.0f);
             g.Stroke();
@@ -54,12 +48,10 @@ public:
         if (m_selectedPath) {
             for (const auto& p : m_selectedPath->points) {
                 bool isSelected = (m_selectedPoint == &p);
-                if (isSelected) {
+                if (isSelected)
                     g.Color(0.0f, 1.0f, 0.0f);
-                }
-                else {
+                else
                     g.Color(1.0f, 0.0f, 0.0f, 0.35f);
-                }
                 g.Arc(p.x, p.y, isSelected ? 5.0f : 4.0f, 0.0f, 2.0f * M_PI);
                 g.Fill();
             }
@@ -68,9 +60,8 @@ public:
         if (!m_tempPoints.empty()) {
             g.Color(1.0f, 1.0f, 1.0f);
             g.BeginPath();
-            for (const auto& p : m_tempPoints) {
+            for (const auto& p : m_tempPoints)
                 g.AddPathPoint(p.x, p.y);
-            }
             g.EndPath();
             g.LineWidth(5.0f);
             g.Stroke();
@@ -86,52 +77,62 @@ public:
             auto* e = static_cast<MouseEvent*>(event);
             if (e->button == MouseButton::Left && e->pressed && b.HasPoint(e->x, e->y)) {
                 switch (m_mode) {
-                    case Mode::DrawPath:    return OnMouseDown_ModeDrawPath(event);
-                    case Mode::ErasePath:   return OnMouseDown_ModeErasePath(event);
-                    case Mode::SegmentEdit: return OnMouseDown_ModeSegmentEdit(event);
+                    case Mode::DrawPath:
+                        return OnMouseDown_ModeDrawPath(event);
+                    case Mode::ErasePath:
+                        return OnMouseDown_ModeErasePath(event);
+                    case Mode::SegmentEdit:
+                        return OnMouseDown_ModeSegmentEdit(event);
                 }
-            }
-            else if (e->button == MouseButton::Left && !e->pressed && b.HasPoint(e->x, e->y)) {
+            } else if (e->button == MouseButton::Left && !e->pressed && b.HasPoint(e->x, e->y)) {
                 switch (m_mode) {
-                    case Mode::DrawPath:    return OnMouseUp_ModeDrawPath(event);
-                    case Mode::ErasePath:   return OnMouseUp_ModeErasePath(event);
-                    case Mode::SegmentEdit: return OnMouseUp_ModeSegmentEdit(event);
+                    case Mode::DrawPath:
+                        return OnMouseUp_ModeDrawPath(event);
+                    case Mode::ErasePath:
+                        return OnMouseUp_ModeErasePath(event);
+                    case Mode::SegmentEdit:
+                        return OnMouseUp_ModeSegmentEdit(event);
                 }
             }
-        }
-        else if (event->Type() == EventType::MouseMotion) {
+        } else if (event->Type() == EventType::MouseMotion) {
             switch (m_mode) {
-                case Mode::DrawPath:    return OnMouseMove_ModeDrawPath(event);
-                case Mode::ErasePath:   return OnMouseMove_ModeErasePath(event);
-                case Mode::SegmentEdit: return OnMouseMove_ModeSegmentEdit(event);
+                case Mode::DrawPath:
+                    return OnMouseMove_ModeDrawPath(event);
+                case Mode::ErasePath:
+                    return OnMouseMove_ModeErasePath(event);
+                case Mode::SegmentEdit:
+                    return OnMouseMove_ModeSegmentEdit(event);
             }
         }
         return EventStatus::Active;
     }
 
     Mode GetMode() const { return m_mode; }
-    void SetMode(Mode mode) { m_mode = mode; m_selectedPath = nullptr; Invalidate(); }
 
-private:
-    bool m_dragging{ false };
-    Mode m_mode{ Mode::DrawPath };
+    void SetMode(Mode mode) {
+        m_mode = mode;
+        m_selectedPath = nullptr;
+        Invalidate();
+    }
+
+  private:
+    bool m_dragging{false};
+    Mode m_mode{Mode::DrawPath};
 
     struct Path {
         std::vector<PointI> points;
-        Color color{ Color::FromHex("#FFF") };
+        Color color{Color::FromHex("#FFF")};
     };
 
     std::vector<Path> m_paths;
-    Path* m_hoveredPath{ nullptr }, * m_selectedPath{ nullptr };
-    PointI* m_hoveredPoint{ nullptr }, * m_selectedPoint{ nullptr };
+    Path *m_hoveredPath{nullptr}, *m_selectedPath{nullptr};
+    PointI *m_hoveredPoint{nullptr}, *m_selectedPoint{nullptr};
     std::vector<PointI> m_tempPoints;
 
     PointI* GetHoveredPoint(Path* path, const PointI& mp) {
-        for (auto& point : path->points) {
-            if (point.DistanceTo(mp) < 10) {
+        for (auto& point : path->points)
+            if (point.DistanceTo(mp) < 10)
                 return &point;
-            }
-        }
         return nullptr;
     }
 
@@ -140,8 +141,10 @@ private:
         for (size_t i = 0; i < path->points.size(); i++) {
             PointI* curr = &path->points[i];
             if (curr == pt) {
-                if (i > 0) neighbors.push_back(&path->points[i - 1]);
-                if (i < path->points.size() - 1) neighbors.push_back(&path->points[i + 1]);
+                if (i > 0)
+                    neighbors.push_back(&path->points[i - 1]);
+                if (i < path->points.size() - 1)
+                    neighbors.push_back(&path->points[i + 1]);
                 break;
             }
         }
@@ -151,26 +154,22 @@ private:
     EventStatus OnMouseDown_ModeSegmentEdit(Event* event) {
         auto b = GetBounds();
         auto* e = static_cast<MouseEvent*>(event);
-        auto mp = PointI{ e->x - b.x, e->y - b.y };
+        auto mp = PointI{e->x - b.x, e->y - b.y};
 
         auto* path = GetHoveredPath(mp);
         if (!m_selectedPath) {
             m_selectedPath = path;
             Invalidate();
-        }
-        else {
-            if (m_selectedPath == path) {
-                auto* point = GetHoveredPoint(path, mp);
-                if (point) {
-                    m_selectedPoint = point;
-                    Invalidate();
-                }
-            }
-            else {
-                m_selectedPath = nullptr;
-                m_selectedPoint = nullptr;
+        } else if (m_selectedPath == path) {
+            auto* point = GetHoveredPoint(path, mp);
+            if (point) {
+                m_selectedPoint = point;
                 Invalidate();
             }
+        } else {
+            m_selectedPath = nullptr;
+            m_selectedPoint = nullptr;
+            Invalidate();
         }
         m_dragging = true;
         return EventStatus::Consumed;
@@ -185,19 +184,17 @@ private:
     EventStatus OnMouseMove_ModeSegmentEdit(Event* event) {
         auto b = GetBounds();
         auto* e = static_cast<MouseEvent*>(event);
-        auto mp = PointI{ e->x - b.x, e->y - b.y };
+        auto mp = PointI{e->x - b.x, e->y - b.y};
         if (m_dragging) {
             if (m_selectedPoint) {
                 m_selectedPoint->x = mp.x;
                 m_selectedPoint->y = mp.y;
                 Invalidate();
             }
-        }
-        else {
+        } else {
             m_hoveredPath = GetHoveredPath(mp);
-            if (m_selectedPath) {
+            if (m_selectedPath)
                 m_hoveredPoint = GetHoveredPoint(m_selectedPath, mp);
-            }
             Invalidate();
         }
         return EventStatus::Consumed;
@@ -205,27 +202,29 @@ private:
 
     Path* GetHoveredPath(const PointI& mp) {
         for (auto& path : m_paths) {
-            for (const auto& point : path.points) {
-                if (point.DistanceTo(mp) <= 8) return &path;
-            }
+            for (const auto& point : path.points)
+                if (point.DistanceTo(mp) <= 8)
+                    return &path;
         }
         return nullptr;
     }
 
     void RemovePath(Path* path) {
         m_hoveredPath = nullptr;
-        m_paths.erase(std::remove_if(m_paths.begin(), m_paths.end(), [path](const Path& p) {
-            return &p == path;
-            }), m_paths.end());
+        m_paths.erase(
+            std::remove_if(m_paths.begin(), m_paths.end(), [path](const Path& p) { return &p == path; }),
+            m_paths.end()
+        );
         Invalidate();
     }
 
     EventStatus OnMouseDown_ModeErasePath(Event* event) {
         auto b = GetBounds();
         auto* e = static_cast<MouseEvent*>(event);
-        auto mp = PointI{ e->x - b.x, e->y - b.y };
+        auto mp = PointI{e->x - b.x, e->y - b.y};
         auto* path = GetHoveredPath(mp);
-        if (path) RemovePath(path);
+        if (path)
+            RemovePath(path);
         m_dragging = true;
         return EventStatus::Consumed;
     }
@@ -233,12 +232,12 @@ private:
     EventStatus OnMouseMove_ModeErasePath(Event* event) {
         auto b = GetBounds();
         auto* e = static_cast<MouseEvent*>(event);
-        auto mp = PointI{ e->x - b.x, e->y - b.y };
+        auto mp = PointI{e->x - b.x, e->y - b.y};
         if (m_dragging) {
             auto* path = GetHoveredPath(mp);
-            if (path) RemovePath(path);
-        }
-        else {
+            if (path)
+                RemovePath(path);
+        } else {
             m_hoveredPath = GetHoveredPath(mp);
             Invalidate();
         }
@@ -255,7 +254,7 @@ private:
         m_dragging = true;
         auto* e = static_cast<MouseEvent*>(event);
         m_tempPoints.reserve(100);
-        auto pt = PointI{ e->x - b.x, e->y - b.y };
+        auto pt = PointI{e->x - b.x, e->y - b.y};
         m_tempPoints.push_back(pt);
         Invalidate();
         return EventStatus::Consumed;
@@ -265,7 +264,7 @@ private:
         auto b = GetBounds();
         auto* e = static_cast<MouseEvent*>(event);
         if (m_dragging) {
-            auto pt = PointI{ e->x - b.x, e->y - b.y };
+            auto pt = PointI{e->x - b.x, e->y - b.y};
             m_tempPoints.push_back(pt);
             Invalidate();
         }
@@ -276,7 +275,7 @@ private:
         m_dragging = false;
         if (m_tempPoints.size() > 1) {
             SimplifyTempPath();
-            m_paths.push_back({ m_tempPoints, Color::FromHex("#FFF") });
+            m_paths.push_back({m_tempPoints, Color::FromHex("#FFF")});
         }
         m_tempPoints.clear();
         Invalidate();
@@ -285,7 +284,8 @@ private:
 
     void SimplifyTempPath() {
         const int minDistanceBetweenPoints = 6;
-        if (m_tempPoints.size() < 2) return;
+        if (m_tempPoints.size() < 2)
+            return;
 
         std::vector<PointI> simplified;
         simplified.reserve(m_tempPoints.size());
@@ -294,9 +294,8 @@ private:
         for (size_t i = 1; i < m_tempPoints.size(); i++) {
             const auto& last = simplified.back();
             const auto& current = m_tempPoints[i];
-            if (last.DistanceTo(current) >= minDistanceBetweenPoints) {
+            if (last.DistanceTo(current) >= minDistanceBetweenPoints)
                 simplified.push_back(current);
-            }
         }
 
         m_tempPoints = std::move(simplified);
@@ -307,65 +306,79 @@ struct InfiniteCanvasProps {
     decl::ElementProps base;
 };
 
-class App : public ApplicationAdapter {
-public:
-    gui::Image icPen, icEraser, icSegment;
-    gui::Window* winMain{ nullptr };
+class App : public Window {
+  public:
+    App()
+        : Window(WindowConfig{.title = "Drawing Pad", .width = 800, .height = 600}) {}
 
-    void OnCreate(Application& app) {
+    gui::Image icPen, icEraser, icSegment;
+
+    decl::WidgetDesc OnBuild() override {
+        Show();
+
         icPen = gui::Image("pen.svg");
         icEraser = gui::Image("eraser.svg");
         icSegment = gui::Image("segment.svg");
 
-        winMain = app.CreateWindow({
-            .title = "Drawing Pad",
-            .width = 800,
-            .height = 600
-            });
-
+        // clang-format off
         auto toolSize = decl::ElementProps{ .bounds = Rectangle::FromHeight(34) };
         auto toolBox = decl::Column({
-            .base = {.bounds = Rectangle::FromWidth(45) },
+            .base = {.bounds = Rectangle::FromWidth(45)},
             .gap = 4,
             .padding = EdgeInsets::All(4),
             .align = FlexAlign::Stretch,
             .justify = FlexJustify::Start,
             .showBackground = true
-            }, {
-                decl::ToolRadioButton("", {.base = toolSize, .icon = &icPen, .toggled = true, .onClick = [this]() {
-                    auto canvas = winMain->FindByTag<InfiniteCanvas>("canvas");
-                    if (canvas) canvas->SetMode(InfiniteCanvas::Mode::DrawPath);
-                }}),
-                decl::ToolRadioButton("", {.base = toolSize, .icon = &icEraser, .onClick = [this]() {
-                    auto canvas = winMain->FindByTag<InfiniteCanvas>("canvas");
-                    if (canvas) canvas->SetMode(InfiniteCanvas::Mode::ErasePath);
-                }}),
-                decl::ToolRadioButton("", {.base = toolSize, .icon = &icSegment, .onClick = [this]() {
-                    auto canvas = winMain->FindByTag<InfiniteCanvas>("canvas");
-                    if (canvas) canvas->SetMode(InfiniteCanvas::Mode::SegmentEdit);
-                }}),
-            });
+        }, {
+            decl::ToolRadioButton("", {
+                .base = toolSize,
+                .icon = &icPen,
+                .toggled = true,
+                .onClick = [this]() {
+                    auto canvas = FindByTag<InfiniteCanvas>("canvas");
+                    if (canvas)
+                        canvas->SetMode(InfiniteCanvas::Mode::DrawPath);
+                }
+            }),
+            decl::ToolRadioButton("", {
+                .base = toolSize,
+                .icon = &icEraser,
+                .onClick = [this]() {
+                    auto canvas = FindByTag<InfiniteCanvas>("canvas");
+                    if (canvas)
+                        canvas->SetMode(InfiniteCanvas::Mode::ErasePath);
+                }
+            }),
+            decl::ToolRadioButton("", {
+                .base = toolSize,
+                .icon = &icSegment,
+                .onClick = [this]() {
+                    auto canvas = FindByTag<InfiniteCanvas>("canvas");
+                    if (canvas)
+                        canvas->SetMode(InfiniteCanvas::Mode::SegmentEdit);
+                }
+            }),
+        });
 
-            auto gui = decl::Row({
-                .gap = 8,
-                .align = FlexAlign::Stretch,
-                .justify = FlexJustify::Start
-                }, {
-                    toolBox,
-                    decl::Custom<InfiniteCanvas, InfiniteCanvasProps>({
-                        .base = {.tag = "canvas", .flexGrow = 1.0f }
-                    }, [](InfiniteCanvas&, const InfiniteCanvasProps&) {})
-                });
+        auto gui = decl::Row({
+            .gap = 8,
+            .align = FlexAlign::Stretch,
+            .justify = FlexJustify::Start
+        }, {
+            toolBox,
+            decl::Custom<InfiniteCanvas, InfiniteCanvasProps>(
+                { .base = { .tag = "canvas", .flexGrow = 1.0f } },
+                [](InfiniteCanvas&, const InfiniteCanvasProps&) {}
+            )}
+        );
+        // clang-format on
 
-                winMain->SetRoot(gui(*winMain));
-                winMain->Show();
+        return gui;
     }
-
-    void OnDestroy() {}
 };
 
 int main(int argc, char** argv) {
-    gui::Application app{};
-    app.SetBackend(std::make_unique<gui::SDL3Backend>());
-    return app.Start(new App());
+    gui::Application app{new gui::SDL3Backend()};
+    app.CreateWindow<App>();
+    return app.Start();
 }

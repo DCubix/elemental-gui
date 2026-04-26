@@ -107,6 +107,21 @@ namespace gui
         GetBackend().SetWindowTitle(m_handle, title);
     }
 
+    void Window::SetResizable(bool resizable) {
+        m_config.resizable = resizable;
+        GetBackend().SetWindowResizable(m_handle, resizable);
+    }
+
+    void Window::SetParent(Window* parent) {
+        m_config.parent = parent;
+        GetBackend().SetWindowParent(m_handle, parent ? parent->m_handle : nullptr);
+    }
+
+    void Window::SetWindowStyle(WindowStyle style) {
+        m_config.style = style;
+        GetBackend().SetWindowStyle(m_handle, style);
+    }
+
     Size Window::GetSize() const {
         int w, h;
         m_application->GetBackend().GetWindowSize(m_handle, w, h);

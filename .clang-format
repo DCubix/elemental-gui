@@ -1,0 +1,98 @@
+# Generated .clang-format
+# Based on observed code style from user snippets
+
+---
+Language: Cpp
+Standard: c++20
+
+# Indentation
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ContinuationIndentWidth: 4
+IndentCaseLabels: true
+IndentPPDirectives: None
+NamespaceIndentation: All
+
+# Column limit
+ColumnLimit: 120
+
+# Brace style
+# All braces attach (same line) — functions, classes, namespaces, control flow
+BreakBeforeBraces: Attach
+
+# Pointer/reference alignment
+PointerAlignment: Left # int* ptr, Window* win
+
+# Spaces
+SpaceBeforeParens: ControlStatements
+SpaceInEmptyParentheses: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+SpaceAfterCStyleCast: false
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeCpp11BracedList: false # m_running{ false }, not m_running { false }
+SpacesInContainerLiterals: false
+SpaceAfterTemplateKeyword: true
+AlwaysBreakTemplateDeclarations: true
+
+# Braced init lists / aggregates
+Cpp11BracedListStyle: true # compact, no extra spaces unless single-line inner struct
+
+# Single-line aggregate: { .x = 1 } gets spaces inside
+# clang-format approximates this via:
+SpacesInAngles: Never
+
+# Designated initializers — each on its own line
+# (clang-format 16+ respects this naturally when the list doesn't fit on one line)
+
+# Short constructs — keep these compact on one line
+AllowShortFunctionsOnASingleLine: Inline # getters in headers: { return m_backend; }
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLambdasOnASingleLine: Inline # short lambdas inside calls stay on one line
+AllowShortLoopsOnASingleLine: false
+AllowShortBlocksOnASingleLine: Empty
+
+# Breaking long lines
+AlignAfterOpenBracket: BlockIndent # closing ) on its own line when args are broken
+BinPackArguments: false # all args on one line, or each on its own
+BinPackParameters: false
+AllowAllArgumentsOnNextLine: false
+AllowAllParametersOfDeclarationOnNextLine: false
+
+# Lambda formatting
+LambdaBodyIndentation: Signature # body indented relative to the lambda's opening [
+
+# Initializer lists and member init
+BreakConstructorInitializers: BeforeColon
+PackConstructorInitializers: Never
+
+# Trailing commas
+InsertTrailingCommas: None # don't auto-insert; you manage these manually
+
+# Include sorting
+SortIncludes: CaseSensitive
+IncludeBlocks: Regroup
+IncludeCategories:
+  # Paired header first (e.g. Application.h in Application.cpp)
+  - Regex: '^"'
+    Priority: 1
+  # Standard library
+  - Regex: "^<[a-z_]+>$"
+    Priority: 2
+  # Everything else (third-party, project)
+  - Regex: ".*"
+    Priority: 3
+
+# Alignment
+AlignConsecutiveAssignments: None
+AlignConsecutiveDeclarations: None
+AlignTrailingComments:
+  Kind: Always
+  OverEmptyLines: 1
+
+# Misc
+FixNamespaceComments: true # adds // namespace gui closing comments
+MaxEmptyLinesToKeep: 1
+KeepEmptyLinesAtTheStartOfBlocks: false
+ReflowComments: false # don't reformat your hand-written comments

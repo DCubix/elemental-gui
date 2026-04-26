@@ -6,12 +6,13 @@
 
 #include "Backend.h"
 
-namespace gui {
+namespace gui
+{
 
     struct SDL3WindowData {
-        SDL_Window*   window{ nullptr };
+        SDL_Window* window{ nullptr };
         SDL_Renderer* renderer{ nullptr };
-        SDL_Texture*  buffer{ nullptr };
+        SDL_Texture* buffer{ nullptr };
     };
 
     class SDL3Backend : public Backend {
@@ -32,6 +33,9 @@ namespace gui {
         void GetWindowSize(WindowHandle handle, int& width, int& height) const override;
         void GetWindowPosition(WindowHandle handle, int& x, int& y) const override;
         void SetWindowPosition(WindowHandle handle, int x, int y) override;
+        void SetWindowResizable(WindowHandle handle, bool resizable) override;
+        void SetWindowStyle(WindowHandle handle, WindowStyle style) override;
+        void SetWindowParent(WindowHandle handle, WindowHandle parentHandle) override;
         WindowId GetWindowId(WindowHandle handle) const override;
 
         void StartTextInput(WindowHandle handle) override;
@@ -40,7 +44,7 @@ namespace gui {
         void CreateRenderBuffer(WindowHandle handle, uint32_t width, uint32_t height) override;
         void DestroyRenderBuffer(WindowHandle handle) override;
         void PresentFrame(WindowHandle handle, unsigned char* data, int stride,
-                          uint32_t width, uint32_t height) override;
+            uint32_t width, uint32_t height) override;
 
         void SetClipboardText(const std::string& text) override;
         std::string GetClipboardText() const override;

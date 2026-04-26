@@ -6,7 +6,8 @@
 #include "EventSystem.h"
 #include "WindowConfig.h"
 
-namespace gui {
+namespace gui
+{
 
     using WindowHandle = void*;
     using WindowId = uint64_t;
@@ -56,6 +57,9 @@ namespace gui {
         virtual void GetWindowSize(WindowHandle handle, int& width, int& height) const = 0;
         virtual void GetWindowPosition(WindowHandle handle, int& x, int& y) const = 0;
         virtual void SetWindowPosition(WindowHandle handle, int x, int y) = 0;
+        virtual void SetWindowResizable(WindowHandle handle, bool resizable) = 0;
+        virtual void SetWindowStyle(WindowHandle handle, WindowStyle style) = 0;
+        virtual void SetWindowParent(WindowHandle handle, WindowHandle parentHandle) = 0;
         virtual WindowId GetWindowId(WindowHandle handle) const = 0;
 
         // Text input (IME)
@@ -67,7 +71,7 @@ namespace gui {
         virtual void CreateRenderBuffer(WindowHandle handle, uint32_t width, uint32_t height) = 0;
         virtual void DestroyRenderBuffer(WindowHandle handle) = 0;
         virtual void PresentFrame(WindowHandle handle, unsigned char* data, int stride,
-                                   uint32_t width, uint32_t height) = 0;
+            uint32_t width, uint32_t height) = 0;
 
         // Clipboard
         virtual void SetClipboardText(const std::string& text) = 0;
