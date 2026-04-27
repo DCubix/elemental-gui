@@ -16,6 +16,7 @@ namespace gui {
 
         g.StyledRect(0, 0, size.w, size.h, style["track"]);
 
+        g.ClipPushPath([&]() { g.GetStyledPath(style["track"], 0, 0, size.w, size.h); });
         if (!m_indeterminate) {
             float progress = m_range.Normalized(m_value);
             if (m_direction == Direction::Horizontal) {
@@ -26,7 +27,6 @@ namespace gui {
                 g.StyledRect(0, size.h - ph, size.w, ph, style["progress"]);
             }
         } else {
-            g.ClipPushPath([&]() { g.GetStyledPath(style["track"], 0, 0, size.w, size.h); });
             int indSize = (m_direction == Direction::Horizontal ? size.w : size.h) / 2;
             if (m_indeterminateOffset > size.w) {
                 m_indeterminateOffset = -indSize;
@@ -37,8 +37,8 @@ namespace gui {
             } else {
                 g.StyledRect(0, m_indeterminateOffset, size.w, indSize, style["indeterminate"]);
             }
-            g.ClipPop();
         }
+        g.ClipPop();
     }
 
     void ProgressBar::SetRange(float min, float max) {

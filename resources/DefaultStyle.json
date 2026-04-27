@@ -1,53 +1,54 @@
 {
     "$variables": {
-        "primary": "#FF3859A6",
-        "primaryHover": "#FF4D73CC",
-        "primaryClick": "#FF2E4780",
-        "secondary": "#FF383838",
-        "secondaryHover": "#FF555555",
-        "secondaryClick": "#FF1A1A1A",
-        "accent": "#FF3D6BC7",
-        "accentHover": "#FF5280E0",
-        "accentClick": "#FF3866B8",
-        "textPrimary": "#FFE0E0E0",
-        "textSecondary": "#FFB8B8B8",
-        "textDisabled": "#FF7A7A7A",
-        "backgroundDark": "#FF141414",
-        "borderDark": "#FF333333",
-        "panelBackground": "#FF212121",
-        "textPrimaryBright": "#FFEBEBEB",
-        "primaryDark": "#FF294580",
-        "primaryHoverDark": "#FF3359A3",
-        "primaryClickDark": "#FF1A2E61",
-        "thumbNormalBorder": "#FF474747",
-        "thumbHoverBorder": "#FF616161",
-        "thumbClickBorder": "#FF525252",
-        "thumbHoverBackground": "#FF4D4D4D",
-        "thumbClickBackground": "#FF2E2E2E",
-        "focusBlue": "#FF2666D9",
-        "selectionBlue": "#732666D9",
-        "switchOffBorder": "#FF404045",
-        "switchOffBackground": "#FF1F1F1F",
-        "switchOnBackground": "#FF24478A",
-        "switchThumbBackground": "#FF85858A",
-        "switchThumbHoverBorder": "#FF7A7A80",
-        "switchThumbHoverBackground": "#FF9E9EA3",
-        "switchThumbClickBackground": "#FF6B6B70",
-        "switchThumbOnBorder": "#FF4D80D9",
-        "switchThumbOnBackground": "#FFA6BDE6",
-        "switchThumbOnHoverBorder": "#FF6194EB",
-        "switchThumbOnHoverBackground": "#FFB8CCF0",
-        "switchThumbOnClickBackground": "#FF859ED6",
-        "checkboxHoverBorder": "#FF4D73C7",
-        "hoverBackground": "#FF24242B",
-        "clickBackground": "#FF121217",
-        "accentDark": "#FF2E5299",
-        "accentHoverDark": "#FF3861B3",
-        "white": "#FFFFFFFF",
-        "menuItemClick": "#FF26478C",
-        "spinnerButtonHover": "#FF2A2A40",
-        "spinnerButtonClick": "#FF1A1A28",
-        "primaryDarkTransparent": "#00294580"
+        "primary":                      "#FFFAFAFA",
+        "primaryHover":                 "#FFF4F4F5",
+        "primaryClick":                 "#FFE4E4E7",
+        "secondary":                    "#FF27272A",
+        "secondaryHover":               "#FF3F3F46",
+        "secondaryClick":               "#FF09090B",
+        "accent":                       "#FFFAFAFA",
+        "accentHover":                  "#FFF4F4F5",
+        "accentClick":                  "#FF3F3F46",
+        "textPrimary":                  "#FFFAFAFA",
+        "textSecondary":                "#FFA1A1AA",
+        "textDisabled":                 "#FF71717A",
+        "backgroundDark":               "#FF09090B",
+        "borderDark":                   "#FF27272A",
+        "panelBackground":              "#FF18181B",
+        "textPrimaryBright":            "#FFFAFAFA",
+        "primaryDark":                  "#FF27272A",
+        "primaryHoverDark":             "#FF3F3F46",
+        "primaryClickDark":             "#FF18181B",
+        "onPrimary":                    "#FF09090B",
+        "thumbNormalBorder":            "#FF3F3F46",
+        "thumbHoverBorder":             "#FF52525B",
+        "thumbClickBorder":             "#FF71717A",
+        "thumbHoverBackground":         "#FF3F3F46",
+        "thumbClickBackground":         "#FF52525B",
+        "focusBlue":                    "#FFFAFAFA",
+        "selectionBlue":                "#FF3F3F46",
+        "switchOffBorder":              "#FF3F3F46",
+        "switchOffBackground":          "#FF27272A",
+        "switchOnBackground":           "#FFFAFAFA",
+        "switchThumbBackground":        "#FFA1A1AA",
+        "switchThumbHoverBorder":       "#FF71717A",
+        "switchThumbHoverBackground":   "#FFD4D4D8",
+        "switchThumbClickBackground":   "#FFA1A1AA",
+        "switchThumbOnBorder":          "#FFFAFAFA",
+        "switchThumbOnBackground":      "#FF09090B",
+        "switchThumbOnHoverBorder":     "#FFF4F4F5",
+        "switchThumbOnHoverBackground": "#FF18181B",
+        "switchThumbOnClickBackground": "#FF27272A",
+        "checkboxHoverBorder":          "#FFA1A1AA",
+        "hoverBackground":              "#FF27272A",
+        "clickBackground":              "#FF18181B",
+        "accentDark":                   "#FFFAFAFA",
+        "accentHoverDark":              "#FFF4F4F5",
+        "white":                        "#FFFFFFFF",
+        "menuItemClick":                "#FF3F3F46",
+        "spinnerButtonHover":           "#FF27272A",
+        "spinnerButtonClick":           "#FF18181B",
+        "primaryDarkTransparent":       "#00FAFAFA"
     },
     "Window": {
         "background": {
@@ -56,14 +57,14 @@
     },
     "DefaultText": {
         "font": "Sans",
-        "fontSize": 16.0,
+        "fontSize": 14.0,
         "fontSlant": "normal",
         "fontWeight": "normal",
         "color": "$textPrimary"
     },
     "DefaultTextBig": {
         "font": "Sans",
-        "fontSize": 26.0,
+        "fontSize": 24.0,
         "fontSlant": "normal",
         "fontWeight": "bold"
     },
@@ -73,7 +74,7 @@
         }
     },
     "Panel": {
-        "elevation": 4.0,
+        "elevation": 1.0,
         "border": {
             "radius": 8.0,
             "color": "$borderDark",
@@ -85,40 +86,49 @@
     },
     "Button": {
         "padding": {
-            "horizontal": 20.0,
-            "vertical": 10.0
+            "horizontal": 16.0,
+            "vertical": 8.0
         },
         "normal": {
-            "elevation": 4.0,
+            "elevation": 0.0,
             "border": {
-                "radius": 8.0,
-                "color": "$primary",
+                "radius": 6.0,
+                "color": "$primaryDark",
                 "width": 1.0
             },
             "background": {
                 "color": "$primaryDark"
+            },
+            "text": {
+                "color": "$textPrimary"
             }
         },
         "hover": {
-            "elevation": 4.0,
+            "elevation": 0.0,
             "border": {
-                "radius": 8.0,
-                "color": "$primaryHover",
+                "radius": 6.0,
+                "color": "$primaryHoverDark",
                 "width": 1.0
             },
             "background": {
                 "color": "$primaryHoverDark"
+            },
+            "text": {
+                "color": "$textPrimary"
             }
         },
         "click": {
-            "elevation": 4.0,
+            "elevation": 0.0,
             "border": {
-                "radius": 8.0,
-                "color": "$primaryClick",
+                "radius": 6.0,
+                "color": "$primaryClickDark",
                 "width": 1.0
             },
             "background": {
                 "color": "$primaryClickDark"
+            },
+            "text": {
+                "color": "$textPrimary"
             }
         }
     },
@@ -127,7 +137,7 @@
             "border": {
                 "radius": 999.0,
                 "color": "$borderDark",
-                "width": 1.0
+                "width": 0.0
             },
             "background": {
                 "color": "$backgroundDark"
@@ -138,7 +148,7 @@
                 "border": {
                     "radius": 999.0,
                     "color": "$thumbNormalBorder",
-                    "width": 1.0
+                    "width": 0.0
                 },
                 "background": {
                     "color": "$secondary"
@@ -148,7 +158,7 @@
                 "border": {
                     "radius": 999.0,
                     "color": "$thumbHoverBorder",
-                    "width": 1.0
+                    "width": 0.0
                 },
                 "background": {
                     "color": "$thumbHoverBackground"
@@ -158,7 +168,7 @@
                 "border": {
                     "radius": 999.0,
                     "color": "$thumbClickBorder",
-                    "width": 1.0
+                    "width": 0.0
                 },
                 "background": {
                     "color": "$thumbClickBackground"
@@ -169,58 +179,58 @@
     "Slider": {
         "track": {
             "border": {
-                "radius": 6.0,
+                "radius": 999.0,
                 "color": "$borderDark",
-                "width": 1.0
+                "width": 0.0
             },
             "background": {
-                "color": "$backgroundDark"
+                "color": "$secondary"
             }
         },
         "thumb": {
             "normal": {
-                "elevation": 2.0,
+                "elevation": 3.0,
                 "border": {
                     "radius": 999.0,
                     "color": "$primary",
-                    "width": 1.0
+                    "width": 0.0
                 },
                 "background": {
-                    "color": "$primaryDark"
+                    "color": "$primary"
                 }
             },
             "hover": {
-                "elevation": 2.0,
+                "elevation": 3.0,
                 "border": {
                     "radius": 999.0,
                     "color": "$primaryHover",
-                    "width": 1.0
+                    "width": 0.0
                 },
                 "background": {
-                    "color": "$primaryHoverDark"
+                    "color": "$primaryHover"
                 }
             },
             "click": {
-                "elevation": 2.0,
+                "elevation": 1.0,
                 "border": {
                     "radius": 999.0,
                     "color": "$primaryClick",
-                    "width": 1.0
+                    "width": 0.0
                 },
                 "background": {
-                    "color": "$primaryClickDark"
+                    "color": "$primaryClick"
                 }
             }
         }
     },
     "Edit": {
         "padding": {
-            "horizontal": 8.0,
-            "vertical": 4.0
+            "horizontal": 12.0,
+            "vertical": 6.0
         },
         "normal": {
             "border": {
-                "radius": 8.0,
+                "radius": 6.0,
                 "color": "$secondary",
                 "width": 1.0
             },
@@ -230,19 +240,19 @@
         },
         "hover": {
             "border": {
-                "radius": 8.0,
+                "radius": 6.0,
                 "color": "$secondaryHover",
                 "width": 1.0
             },
             "background": {
-                "color": "$secondaryClick"
+                "color": "$backgroundDark"
             }
         },
         "focused": {
             "border": {
-                "radius": 8.0,
+                "radius": 6.0,
                 "color": "$focusBlue",
-                "width": 2.0
+                "width": 1.0
             },
             "background": {
                 "color": "$backgroundDark"
@@ -260,7 +270,7 @@
                 "border": {
                     "radius": 999.0,
                     "color": "$switchOffBorder",
-                    "width": 1.0
+                    "width": 0.0
                 },
                 "background": {
                     "color": "$switchOffBackground"
@@ -269,8 +279,8 @@
             "on": {
                 "border": {
                     "radius": 999.0,
-                    "color": "$accentClick",
-                    "width": 1.0
+                    "color": "$switchOnBackground",
+                    "width": 0.0
                 },
                 "background": {
                     "color": "$switchOnBackground"
@@ -281,8 +291,8 @@
             "normal": {
                 "border": {
                     "radius": 999.0,
-                    "color": "$thumbHoverBorder",
-                    "width": 1.0
+                    "color": "$thumbNormalBorder",
+                    "width": 0.0
                 },
                 "background": {
                     "color": "$switchThumbBackground"
@@ -292,7 +302,7 @@
                 "border": {
                     "radius": 999.0,
                     "color": "$switchThumbHoverBorder",
-                    "width": 1.0
+                    "width": 0.0
                 },
                 "background": {
                     "color": "$switchThumbHoverBackground"
@@ -302,7 +312,7 @@
                 "border": {
                     "radius": 999.0,
                     "color": "$thumbClickBorder",
-                    "width": 1.0
+                    "width": 0.0
                 },
                 "background": {
                     "color": "$switchThumbClickBackground"
@@ -311,8 +321,8 @@
             "normalOn": {
                 "border": {
                     "radius": 999.0,
-                    "color": "$switchThumbOnBorder",
-                    "width": 1.0
+                    "color": "$switchThumbOnBackground",
+                    "width": 0.0
                 },
                 "background": {
                     "color": "$switchThumbOnBackground"
@@ -321,8 +331,8 @@
             "hoverOn": {
                 "border": {
                     "radius": 999.0,
-                    "color": "$switchThumbOnHoverBorder",
-                    "width": 1.0
+                    "color": "$switchThumbOnHoverBackground",
+                    "width": 0.0
                 },
                 "background": {
                     "color": "$switchThumbOnHoverBackground"
@@ -331,8 +341,8 @@
             "clickOn": {
                 "border": {
                     "radius": 999.0,
-                    "color": "$accentClick",
-                    "width": 1.0
+                    "color": "$switchThumbOnClickBackground",
+                    "width": 0.0
                 },
                 "background": {
                     "color": "$switchThumbOnClickBackground"
@@ -341,10 +351,10 @@
         }
     },
     "CheckBox": {
-        "size": 20.0,
+        "size": 16.0,
         "normal": {
             "border": {
-                "radius": 6.0,
+                "radius": 4.0,
                 "color": "$switchOffBorder",
                 "width": 1.0
             },
@@ -354,7 +364,7 @@
         },
         "hover": {
             "border": {
-                "radius": 6.0,
+                "radius": 4.0,
                 "color": "$checkboxHoverBorder",
                 "width": 1.0
             },
@@ -364,8 +374,8 @@
         },
         "click": {
             "border": {
-                "radius": 6.0,
-                "color": "$primaryClick",
+                "radius": 4.0,
+                "color": "$secondaryHover",
                 "width": 1.0
             },
             "background": {
@@ -374,8 +384,8 @@
         },
         "checked": {
             "border": {
-                "radius": 6.0,
-                "color": "$accent",
+                "radius": 4.0,
+                "color": "$primary",
                 "width": 1.0
             },
             "background": {
@@ -384,8 +394,8 @@
         },
         "checkedHover": {
             "border": {
-                "radius": 6.0,
-                "color": "$accentHover",
+                "radius": 4.0,
+                "color": "$primaryHover",
                 "width": 1.0
             },
             "background": {
@@ -394,7 +404,7 @@
         },
         "checkmark": {
             "stroke": {
-                "color": "$white",
+                "color": "$onPrimary",
                 "width": 2.0
             },
             "lineCap": "round",
@@ -403,7 +413,7 @@
         }
     },
     "RadioButton": {
-        "size": 20.0,
+        "size": 16.0,
         "normal": {
             "border": {
                 "radius": 999.0,
@@ -427,7 +437,7 @@
         "click": {
             "border": {
                 "radius": 999.0,
-                "color": "$primaryClick",
+                "color": "$secondaryHover",
                 "width": 1.0
             },
             "background": {
@@ -437,7 +447,7 @@
         "selected": {
             "border": {
                 "radius": 999.0,
-                "color": "$accent",
+                "color": "$primary",
                 "width": 1.0
             },
             "background": {
@@ -447,7 +457,7 @@
         "selectedHover": {
             "border": {
                 "radius": 999.0,
-                "color": "$accentHover",
+                "color": "$primaryHover",
                 "width": 1.0
             },
             "background": {
@@ -457,11 +467,11 @@
         "dot": {
             "border": {
                 "radius": 999.0,
-                "color": "$white",
+                "color": "$onPrimary",
                 "width": 0.0
             },
             "background": {
-                "color": "$white"
+                "color": "$onPrimary"
             }
         }
     },
@@ -469,21 +479,21 @@
         "elevation": 8.0,
         "padding": {
             "horizontal": 0.0,
-            "vertical": 8.0
+            "vertical": 4.0
         },
         "border": {
-            "radius": 10.0,
-            "color": "$secondary",
+            "radius": 8.0,
+            "color": "$borderDark",
             "width": 1.0
         },
         "background": {
-            "color": "$hoverBackground"
+            "color": "$panelBackground"
         }
     },
     "MenuItem": {
         "padding": {
-            "horizontal": 14.0,
-            "vertical": 8.0
+            "horizontal": 8.0,
+            "vertical": 6.0
         },
         "normal": {
             "background": {
@@ -491,19 +501,29 @@
             }
         },
         "hover": {
+            "border": {
+                "radius": 4.0,
+                "color": "#00000000",
+                "width": 0.0
+            },
             "background": {
-                "color": "$primaryHoverDark"
+                "color": "$hoverBackground"
             }
         },
         "click": {
+            "border": {
+                "radius": 4.0,
+                "color": "#00000000",
+                "width": 0.0
+            },
             "background": {
                 "color": "$menuItemClick"
             }
         },
         "arrow": {
             "stroke": {
-                "color": "$white",
-                "width": 2.0
+                "color": "$textSecondary",
+                "width": 1.5
             },
             "lineCap": "round",
             "lineJoin": "round",
@@ -511,17 +531,17 @@
         }
     },
     "MenuSeparator": {
-        "color": "$secondary",
+        "color": "$borderDark",
         "margin": {
-            "horizontal": 12.0,
-            "vertical": 6.0
+            "horizontal": 8.0,
+            "vertical": 4.0
         }
     },
     "List": {
-        "padding": 8.0,
+        "padding": 4.0,
         "border": {
             "radius": 8.0,
-            "color": "$secondary",
+            "color": "$borderDark",
             "width": 1.0
         },
         "background": {
@@ -530,22 +550,22 @@
         "item": {
             "height": 22.0,
             "padding": {
-                "vertical": 8.0,
-                "horizontal": 12.0
+                "vertical": 6.0,
+                "horizontal": 8.0
             }
         },
         "itemSelected": {
             "border": {
-                "radius": 6.0,
-                "color": "$white",
+                "radius": 4.0,
+                "color": "$secondary",
                 "width": 0.0
             },
             "background": {
-                "color": "$selectionBlue"
+                "color": "$secondary"
             },
             "text": {
-                "color": "$white",
-                "fontWeight": "bold"
+                "color": "$textPrimary",
+                "fontWeight": "normal"
             }
         }
     },
@@ -555,6 +575,11 @@
             "vertical": 8.0
         },
         "hover": {
+            "border": {
+                "radius": 6.0,
+                "color": "#00000000",
+                "width": 0.0
+            },
             "background": {
                 "color": "$hoverBackground"
             }
@@ -562,33 +587,33 @@
         "click": {
             "border": {
                 "radius": 6.0,
-                "color": "$primaryClick",
-                "width": 1.0
+                "color": "#00000000",
+                "width": 0.0
             },
             "background": {
-                "color": "$clickBackground"
+                "color": "$menuItemClick"
             }
         }
     },
     "ProgressBar": {
         "track": {
             "border": {
-                "radius": 6.0,
+                "radius": 999.0,
                 "color": "$borderDark",
-                "width": 1.0
+                "width": 0.0
             },
             "background": {
-                "color": "$backgroundDark"
+                "color": "$secondary"
             }
         },
         "progress": {
             "border": {
-                "radius": 6.0,
+                "radius": 999.0,
                 "color": "$primary",
-                "width": 1.0
+                "width": 0.0
             },
             "background": {
-                "color": "$primaryDark"
+                "color": "$primary"
             }
         },
         "indeterminate": {
@@ -631,7 +656,7 @@
             "hover": {
                 "border": {
                     "radius": 0.0,
-                    "color": "$primaryHover",
+                    "color": "#00000000",
                     "width": 0.0
                 },
                 "background": {
@@ -641,7 +666,7 @@
             "click": {
                 "border": {
                     "radius": 0.0,
-                    "color": "$primaryClick",
+                    "color": "#00000000",
                     "width": 0.0
                 },
                 "background": {

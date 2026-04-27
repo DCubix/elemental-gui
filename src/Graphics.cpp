@@ -855,6 +855,7 @@ namespace gui {
         if (style["border"].is_object()) {
             Json border = style["border"];
             borderRadius = border.value("radius", 0.0);
+            borderRadius = std::min(borderRadius, std::min(w - 1, h - 1) / 2.0);
         }
         RoundRect(x, y, w - 1, h - 1, borderRadius);
     }
