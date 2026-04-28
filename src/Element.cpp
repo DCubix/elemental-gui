@@ -140,6 +140,11 @@ namespace gui {
         m_dirty = true;
         if (m_window)
             m_window->RequestRedraw();
+
+        if (m_bounds.w != m_prevSize.w || m_bounds.h != m_prevSize.h) {
+            m_prevSize = GetSize();
+            OnResize();
+        }
     }
 
     void Element::RequestFocus() {

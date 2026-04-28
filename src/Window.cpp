@@ -26,6 +26,7 @@ namespace gui {
         if (reshape) {
             GetBackend().ResizeWindow(m_handle, width, height);
         }
+        OnResize();
         ResizeScreenBuffer();
         RequestRedrawAll();
     }

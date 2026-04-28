@@ -47,6 +47,7 @@ namespace gui {
         virtual void OnTextInput(TextInputEvent e) {}
         virtual void OnFocus(FocusEvent e) {}
         virtual void OnBlur(BlurEvent e) {}
+        virtual void OnResize() {}
 
         // Used for Auto-Size
         virtual Size GetPreferredSize() const { return {m_bounds.w, m_bounds.h}; }
@@ -57,6 +58,7 @@ namespace gui {
 
         const Rectangle& GetLocalBounds() const { return m_bounds; }
         void SetLocalBounds(Rectangle b) {
+            m_prevSize = GetSize();
             m_bounds = b;
             Invalidate();
         }
@@ -118,6 +120,7 @@ namespace gui {
         Window* m_window{nullptr};
         Element* m_parent{nullptr};
         Rectangle m_bounds;
+        Size m_prevSize{-1, -1};
 
         bool m_dirty{false}, m_visible{true}, m_focused{false}, m_autoSize{false}, m_hovered{false},
             m_mouseDown{false};

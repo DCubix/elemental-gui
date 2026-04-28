@@ -18,6 +18,8 @@ namespace gui {
         Window(const WindowConfig& config);
 
         virtual std::function<Element*(Window&)> OnBuild() { return nullptr; }
+        virtual void OnCreate() {}
+        virtual void OnResize() {}
 
         void Resize(uint32_t width, uint32_t height, bool reshape = true);
 

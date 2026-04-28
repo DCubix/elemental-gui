@@ -72,6 +72,8 @@ namespace gui {
             return;
         }
 
+        radius = std::min(radius, std::min(w, h) / 2.0f);
+
         double degrees = PI / 180.0;
 
         double _x = double(x) + 0.5;
@@ -119,8 +121,9 @@ namespace gui {
             double r = 0, g = 0, b = 0, a = 1;
             if (patType == CAIRO_PATTERN_TYPE_SOLID) {
                 cairo_pattern_get_rgba(pat, &r, &g, &b, &a);
-            } else if (patType == CAIRO_PATTERN_TYPE_LINEAR ||
-                       patType == CAIRO_PATTERN_TYPE_RADIAL) {
+            } else if (
+                patType == CAIRO_PATTERN_TYPE_LINEAR || patType == CAIRO_PATTERN_TYPE_RADIAL
+            ) {
                 double offset;
                 cairo_pattern_get_color_stop_rgba(pat, 0, &offset, &r, &g, &b, &a);
             }
@@ -915,8 +918,10 @@ namespace gui {
         if (!m_surface) {
             m_surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
             m_context = cairo_create(m_surface);
-        } else if (cairo_image_surface_get_width(m_surface) != width ||
-                   cairo_image_surface_get_height(m_surface) != height) {
+        } else if (
+            cairo_image_surface_get_width(m_surface) != width ||
+            cairo_image_surface_get_height(m_surface) != height
+        ) {
             cairo_surface_destroy(m_surface);
             m_surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
             m_context = cairo_create(m_surface);

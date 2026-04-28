@@ -17,6 +17,10 @@ namespace gui {
     }
 
     int Application::Start() {
+        if (m_windows.empty()) {
+            return 0;
+        }
+
         m_style = Json::parse(DefaultStyleJson);
         ProcessStyle(m_style);
 
@@ -31,7 +35,11 @@ namespace gui {
         for (auto& win : m_windows) {
             auto* root = win->OnBuild()(*win);
             win->SetRoot(root);
+            win->Update();
+            win->OnCreate();
         }
+
+        bool windowsInitialized = false;
 
         m_running = true;
         while (m_running) {

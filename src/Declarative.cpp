@@ -18,32 +18,59 @@
 
 namespace gui::declarative {
 
+#define MergeField(name) .name = b.name.has_value() ? b.name : name
+
+    ElementProps ElementProps::CopyWith(const ElementProps& b) const {
+        return ElementProps{
+            MergeField(tag),
+            MergeField(enabled),
+            MergeField(autoSize),
+            MergeField(flexGrow),
+            MergeField(bounds),
+            MergeField(style),
+        };
+    }
+
     void ElementSetup(Element& element, const ElementProps& props) {
-        if (props.bounds.w > 0)
-            element.SetSize({props.bounds.w, element.GetSize().h});
-        if (props.bounds.h > 0)
-            element.SetSize({element.GetSize().w, props.bounds.h});
-        element.SetPosition({props.bounds.x, props.bounds.y});
-        element.SetTag(props.tag);
-        element.SetAutoSize(props.autoSize);
-        element.SetFlexGrow(props.flexGrow);
-        element.SetStyle(props.style);
-        element.SetEnabled(props.enabled);
+        auto tag = props.tag.value_or("");
+        auto enabled = props.enabled.value_or(true);
+        auto autoSize = props.autoSize.value_or(false);
+        auto flexGrow = props.flexGrow.value_or(0.0f);
+        auto bounds = props.bounds.value_or(Rectangle{0, 0, 0, 0});
+        auto style = props.style.value_or(Json());
+
+        if (bounds.w > 0)
+            element.SetSize({bounds.w, element.GetSize().h});
+        if (bounds.h > 0)
+            element.SetSize({element.GetSize().w, bounds.h});
+        element.SetPosition({bounds.x, bounds.y});
+        element.SetTag(tag);
+        element.SetAutoSize(autoSize);
+        element.SetFlexGrow(flexGrow);
+        element.SetStyle(style);
+        element.SetEnabled(enabled);
     }
 
     WidgetDesc Column(const ColumnProps& props, const std::vector<WidgetDesc>& children) {
         return [props, children](Window& window) -> Element* {
-            auto& panel = window.Create<Panel>();
-            ElementSetup(panel, props.base);
+            auto base = props.base.value_or(ElementProps{});
+            auto gap = props.gap.value_or(0);
+            auto padding = props.padding.value_or(EdgeInsets::All(0));
+            auto align = props.align.value_or(FlexAlign::Start);
+            auto justify = props.justify.value_or(FlexJustify::Start);
+            auto showBackground = props.showBackground.value_or(false);
 
-            panel.SetBackgroundVisible(props.showBackground);
+            auto& panel = window.Create<gui::Panel>();
+            ElementSetup(panel, base);
+
+            panel.SetBackgroundVisible(showBackground);
 
             auto* flex = panel.GetLayout<FlexLayout>();
             flex->SetDirection(FlexDirection::Column);
-            flex->SetAlignItems(props.align);
-            flex->SetJustifyContent(props.justify);
-            flex->SetGap(props.gap);
-            flex->SetPadding(props.padding);
+            flex->SetAlignItems(align);
+            flex->SetJustifyContent(justify);
+            flex->SetGap(gap);
+            flex->SetPadding(padding);
 
             for (auto&& childDesc : children) {
                 Element* child = childDesc(window);
@@ -56,17 +83,24 @@ namespace gui::declarative {
 
     WidgetDesc Row(const RowProps& props, const std::vector<WidgetDesc>& children) {
         return [props, children](Window& window) -> Element* {
-            auto& panel = window.Create<Panel>();
-            ElementSetup(panel, props.base);
+            auto base = props.base.value_or(ElementProps{});
+            auto gap = props.gap.value_or(0);
+            auto padding = props.padding.value_or(EdgeInsets::All(0));
+            auto align = props.align.value_or(FlexAlign::Start);
+            auto justify = props.justify.value_or(FlexJustify::Start);
+            auto showBackground = props.showBackground.value_or(false);
 
-            panel.SetBackgroundVisible(props.showBackground);
+            auto& panel = window.Create<gui::Panel>();
+            ElementSetup(panel, base);
+
+            panel.SetBackgroundVisible(showBackground);
 
             auto* flex = panel.GetLayout<FlexLayout>();
             flex->SetDirection(FlexDirection::Row);
-            flex->SetAlignItems(props.align);
-            flex->SetJustifyContent(props.justify);
-            flex->SetGap(props.gap);
-            flex->SetPadding(props.padding);
+            flex->SetAlignItems(align);
+            flex->SetJustifyContent(justify);
+            flex->SetGap(gap);
+            flex->SetPadding(padding);
 
             for (auto&& childDesc : children) {
                 Element* child = childDesc(window);
@@ -79,40 +113,54 @@ namespace gui::declarative {
 
     WidgetDesc Text(const std::string& text, const TextProps& props) {
         return [text, props](Window& window) -> Element* {
+            auto base = props.base.value_or(ElementProps{});
+            auto align = props.align.value_or(Alignment::TopLeft);
+            auto icon = props.icon.value_or(nullptr);
+
             auto& label = window.Create<Label>();
-            ElementSetup(label, props.base);
+            ElementSetup(label, base);
             label.SetText(text);
-            label.SetAlignment(props.align);
-            label.SetIcon(props.icon);
+            label.SetAlignment(align);
+            label.SetIcon(icon);
             return &label;
         };
     }
 
     WidgetDesc Button(const std::string& text, const ButtonProps& props) {
         return [text, props](Window& window) -> Element* {
+            auto base = props.base.value_or(ElementProps{});
+            auto icon = props.icon.value_or(nullptr);
+            auto onClick = props.onClick.value_or(nullptr);
+
             auto& button = window.Create<gui::Button>();
-            ElementSetup(button, props.base);
+            ElementSetup(button, base);
             button.SetText(text);
-            button.SetIcon(props.icon);
-            button.SetOnClick(props.onClick);
+            button.SetIcon(icon);
+            button.SetOnClick(onClick);
             return &button;
         };
     }
 
     WidgetDesc TextEdit(const TextEditProps& props) {
         return [props](Window& window) -> Element* {
-            if (props.multiLine) {
+            auto base = props.base.value_or(ElementProps{});
+            auto text = props.text.value_or("");
+            auto onChanged = props.onChanged.value_or(nullptr);
+            auto multiLine = props.multiLine.value_or(false);
+            auto masked = props.masked.value_or(false);
+
+            if (multiLine) {
                 auto& edit = window.Create<TextArea>();
-                ElementSetup(edit, props.base);
-                edit.SetText(props.text);
-                edit.SetOnChange(props.onChanged);
+                ElementSetup(edit, base);
+                edit.SetText(text);
+                edit.SetOnChange(onChanged);
                 return &edit;
             } else {
                 auto& edit = window.Create<Edit>();
-                ElementSetup(edit, props.base);
-                edit.SetText(props.text);
-                edit.SetMasked(props.masked);
-                edit.SetOnChange(props.onChanged);
+                ElementSetup(edit, base);
+                edit.SetText(text);
+                edit.SetMasked(masked);
+                edit.SetOnChange(onChanged);
                 return &edit;
             }
         };
@@ -120,21 +168,26 @@ namespace gui::declarative {
 
     WidgetDesc Image(const ImageProps& props) {
         return [props](Window& window) -> Element* {
+            auto base = props.base.value_or(ElementProps{});
+            auto image = props.image.value_or(nullptr);
+            auto scaling = props.scaling.value_or(ImageScalingMode::Stretch);
+
             auto& imageView = window.Create<ImageView>();
-            ElementSetup(imageView, props.base);
-
-            imageView.SetImage(props.image);
-            imageView.SetScalingMode(props.scaling);
-
+            ElementSetup(imageView, base);
+            imageView.SetImage(image);
+            imageView.SetScalingMode(scaling);
             return &imageView;
         };
     }
 
     WidgetDesc ScrollView(const WidgetDesc& child, const ScrollViewProps& props) {
         return [child, props](Window& window) -> Element* {
+            auto base = props.base.value_or(ElementProps{});
+            auto scrollDirection = props.scrollDirection.value_or(Direction::Vertical);
+
             auto& sv = window.Create<gui::ScrollView>();
-            ElementSetup(sv, props.base);
-            sv.SetScrollDirection(props.scrollDirection);
+            ElementSetup(sv, base);
+            sv.SetScrollDirection(scrollDirection);
             Element* content = child(window);
             sv.SetElement(content);
             return &sv;
@@ -143,61 +196,88 @@ namespace gui::declarative {
 
     WidgetDesc CheckBox(const std::string& text, const CheckBoxProps& props) {
         return [props, text](Window& window) -> Element* {
+            auto base = props.base.value_or(ElementProps{});
+            auto checked = props.checked.value_or(false);
+            auto onChanged = props.onChanged.value_or(nullptr);
+
             auto& cb = window.Create<gui::CheckBox>();
-            ElementSetup(cb, props.base);
+            ElementSetup(cb, base);
             cb.SetText(text);
-            cb.SetChecked(props.checked);
-            cb.SetOnChanged(props.onChanged);
+            cb.SetChecked(checked);
+            cb.SetOnChanged(onChanged);
             return &cb;
         };
     }
 
     WidgetDesc RadioButton(const std::string& text, const RadioButtonProps& props) {
         return [props, text](Window& window) -> Element* {
+            auto base = props.base.value_or(ElementProps{});
+            auto group = props.group.value_or("");
+            auto checked = props.checked.value_or(false);
+            auto onChanged = props.onChanged.value_or(nullptr);
+
             auto& rb = window.Create<gui::RadioButton>();
-            ElementSetup(rb, props.base);
+            ElementSetup(rb, base);
             rb.SetText(text);
-            rb.SetGroup(props.group);
-            rb.SetChecked(props.checked);
-            rb.SetOnChanged(props.onChanged);
+            rb.SetGroup(group);
+            rb.SetChecked(checked);
+            rb.SetOnChanged(onChanged);
             return &rb;
         };
     }
 
     WidgetDesc Switch(const SwitchProps& props) {
         return [props](Window& window) -> Element* {
+            auto base = props.base.value_or(ElementProps{});
+            auto checked = props.checked.value_or(false);
+            auto onChanged = props.onChanged.value_or(nullptr);
+
             auto& sw = window.Create<gui::Switch>();
-            ElementSetup(sw, props.base);
-            sw.SetChecked(props.checked);
-            sw.SetOnChanged(props.onChanged);
+            ElementSetup(sw, base);
+            sw.SetChecked(checked);
+            sw.SetOnChanged(onChanged);
             return &sw;
         };
     }
 
     WidgetDesc Slider(const SliderProps& props) {
         return [props](Window& window) -> Element* {
+            auto base = props.base.value_or(ElementProps{});
+            auto direction = props.direction.value_or(Direction::Horizontal);
+            auto range = props.range.value_or(Range{0.0f, 1.0f});
+            auto value = props.value.value_or(0.0f);
+            auto step = props.step.value_or(0.01f);
+            auto onValueChange = props.onValueChange.value_or(nullptr);
+
             auto& slider = window.Create<gui::Slider>();
-            ElementSetup(slider, props.base);
-            slider.SetDirection(props.direction);
-            slider.SetRange(props.range.minimum, props.range.maximum);
-            slider.SetValue(props.value);
-            slider.SetStep(props.step);
-            slider.SetOnValueChange(props.onValueChange);
+            ElementSetup(slider, base);
+            slider.SetDirection(direction);
+            slider.SetRange(range.minimum, range.maximum);
+            slider.SetValue(value);
+            slider.SetStep(step);
+            slider.SetOnValueChange(onValueChange);
             return &slider;
         };
     }
 
     WidgetDesc MenuItem(const MenuItemProps& props) {
         return [props](Window& window) -> Element* {
+            auto base = props.base.value_or(ElementProps{});
+            auto text = props.text.value_or("");
+            auto icon = props.icon.value_or(nullptr);
+            auto checked = props.checked.value_or(false);
+            auto onClick = props.onClick.value_or(nullptr);
+            auto subMenu = props.subMenu.value_or(nullptr);
+
             auto& item = window.Create<gui::MenuItem>();
-            ElementSetup(item, props.base);
-            item.SetText(props.text);
-            item.SetIcon(props.icon);
-            item.SetChecked(props.checked);
-            item.SetOnClick(props.onClick);
-            if (props.subMenu) {
-                gui::Menu* subMenu = props.subMenu(window);
-                item.SetSubMenu(subMenu);
+            ElementSetup(item, base);
+            item.SetText(text);
+            item.SetIcon(icon);
+            item.SetChecked(checked);
+            item.SetOnClick(onClick);
+            if (subMenu) {
+                gui::Menu* sm = subMenu(window);
+                item.SetSubMenu(sm);
             }
             return &item;
         };
@@ -214,10 +294,13 @@ namespace gui::declarative {
 
     MenuDesc Menu(const MenuProps& props, const std::vector<WidgetDesc>& items) {
         return [props, items](Window& window) -> gui::Menu* {
+            auto base = props.base.value_or(ElementProps{});
+            auto onDismiss = props.onDismiss.value_or(nullptr);
+
             auto& menu = window.Create<gui::Menu>();
-            ElementSetup(menu, props.base);
+            ElementSetup(menu, base);
             menu.SetAutoSize(true);
-            menu.SetOnDismiss(props.onDismiss);
+            menu.SetOnDismiss(onDismiss);
 
             for (auto&& itemDesc : items) {
                 Element* el = itemDesc(window);
@@ -233,17 +316,25 @@ namespace gui::declarative {
 
     WidgetDesc SplitView(const SplitViewProps& props) {
         return [props](Window& window) -> Element* {
+            auto base = props.base.value_or(ElementProps{});
+            auto direction = props.direction.value_or(Direction::Horizontal);
+            auto align = props.align.value_or(SplitViewAlign::Start);
+            auto splitPosition = props.splitPosition.value_or(100);
+            auto first = props.first.value_or(nullptr);
+            auto second = props.second.value_or(nullptr);
+
             auto& splitView = window.Create<gui::SplitView>();
-            ElementSetup(splitView, props.base);
-            splitView.SetDirection(props.direction);
-            splitView.SetSplitPosition(props.splitPosition);
-            if (props.first) {
-                Element* first = props.first(window);
-                splitView.Add(first);
+            ElementSetup(splitView, base);
+            splitView.SetDirection(direction);
+            splitView.SetAlign(align);
+            splitView.SetSplitPosition(splitPosition);
+            if (first) {
+                Element* firstEl = first(window);
+                splitView.Add(firstEl);
             }
-            if (props.second) {
-                Element* second = props.second(window);
-                splitView.Add(second);
+            if (second) {
+                Element* secondEl = second(window);
+                splitView.Add(secondEl);
             }
             return &splitView;
         };
@@ -251,82 +342,118 @@ namespace gui::declarative {
 
     WidgetDesc BasicList(const BasicListProps& props) {
         return [props](Window& window) -> Element* {
+            auto base = props.base.value_or(ElementProps{});
+            auto items = props.items.value_or(std::vector<std::string>{});
+            auto selectedIndex = props.selectedIndex.value_or(-1);
+            auto onSelectionChanged = props.onSelectionChanged.value_or(nullptr);
+
             auto& list = window.Create<gui::List<std::string>>();
-            ElementSetup(list, props.base);
-            for (const auto& item : props.items) {
+            ElementSetup(list, base);
+            for (const auto& item : items)
                 list.AddItem(item, item);
-            }
-            list.SetSelectedIndex(props.selectedIndex);
-            list.SetOnSelectionChanged(props.onSelectionChanged);
+            list.SetSelectedIndex(selectedIndex);
+            list.SetOnSelectionChanged(onSelectionChanged);
             return &list;
         };
     }
 
     WidgetDesc ToolButton(const std::string& text, const ToolButtonProps& props) {
         return [text, props](Window& window) -> Element* {
+            auto base = props.base.value_or(ElementProps{});
+            auto icon = props.icon.value_or(nullptr);
+            auto iconSize = props.iconSize.value_or(16u);
+            auto group = props.group.value_or("");
+            auto onClick = props.onClick.value_or(nullptr);
+
             auto& button = window.Create<gui::ToolButton>();
-            ElementSetup(button, props.base);
+            ElementSetup(button, base);
             button.SetText(text);
-            button.SetIcon(props.icon);
-            button.SetIconSize(props.iconSize);
+            button.SetIcon(icon);
+            button.SetIconSize(iconSize);
             button.SetMode(gui::ToolButton::Mode::Normal);
-            button.SetGroup(props.group);
-            button.SetOnClick(props.onClick);
+            button.SetGroup(group);
+            button.SetOnClick(onClick);
             return &button;
         };
     }
 
     WidgetDesc ToolRadioButton(const std::string& text, const ToolButtonProps& props) {
         return [text, props](Window& window) -> Element* {
+            auto base = props.base.value_or(ElementProps{});
+            auto icon = props.icon.value_or(nullptr);
+            auto iconSize = props.iconSize.value_or(16u);
+            auto toggled = props.toggled.value_or(false);
+            auto group = props.group.value_or("");
+            auto onClick = props.onClick.value_or(nullptr);
+
             auto& button = window.Create<gui::ToolButton>();
-            ElementSetup(button, props.base);
+            ElementSetup(button, base);
             button.SetText(text);
-            button.SetIcon(props.icon);
-            button.SetIconSize(props.iconSize);
+            button.SetIcon(icon);
+            button.SetIconSize(iconSize);
             button.SetMode(gui::ToolButton::Mode::Radio);
-            button.SetGroup(props.group);
-            button.SetToggled(props.toggled);
-            button.SetOnClick(props.onClick);
+            button.SetGroup(group);
+            button.SetToggled(toggled);
+            button.SetOnClick(onClick);
             return &button;
         };
     }
 
     WidgetDesc ToolToggleButton(const std::string& text, const ToolButtonProps& props) {
         return [text, props](Window& window) -> Element* {
+            auto base = props.base.value_or(ElementProps{});
+            auto icon = props.icon.value_or(nullptr);
+            auto iconSize = props.iconSize.value_or(16u);
+            auto toggled = props.toggled.value_or(false);
+            auto onClick = props.onClick.value_or(nullptr);
+
             auto& button = window.Create<gui::ToolButton>();
-            ElementSetup(button, props.base);
+            ElementSetup(button, base);
             button.SetText(text);
-            button.SetIcon(props.icon);
-            button.SetIconSize(props.iconSize);
+            button.SetIcon(icon);
+            button.SetIconSize(iconSize);
             button.SetMode(gui::ToolButton::Mode::Toggle);
-            button.SetToggled(props.toggled);
-            button.SetOnClick(props.onClick);
+            button.SetToggled(toggled);
+            button.SetOnClick(onClick);
             return &button;
         };
     }
 
     WidgetDesc ProgressBar(const ProgressBarProps& props) {
         return [props](Window& window) -> Element* {
+            auto base = props.base.value_or(ElementProps{});
+            auto range = props.range.value_or(Range{0.0f, 1.0f});
+            auto value = props.value.value_or(0.0f);
+            auto indeterminate = props.indeterminate.value_or(false);
+            auto direction = props.direction.value_or(Direction::Horizontal);
+
             auto& progressBar = window.Create<gui::ProgressBar>();
-            ElementSetup(progressBar, props.base);
-            progressBar.SetRange(props.range.minimum, props.range.maximum);
-            progressBar.SetValue(props.value);
-            progressBar.SetIndeterminate(props.indeterminate);
-            progressBar.SetDirection(props.direction);
+            ElementSetup(progressBar, base);
+            progressBar.SetRange(range.minimum, range.maximum);
+            progressBar.SetValue(value);
+            progressBar.SetIndeterminate(indeterminate);
+            progressBar.SetDirection(direction);
             return &progressBar;
         };
     }
 
     WidgetDesc Spinner(const SpinnerProps& props) {
         return [props](Window& window) -> Element* {
+            auto base = props.base.value_or(ElementProps{});
+            auto range = props.range.value_or(Range{0.0f, 100.0f});
+            auto value = props.value.value_or(0.0f);
+            auto step = props.step.value_or(1.0f);
+            auto decimals = props.decimals.value_or(0);
+            auto onValueChange = props.onValueChange.value_or(nullptr);
+
             auto& spinner = window.Create<gui::Spinner>();
-            ElementSetup(spinner, props.base);
-            spinner.SetRange(props.range.minimum, props.range.maximum);
-            spinner.SetValue(props.value);
-            spinner.SetStep(props.step);
-            spinner.SetDecimals(props.decimals);
-            if (props.onValueChange)
-                spinner.SetOnValueChange(props.onValueChange);
+            ElementSetup(spinner, base);
+            spinner.SetRange(range.minimum, range.maximum);
+            spinner.SetValue(value);
+            spinner.SetStep(step);
+            spinner.SetDecimals(decimals);
+            if (onValueChange)
+                spinner.SetOnValueChange(onValueChange);
             return &spinner;
         };
     }
@@ -334,8 +461,50 @@ namespace gui::declarative {
     WidgetDesc Spacer() {
         return [](Window& window) -> Element* {
             auto& el = window.Create<gui::Element>();
+            el.SetLocalBounds(Rectangle{0, 0, 1, 1});
             el.SetFlexGrow(1.0f);
             return &el;
         };
     }
+
+    WidgetDesc Panel(const PanelProps& props, const std::vector<WidgetDesc>& children) {
+        return [props, children](Window& window) -> Element* {
+            auto base = props.base.value_or(ElementProps{});
+            auto padding = props.padding.value_or(EdgeInsets::All(0));
+            auto showBackground = props.showBackground.value_or(false);
+
+            auto& panel = window.Create<gui::Panel>();
+            ElementSetup(panel, base);
+
+            panel.SetBackgroundVisible(showBackground);
+            panel.SetLayout(nullptr);
+
+            for (auto&& childDesc : children) {
+                Element* child = childDesc(window);
+                panel.Add(child);
+            }
+
+            return &panel;
+        };
+    }
+
+    ToolButtonProps ToolButtonProps::CopyWith(const ToolButtonProps& b) const {
+        return ToolButtonProps{
+            MergeField(base),
+            MergeField(icon),
+            MergeField(iconSize),
+            MergeField(toggled),
+            MergeField(onClick),
+            MergeField(group),
+        };
+    }
+
+    PanelProps PanelProps::CopyWith(const PanelProps& b) const {
+        return PanelProps{
+            MergeField(base),
+            MergeField(padding),
+            MergeField(showBackground),
+        };
+    }
+
 } // namespace gui::declarative

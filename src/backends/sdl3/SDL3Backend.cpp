@@ -297,6 +297,10 @@ namespace gui {
                 break;
         }
 
+        if (config.resizable) {
+            flags |= SDL_WINDOW_RESIZABLE;
+        }
+
         SDL_Window* sdlWindow =
             SDL_CreateWindow(config.title.c_str(), config.width, config.height, flags);
 
