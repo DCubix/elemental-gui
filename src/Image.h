@@ -11,6 +11,7 @@ struct NSVGrasterizer;
 namespace gui {
     struct Color;
     class Graphics;
+    struct Size;
 
     class Image {
         friend class Graphics;
@@ -33,6 +34,10 @@ namespace gui {
         int GetWidth() const { return m_width; }
         int GetHeight() const { return m_height; }
         Type GetType() const { return m_type; }
+        Size GetSize() const;
+
+        void Lock();
+        void Unlock();
 
         Color GetPixel(int x, int y) const;
         void SetPixel(int x, int y, const Color& color);
@@ -46,6 +51,11 @@ namespace gui {
         Type m_type{Type::Bitmap};
         int m_width{0}, m_height{0};
         cairo_surface_t* m_surface{nullptr};
+
+        struct {
+            unsigned char* data{nullptr};
+            int stride{0};
+        } m_lockedData;
 
         // SVG-specific
         NSVGimage* m_svgImage{nullptr};

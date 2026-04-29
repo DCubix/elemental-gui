@@ -110,7 +110,7 @@ namespace gui {
             cairo_fill_preserve(m_context);
     }
 
-    void Graphics::DrawImage(Image* img, int x, int y, int w, int h) {
+    void Graphics::DrawImage(Image* img, int x, int y, int w, int h, ImageFiltering filter) {
         if (!img->IsValid())
             return;
 
@@ -145,6 +145,17 @@ namespace gui {
             double(h) / double(img->GetHeight())
         );
         cairo_set_source_surface(m_context, img->m_surface, 0, 0);
+        switch (filter) {
+            case ImageFiltering::Nearest:
+                cairo_pattern_set_filter(cairo_get_source(m_context), CAIRO_FILTER_NEAREST);
+                break;
+            case ImageFiltering::Linear:
+                cairo_pattern_set_filter(cairo_get_source(m_context), CAIRO_FILTER_FAST);
+                break;
+            case ImageFiltering::Bilinear:
+                cairo_pattern_set_filter(cairo_get_source(m_context), CAIRO_FILTER_BILINEAR);
+                break;
+        }
         cairo_paint(m_context);
         cairo_restore(m_context);
     }

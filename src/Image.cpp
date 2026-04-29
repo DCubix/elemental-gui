@@ -103,12 +103,34 @@ namespace gui {
         m_surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
     }
 
-    Color Image::GetPixel(int x, int y) const {
+    Size Image::GetSize() const {
+        return {m_width, m_height};
+    }
+
+    void Image::Lock() {
+        if (m_lockedData.data) {
+            throw std::runtime_error("Image is already locked.");
+        }
         cairo_surface_flush(m_surface);
-        unsigned char* data = cairo_image_surface_get_data(m_surface);
-        int stride = cairo_image_surface_get_stride(m_surface);
+        m_lockedData.data = cairo_image_surface_get_data(m_surface);
+        m_lockedData.stride = cairo_image_surface_get_stride(m_surface);
+    }
+
+    void Image::Unlock() {
+        if (!m_lockedData.data) {
+            throw std::runtime_error("Image was not locked.");
+        }
+        cairo_surface_mark_dirty(m_surface);
+        m_lockedData.data = nullptr;
+        m_lockedData.stride = 0;
+    }
+
+    Color Image::GetPixel(int x, int y) const {
+        if (!m_lockedData.data) {
+            throw std::runtime_error("Image data must be locked.");
+        }
         // Assuming ARGB format (4 bytes per pixel)
-        unsigned char* pixel = data + y * stride + x * 4;
+        unsigned char* pixel = m_lockedData.data + y * m_lockedData.stride + x * 4;
         float b = pixel[0] / 255.0f;
         float g = pixel[1] / 255.0f;
         float r = pixel[2] / 255.0f;
@@ -117,35 +139,31 @@ namespace gui {
     }
 
     void Image::SetPixel(int x, int y, const Color& color) {
-        cairo_surface_flush(m_surface);
-        unsigned char* data = cairo_image_surface_get_data(m_surface);
-        int stride = cairo_image_surface_get_stride(m_surface);
+        if (!m_lockedData.data) {
+            throw std::runtime_error("Image data must be locked.");
+        }
+        if (x < 0 || y < 0 || x >= m_width || y >= m_height) {
+            return;
+        }
         // Assuming ARGB format (4 bytes per pixel)
-        unsigned char* pixel = data + y * stride + x * 4;
+        unsigned char* pixel = m_lockedData.data + y * m_lockedData.stride + x * 4;
         pixel[0] = static_cast<unsigned char>(color.b * 255.0f);
         pixel[1] = static_cast<unsigned char>(color.g * 255.0f);
         pixel[2] = static_cast<unsigned char>(color.r * 255.0f);
         pixel[3] = static_cast<unsigned char>(color.a * 255.0f);
-        cairo_surface_mark_dirty(m_surface);
     }
 
     void Image::SetPixels(const unsigned char* data, int stride) {
-        if (!m_surface)
-            return;
-
-        cairo_surface_flush(m_surface);
-
-        unsigned char* surfaceData = cairo_image_surface_get_data(m_surface);
-        int surfaceStride = cairo_image_surface_get_stride(m_surface);
-
+        if (!m_surface) {
+            throw std::runtime_error("Image data must be locked.");
+        }
         for (int y = 0; y < m_height; y++) {
             std::memcpy(
-                surfaceData + y * surfaceStride,
+                m_lockedData.data + y * m_lockedData.stride,
                 data + y * stride,
-                std::min(surfaceStride, stride)
+                std::min(m_lockedData.stride, stride)
             );
         }
-        cairo_surface_mark_dirty(m_surface);
     }
 
     void Image::Resize(int w, int h) {

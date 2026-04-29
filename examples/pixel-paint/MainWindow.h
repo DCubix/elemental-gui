@@ -29,5 +29,4 @@ public:
     };
 
     gui::Image icons[icCount];
-    gui::PointI viewPosition{0, 0};
 };

@@ -164,13 +164,5 @@ void MainWindow::RepositionCanvas() {
     auto* canvas = FindByTag<Canvas>("canvas");
     if (!canvas)
         return;
-
-    auto* parent = canvas->GetParent();
-
-    auto cs = canvas->GetSize();
-    auto ps = parent->GetSize();
-    int cx = (ps.w / 2 - cs.w / 2) + viewPosition.x;
-    int cy = (ps.h / 2 - cs.h / 2) + viewPosition.y;
-
-    canvas->SetPosition({cx, cy});
+    canvas->Reposition();
 }

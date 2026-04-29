@@ -101,6 +101,8 @@ namespace gui {
 
     enum class LineJoin { Miter = 0, Round, Bevel };
 
+    enum class ImageFiltering { Nearest = 0, Linear, Bilinear };
+
     class Graphics;
     using DrawFunction = std::function<void(Graphics&)>;
 
@@ -123,7 +125,14 @@ namespace gui {
         void Stroke(bool preserve = false);
         void Fill(bool preserve = false);
 
-        void DrawImage(Image* img, int x, int y, int w, int h);
+        void DrawImage(
+            Image* img,
+            int x,
+            int y,
+            int w,
+            int h,
+            ImageFiltering filter = ImageFiltering::Bilinear
+        );
         void DrawShadow(float elevation, int x, int y, int w, int h, float radius);
 
         void StyledPaint(Json style);
