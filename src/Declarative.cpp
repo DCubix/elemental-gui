@@ -490,13 +490,13 @@ namespace gui::declarative {
     WidgetDesc ColorPicker(const ColorPickerProps& props) {
         return [props](Window& window) -> Element* {
             auto base = props.base.value_or(ElementProps{});
-            auto selectedColor = props.selectedColor.value_or(Color::FromRGB(0.0f, 0.0f, 0.0f));
             auto onChange = props.onChange.value_or(nullptr);
 
             auto& picker = window.Create<gui::ColorPicker>();
             ElementSetup(picker, base);
 
-            picker.SetSelected(selectedColor);
+            if (props.selectedColor.has_value())
+                picker.SetSelected(props.selectedColor.value());
             picker.SetOnChange(onChange);
 
             return &picker;

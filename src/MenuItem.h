@@ -15,7 +15,10 @@ namespace gui {
 
         void OnMouseDown(MouseEvent e) override;
         void OnMouseUp(MouseEvent e) override;
-        void OnMouseMove(MotionEvent e) override;
+        void OnMouseEnter() override;
+        void OnMouseLeave() override;
+
+        void ClearHoverState();
 
         Size GetPreferredSize() const override;
 

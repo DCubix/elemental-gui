@@ -94,8 +94,9 @@ namespace gui {
             return;
 
         if (m_state == ButtonState::Click) {
-            Rectangle b = GetBounds();
-            if (b.HasPoint(e.x, e.y)) {
+            // e.x/y are element-local (Element::OnEvent subtracts GetBounds() origin)
+            Size sz = GetSize();
+            if (Rectangle{0, 0, sz.w, sz.h}.HasPoint(e.x, e.y)) {
                 if (m_onClick)
                     m_onClick();
                 m_state = ButtonState::Normal;
@@ -106,24 +107,28 @@ namespace gui {
         }
     }
 
-    void MenuItem::OnMouseMove(MotionEvent e) {
+    void MenuItem::OnMouseEnter() {
         if (m_separator)
             return;
-        Rectangle b = GetBounds();
+        m_state = ButtonState::Hover;
+        Invalidate();
+        NotifyParentMenuHover();
+    }
 
-        if (b.HasPoint(e.x, e.y)) {
-            if (m_state == ButtonState::Normal) {
-                m_state = ButtonState::Hover;
-                Invalidate();
-                NotifyParentMenuHover();
-            }
-        } else {
-            // Don't leave hover if mouse is in our open submenu
-            bool inSubMenu = m_subMenu && m_subMenu->IsOpen() && m_subMenu->HitTest(e.x, e.y);
-            if (!inSubMenu && m_state != ButtonState::Normal) {
-                m_state = ButtonState::Normal;
-                Invalidate();
-            }
+    void MenuItem::OnMouseLeave() {
+        if (m_separator)
+            return;
+        // Keep hover highlight while mouse is inside our open submenu
+        if (m_subMenu && m_subMenu->IsOpen())
+            return;
+        m_state = ButtonState::Normal;
+        Invalidate();
+    }
+
+    void MenuItem::ClearHoverState() {
+        if (m_state != ButtonState::Click) {
+            m_state = ButtonState::Normal;
+            Invalidate();
         }
     }
 

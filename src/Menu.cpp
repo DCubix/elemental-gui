@@ -191,6 +191,9 @@ namespace gui {
             subMenu->CloseSubMenu();
             m_window->DismissPopup(subMenu);
         }
+        // Submenu is now closed — the item's OnMouseLeave kept hover alive while it was open,
+        // so we must reset it manually now that the submenu is gone.
+        m_activeSubMenuItem->ClearHoverState();
         m_activeSubMenuItem = nullptr;
         Invalidate();
     }

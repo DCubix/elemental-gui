@@ -7,6 +7,8 @@ namespace gui {
     ColorPicker::ColorPicker()
         : Element() {
         SetLocalBounds({0, 0, 200, 200});
+        m_value = 1.0f;
+        m_selected = Color::FromHSVA(0.0f, 0.0f, 1.0f, 1.0f);
     }
 
     void ColorPicker::OnDraw(Graphics& g) {
@@ -130,15 +132,19 @@ namespace gui {
     void ColorPicker::OnMouseDown(MouseEvent e) {
         if (e.button != MouseButton::Left)
             return;
-        m_dragging = true;
-        m_clicked = m_hovered;
+        const Size sz = GetSatValSize();
+        if (Rectangle{0, 0, sz.w, sz.h}.HasPoint(e.x, e.y))
+            m_clicked = SatVal;
+        else if (Rectangle{sz.w + SLIDER_GAP, 0, SLIDER_SIZE, sz.h}.HasPoint(e.x, e.y))
+            m_clicked = Hue;
+        else if (Rectangle{0, sz.h + SLIDER_GAP, sz.w, SLIDER_SIZE}.HasPoint(e.x, e.y))
+            m_clicked = Alpha;
+        else
+            m_clicked = Unknown;
     }
 
     void ColorPicker::OnMouseMove(MotionEvent e) {
         const Size sz = GetSatValSize();
-        Rectangle svRegion{0, 0, sz.w, sz.h};
-        Rectangle hueRegion{sz.w + SLIDER_GAP, 0, SLIDER_SIZE, sz.h};
-        Rectangle alphaRegion{0, sz.h + SLIDER_GAP, sz.w, SLIDER_SIZE};
 
         float fx = static_cast<float>(e.x) / sz.w;
         float fy = static_cast<float>(e.y) / sz.h;
@@ -159,18 +165,10 @@ namespace gui {
             SetSelected(Color::FromHSVA(m_hue, m_saturation, m_value, m_selected.a));
             return;
         }
-
-        if (svRegion.HasPoint(e.x, e.y)) {
-            m_hovered = SatVal;
-        } else if (hueRegion.HasPoint(e.x, e.y)) {
-            m_hovered = Hue;
-        } else if (alphaRegion.HasPoint(e.x, e.y)) {
-            m_hovered = Alpha;
-        }
     }
 
     void ColorPicker::OnMouseUp(MouseEvent e) {
-        m_clicked = m_hovered = Unknown;
+        m_clicked = Unknown;
     }
 
     void ColorPicker::SetSelected(const Color& color) {

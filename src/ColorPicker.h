@@ -40,7 +40,7 @@ namespace gui {
 
     private:
         enum Region { Unknown = 0, SatVal, Hue, Alpha };
-        Region m_hovered{Unknown}, m_clicked{Unknown};
+        Region m_clicked{Unknown};
 
         bool m_dragging{false};
 
