@@ -46,16 +46,29 @@ dc::WidgetDesc MainWindow::OnBuild() {
         dc::ToolRadioButton("", toolProps.CopyWith({
             .base = BaseOf(toolProps).CopyWith({ .tag = "tool_pencil" }),
             .icon = &icons[icPencil],
+            .toggled = true,
+            .onClick = [this]() {
+                if (auto* c = FindByTag<Canvas>("canvas"))
+                    c->selectedTool = Canvas::ToolType::Pencil;
+            },
             .group = "tools",
         })),
         dc::ToolRadioButton("", toolProps.CopyWith({
             .base = BaseOf(toolProps).CopyWith({ .tag = "tool_curve" }),
             .icon = &icons[icCurve],
+            .onClick = [this]() {
+                if (auto* c = FindByTag<Canvas>("canvas"))
+                    c->selectedTool = Canvas::ToolType::Curve;
+            },
             .group = "tools",
         })),
         dc::ToolRadioButton("", toolProps.CopyWith({
             .base = BaseOf(toolProps).CopyWith({ .tag = "tool_fill" }),
             .icon = &icons[icFill],
+            .onClick = [this]() {
+                if (auto* c = FindByTag<Canvas>("canvas"))
+                    c->selectedTool = Canvas::ToolType::Fill;
+            },
             .group = "tools",
         })),
         dc::ToolRadioButton("", toolProps.CopyWith({

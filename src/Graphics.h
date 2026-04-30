@@ -21,9 +21,15 @@ namespace gui {
     struct Point {
         T x{}, y{};
 
-        T DistanceTo(const Point<T>& other) const {
-            return std::sqrt((x - other.x) * (x - other.x) + (y - other.y) * (y - other.y));
-        }
+        T Dot(const Point<T>& other) const { return x * other.x + y * other.y; }
+
+        T Cross(const Point<T>& other) const { return x * other.y - y * other.x; }
+
+        T GetLength() const { return std::sqrt(Dot(*this)); }
+
+        T DistanceTo(const Point<T>& other) const { return ((*this) - other).GetLength(); }
+
+        Point<T> Abs() const { return {std::abs(x), std::abs(y)}; }
 
         Point<T> operator+(const Point<T>& other) const {
             return Point<T>(x + other.x, y + other.y);
@@ -33,8 +39,19 @@ namespace gui {
             return Point<T>(x - other.x, y - other.y);
         }
 
-        Point<T> operator*(T scalar) const { return Point<T>(x * scalar, y * scalar); }
+        Point<T>& operator+=(const Point<T>& other) {
+            x += other.x;
+            y += other.y;
+            return *this;
+        }
 
+        Point<T>& operator-=(const Point<T>& other) {
+            x -= other.x;
+            y -= other.y;
+            return *this;
+        }
+
+        Point<T> operator*(T scalar) const { return Point<T>(x * scalar, y * scalar); }
         Point<T> operator/(T scalar) const { return Point<T>(x / scalar, y / scalar); }
     };
 
@@ -72,6 +89,8 @@ namespace gui {
 
         Color Darken(float amount) const;
         Color Lighten(float amount) const;
+
+        bool operator==(const Color& other) const;
 
         static Color FromHex(const std::string& hex);
         static Color FromRGBA(float r, float g, float b, float a = 1.0f);

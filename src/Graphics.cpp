@@ -1122,6 +1122,18 @@ namespace gui {
         );
     }
 
+    bool Color::operator==(const Color& other) const {
+        int ra = static_cast<int>(r * 255.0f);
+        int ga = static_cast<int>(g * 255.0f);
+        int ba = static_cast<int>(b * 255.0f);
+        int aa = static_cast<int>(a * 255.0f);
+        int rb = static_cast<int>(other.r * 255.0f);
+        int gb = static_cast<int>(other.g * 255.0f);
+        int bb = static_cast<int>(other.b * 255.0f);
+        int ab = static_cast<int>(other.a * 255.0f);
+        return ra == rb && ga == gb && ba == bb && aa == ab;
+    }
+
     Color Color::FromHex(const std::string& hex) {
         std::string cleanHex = hex;
         if (cleanHex[0] == '#') {
