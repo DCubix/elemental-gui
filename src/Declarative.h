@@ -293,6 +293,7 @@ namespace gui::declarative {
     struct ColorPickerProps {
         opt<ElementProps> base{std::nullopt};
         opt<Color> selectedColor{std::nullopt};
+        opt<ValueChanged<Color>> onChange{std::nullopt};
     };
     WidgetDesc ColorPicker(const ColorPickerProps& props);
 } // namespace gui::declarative

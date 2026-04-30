@@ -478,8 +478,8 @@
     "Menu": {
         "elevation": 8.0,
         "padding": {
-            "horizontal": 0.0,
-            "vertical": 4.0
+            "horizontal": 5.0,
+            "vertical": 5.0
         },
         "border": {
             "radius": 8.0,

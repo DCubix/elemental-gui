@@ -39,6 +39,9 @@ dc::WidgetDesc MainWindow::OnBuild() {
             .base = dc::ElementProps{
                 .bounds = gui::Rectangle::FromSize(150, 150),
             },
+            .onChange = [this](gui::Color color) {
+                FindByTag<Canvas>("canvas")->colors[0] = color;
+            },
         }),
     });
 
@@ -104,8 +107,9 @@ dc::WidgetDesc MainWindow::OnBuild() {
         dc::ToolButton("", toolProps.CopyWith({
             .base = BaseOf(toolProps).CopyWith({ .tag = "tool_palette" }),
             .icon = &icons[icPalette],
-            .onClick = [&colorPickerMenu, this]() {
-                FindByTag<gui::ToolButton>("tool_palette")->ShowPopup(colorPickerMenu(*this));
+            .onClick = [colorPickerMenu, this]() {
+                auto* menu = colorPickerMenu(*this);
+                FindByTag<gui::ToolButton>("tool_palette")->ShowPopup(menu);
             },
         })),
         dc::Spacer(),

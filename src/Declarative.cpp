@@ -305,10 +305,8 @@ namespace gui::declarative {
 
             for (auto&& itemDesc : items) {
                 Element* el = itemDesc(window);
-                if (auto* item = dynamic_cast<gui::MenuItem*>(el)) {
-                    item->SetAutoSize(true);
-                    menu.Add(item);
-                }
+                el->SetAutoSize(true);
+                menu.Add(el);
             }
 
             return &menu;
@@ -493,11 +491,13 @@ namespace gui::declarative {
         return [props](Window& window) -> Element* {
             auto base = props.base.value_or(ElementProps{});
             auto selectedColor = props.selectedColor.value_or(Color::FromRGB(0.0f, 0.0f, 0.0f));
+            auto onChange = props.onChange.value_or(nullptr);
 
             auto& picker = window.Create<gui::ColorPicker>();
             ElementSetup(picker, base);
 
             picker.SetSelected(selectedColor);
+            picker.SetOnChange(onChange);
 
             return &picker;
         };

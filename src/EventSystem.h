@@ -323,17 +323,23 @@ namespace gui {
         ~EventSystem() = default;
 
         void Subscribe(Subscriber* sub, EventType event);
+        void UnsubscribeAll(Subscriber* sub);
 
         template <DerivedFromEvent E, typename... Args>
         void Broadcast(Args&&... args) {
             E* e = new E(std::forward<Args>(args)...);
 
             auto evt = m_subscribers.find(e->Type());
-            if (evt == m_subscribers.end())
+            if (evt == m_subscribers.end()) {
+                delete e;
                 return;
+            }
+
+            // Snapshot so subscribe/unsubscribe inside OnEvent can't invalidate the iterator.
+            std::vector<Subscriber*> snapshot = evt->second;
 
             bool consumed = false;
-            for (auto&& sub : evt->second) {
+            for (auto* sub : snapshot) {
                 if (!sub->IsEnabled())
                     continue;
 

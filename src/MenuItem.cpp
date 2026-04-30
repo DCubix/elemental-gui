@@ -94,14 +94,14 @@ namespace gui {
             return;
 
         if (m_state == ButtonState::Click) {
-            Rectangle b = GetLocalBounds();
+            Rectangle b = GetBounds();
             if (b.HasPoint(e.x, e.y)) {
                 if (m_onClick)
                     m_onClick();
                 m_state = ButtonState::Normal;
+                Invalidate();
                 if (auto* menu = GetParentMenu())
                     menu->HideAll();
-                Invalidate();
             }
         }
     }
@@ -109,7 +109,7 @@ namespace gui {
     void MenuItem::OnMouseMove(MotionEvent e) {
         if (m_separator)
             return;
-        Rectangle b = GetLocalBounds();
+        Rectangle b = GetBounds();
 
         if (b.HasPoint(e.x, e.y)) {
             if (m_state == ButtonState::Normal) {

@@ -2,6 +2,8 @@
 
 #include "Application.h"
 
+#include <algorithm>
+
 namespace gui {
 
     Backend& Window::GetBackend() {
@@ -100,6 +102,10 @@ namespace gui {
         RequestRedraw();
     }
 
+    void Window::ScheduleDestroy(Element* el) {
+        m_pendingDestroy.push_back(el);
+    }
+
     void Window::SetRoot(Element* root) {
         m_root = root;
         RequestRedraw();
@@ -136,6 +142,22 @@ namespace gui {
     }
 
     void Window::Update() {
+        if (!m_pendingDestroy.empty()) {
+            auto& esys = m_application->GetEventSystem();
+            for (auto* el : m_pendingDestroy) {
+                if (el == m_focused)
+                    m_focused = nullptr;
+                esys.UnsubscribeAll(el);
+                m_popups.erase(std::remove(m_popups.begin(), m_popups.end(), el), m_popups.end());
+                m_elements.erase(
+                    std::remove_if(m_elements.begin(), m_elements.end(),
+                        [el](const std::unique_ptr<Element>& p) { return p.get() == el; }),
+                    m_elements.end());
+            }
+            m_pendingDestroy.clear();
+            RequestRedraw();
+        }
+
         if (m_shouldRedraw) {
             if (m_root)
                 m_root->SetLocalBounds(Rectangle(0, 0, m_config.width, m_config.height));

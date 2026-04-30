@@ -150,6 +150,7 @@ namespace gui {
 
     void Element::ShowPopup(Menu* el) {
         GetWindow()->ShowPopup(el);
+        el->PlaceItems();
 
         auto b = GetBounds();
         auto msz = el->GetPreferredSize();

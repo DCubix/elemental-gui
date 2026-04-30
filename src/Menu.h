@@ -5,6 +5,8 @@
 namespace gui {
     class Application;
     class Menu : public Element {
+        friend class Element;
+
     public:
         Menu();
         ~Menu() = default;
@@ -15,7 +17,7 @@ namespace gui {
 
         Size GetPreferredSize() const override;
 
-        void Add(MenuItem* item);
+        void Add(Element* item);
 
         void Show(int x, int y);
         void Hide();
@@ -32,8 +34,10 @@ namespace gui {
         Menu* GetParentMenu() const { return m_parentMenu; }
         void SetParentMenu(Menu* parent) { m_parentMenu = parent; }
 
-    private:
-        std::vector<MenuItem*> m_items;
+        void CollectAll(std::vector<Element*>& out);
+
+    protected:
+        std::vector<Element*> m_items;
         bool m_open{false};
         VoidCallback m_onDismiss;
         MenuItem* m_activeSubMenuItem{nullptr};

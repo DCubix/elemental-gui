@@ -66,6 +66,7 @@ namespace gui {
 
         void ShowPopup(Element* popup);
         void DismissPopup(Element* popup);
+        void ScheduleDestroy(Element* el);
 
         Element& GetRoot() { return *m_root; }
         void SetRoot(Element* root);
@@ -98,6 +99,7 @@ namespace gui {
 
         std::vector<std::unique_ptr<Element>> m_elements;
         std::vector<Element*> m_popups;
+        std::vector<Element*> m_pendingDestroy;
         Element* m_focused{nullptr};
         Element* m_root{nullptr};
 

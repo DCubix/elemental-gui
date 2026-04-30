@@ -170,7 +170,7 @@ namespace gui {
     }
 
     void ColorPicker::OnMouseUp(MouseEvent e) {
-        m_clicked = Unknown;
+        m_clicked = m_hovered = Unknown;
     }
 
     void ColorPicker::SetSelected(const Color& color) {
