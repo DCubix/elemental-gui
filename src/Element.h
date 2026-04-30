@@ -80,6 +80,7 @@ namespace gui {
         Element* GetParent() const { return m_parent; }
 
         void Invalidate();
+        void ShowPopup(Menu* el);
 
         bool IsVisible() const { return m_visible; }
         void SetVisible(bool v) {

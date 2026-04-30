@@ -289,4 +289,10 @@ namespace gui::declarative {
         PanelProps CopyWith(const PanelProps& b) const;
     };
     WidgetDesc Panel(const PanelProps& props, const std::vector<WidgetDesc>& children);
+
+    struct ColorPickerProps {
+        opt<ElementProps> base{std::nullopt};
+        opt<Color> selectedColor{std::nullopt};
+    };
+    WidgetDesc ColorPicker(const ColorPickerProps& props);
 } // namespace gui::declarative

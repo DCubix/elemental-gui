@@ -210,10 +210,10 @@ namespace gui {
 
             if (!selLines.empty()) {
                 auto hull = text::BuildOrthoHull(selLines);
-                g.BeginPath();
+                g.BeginSimplePath();
                 for (const auto& pt : hull)
                     g.AddPathPoint(pt.x, pt.y);
-                g.EndPath(true);
+                g.EndSimplePath(true);
                 g.StyledPaint(GetWindow()->GetApp()->GetStyle()["Selection"]);
             }
         }

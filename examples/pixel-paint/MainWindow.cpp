@@ -2,6 +2,8 @@
 
 #include "Canvas.h"
 
+#include <ToolButton.h>
+
 MainWindow::MainWindow()
     : gui::Window(
           gui::WindowConfig{
@@ -31,6 +33,14 @@ dc::WidgetDesc MainWindow::OnBuild() {
         },
         .iconSize = 20,
     };
+
+    auto colorPickerMenu = dc::Menu({}, {
+        dc::ColorPicker({
+            .base = dc::ElementProps{
+                .bounds = gui::Rectangle::FromSize(150, 150),
+            },
+        }),
+    });
 
     // Painting toolbar
     auto toolBar = dc::Column({
@@ -94,6 +104,9 @@ dc::WidgetDesc MainWindow::OnBuild() {
         dc::ToolButton("", toolProps.CopyWith({
             .base = BaseOf(toolProps).CopyWith({ .tag = "tool_palette" }),
             .icon = &icons[icPalette],
+            .onClick = [&colorPickerMenu, this]() {
+                FindByTag<gui::ToolButton>("tool_palette")->ShowPopup(colorPickerMenu(*this));
+            },
         })),
         dc::Spacer(),
     });
@@ -156,8 +169,10 @@ dc::WidgetDesc MainWindow::OnBuild() {
                         },
                     }, [](Canvas& canvas, const CanvasProps& props) {}),
                 }),
-                .second = dc::Text("Properties", {
-                    .align = gui::utils::Alignment::MiddleCenter,
+                .second = dc::Column({
+                    .align = gui::FlexAlign::Stretch,
+                }, {
+                    
                 }),
             }),
         }),

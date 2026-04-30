@@ -95,8 +95,8 @@ namespace gui {
         static Color FromHex(const std::string& hex);
         static Color FromRGBA(float r, float g, float b, float a = 1.0f);
         static Color FromRGB(float r, float g, float b);
-        static Color FromHSLA(float h, float s, float l, float a = 1.0f);
-        static Color FromHSL(float h, float s, float l);
+        static Color FromHSVA(float h, float s, float v, float a = 1.0f);
+        static Color FromHSV(float h, float s, float v);
         static Color FromStyle(Json style);
     };
 
@@ -122,8 +122,7 @@ namespace gui {
 
     enum class ImageFiltering { Nearest = 0, Linear, Bilinear };
 
-    class Graphics;
-    using DrawFunction = std::function<void(Graphics&)>;
+    using ColorStop = std::pair<float, Color>;
 
     class Graphics {
         friend class Application;
@@ -136,10 +135,18 @@ namespace gui {
         void SetLineCap(LineCap cap);
         void SetLineJoin(LineJoin join);
         void Color(float r, float g, float b, float a = 1.0f);
+        void
+        LinearGradient(const std::vector<ColorStop>& stops, const PointF& p1, const PointF& p2);
         void Rect(int x, int y, int w, int h);
         void RoundRect(int x, int y, int w, int h, float radius = 0.0f);
         void Arc(int x, int y, float radius, float startAngle, float endAngle);
+        void ArcNegative(int x, int y, float radius, float startAngle, float endAngle);
         void Line(int x1, int y1, int x2, int y2);
+        void MoveTo(int x, int y);
+        void LineTo(int x, int y);
+
+        void BeginPath();
+        void ClosePath();
 
         void Stroke(bool preserve = false);
         void Fill(bool preserve = false);
@@ -173,10 +180,10 @@ namespace gui {
 
         void GetStyledPath(Json style, int x, int y, int w, int h);
 
-        void BeginPath();
+        void BeginSimplePath();
         void AddPathRect(int x, int y, int w, int h);
         void AddPathPoint(int x, int y);
-        void EndPath(bool close = false);
+        void EndSimplePath(bool close = false);
 
         // Transformations
         void Translate(double tx, double ty);
@@ -209,6 +216,8 @@ namespace gui {
 
         uint32_t m_clipDepth{0};
         std::vector<PointI> m_pathPoints;
+
+        std::vector<cairo_pattern_t*> m_tempPatterns;
 
         // Parses a JSON paint object ({"color": [...]} or {"gradient": {...}})
         // and sets it as the cairo source. Returns a pattern that must be destroyed

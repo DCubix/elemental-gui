@@ -2,6 +2,7 @@
 
 #include "Button.h"
 #include "CheckBox.h"
+#include "ColorPicker.h"
 #include "Edit.h"
 #include "FlexLayout.h"
 #include "Menu.h"
@@ -485,6 +486,20 @@ namespace gui::declarative {
             }
 
             return &panel;
+        };
+    }
+
+    WidgetDesc ColorPicker(const ColorPickerProps& props) {
+        return [props](Window& window) -> Element* {
+            auto base = props.base.value_or(ElementProps{});
+            auto selectedColor = props.selectedColor.value_or(Color::FromRGB(0.0f, 0.0f, 0.0f));
+
+            auto& picker = window.Create<gui::ColorPicker>();
+            ElementSetup(picker, base);
+
+            picker.SetSelected(selectedColor);
+
+            return &picker;
         };
     }
 

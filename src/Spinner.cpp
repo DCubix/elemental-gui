@@ -76,11 +76,11 @@ namespace gui {
         {
             int cx = upRect.x + upRect.w / 2;
             int cy = upRect.y + upRect.h / 2;
-            g.BeginPath();
+            g.BeginSimplePath();
             g.AddPathPoint(cx - 4, cy + 2);
             g.AddPathPoint(cx, cy - 2);
             g.AddPathPoint(cx + 4, cy + 2);
-            g.EndPath(true);
+            g.EndSimplePath(true);
             g.Fill();
         }
 
@@ -88,11 +88,11 @@ namespace gui {
         {
             int cx = downRect.x + downRect.w / 2;
             int cy = downRect.y + downRect.h / 2;
-            g.BeginPath();
+            g.BeginSimplePath();
             g.AddPathPoint(cx - 4, cy - 2);
             g.AddPathPoint(cx, cy + 2);
             g.AddPathPoint(cx + 4, cy - 2);
-            g.EndPath(true);
+            g.EndSimplePath(true);
             g.Fill();
         }
     }

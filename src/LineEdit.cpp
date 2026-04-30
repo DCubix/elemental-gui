@@ -59,9 +59,9 @@ namespace gui {
             b = std::max(0, std::min(b, (int)m_text.chars.size() - 1));
             int x0 = m_text.chars[a].bounds.x;
             int x1 = m_text.chars[b].bounds.x;
-            g.BeginPath();
+            g.BeginSimplePath();
             g.AddPathRect(x0, 0, x1 - x0, lineHeight);
-            g.EndPath(true);
+            g.EndSimplePath(true);
             g.StyledPaint(GetWindow()->GetApp()->GetStyle()["Selection"]);
         }
 

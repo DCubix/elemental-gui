@@ -28,19 +28,19 @@ public:
         for (const auto& path : m_paths) {
             if (m_hoveredPath == &path) {
                 g.Color(0.2f, 1.0f, 0.05f);
-                g.BeginPath();
+                g.BeginSimplePath();
                 for (const auto& p : path.points)
                     g.AddPathPoint(p.x, p.y);
-                g.EndPath();
+                g.EndSimplePath();
                 g.LineWidth(7.0f);
                 g.Stroke();
             }
 
             g.Color(path.color.r, path.color.g, path.color.b);
-            g.BeginPath();
+            g.BeginSimplePath();
             for (const auto& p : path.points)
                 g.AddPathPoint(p.x, p.y);
-            g.EndPath();
+            g.EndSimplePath();
             g.LineWidth(5.0f);
             g.Stroke();
         }
@@ -59,10 +59,10 @@ public:
 
         if (!m_tempPoints.empty()) {
             g.Color(1.0f, 1.0f, 1.0f);
-            g.BeginPath();
+            g.BeginSimplePath();
             for (const auto& p : m_tempPoints)
                 g.AddPathPoint(p.x, p.y);
-            g.EndPath();
+            g.EndSimplePath();
             g.LineWidth(5.0f);
             g.Stroke();
         }

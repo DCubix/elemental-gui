@@ -2,6 +2,7 @@
 
 #include "Application.h"
 #include "EventSystem.h"
+#include "Menu.h"
 #include "Window.h"
 
 #include <cmath>
@@ -145,6 +146,28 @@ namespace gui {
             m_prevSize = GetSize();
             OnResize();
         }
+    }
+
+    void Element::ShowPopup(Menu* el) {
+        GetWindow()->ShowPopup(el);
+
+        auto b = GetBounds();
+        auto msz = el->GetPreferredSize();
+        auto wsz = GetWindow()->GetSize();
+
+        const int menuDist = 2;
+        int mx = b.x;
+        int my = b.y + b.h + menuDist;
+
+        if (mx + msz.w > wsz.w) {
+            mx = b.x - (msz.w - b.w) - menuDist;
+        }
+
+        if (my + msz.h > wsz.h) {
+            my = b.y - (msz.h - b.h) - menuDist;
+        }
+
+        el->Show(mx, my);
     }
 
     void Element::RequestFocus() {

@@ -62,6 +62,26 @@ namespace gui {
         cairo_set_source_rgba(m_context, r, g, b, a);
     }
 
+    void Graphics::LinearGradient(
+        const std::vector<ColorStop>& stops,
+        const PointF& p1,
+        const PointF& p2
+    ) {
+        cairo_pattern_t* pat = cairo_pattern_create_linear(p1.x, p1.y, p2.x, p2.y);
+        for (const auto& stop : stops) {
+            cairo_pattern_add_color_stop_rgba(
+                pat,
+                stop.first,
+                stop.second.r,
+                stop.second.g,
+                stop.second.b,
+                stop.second.a
+            );
+        }
+        cairo_set_source(m_context, pat);
+        m_tempPatterns.push_back(pat);
+    }
+
     void Graphics::Rect(int x, int y, int w, int h) {
         cairo_rectangle(m_context, double(x) + 0.5, double(y) + 0.5, w, h);
     }
@@ -91,9 +111,29 @@ namespace gui {
         cairo_arc(m_context, x, y, radius, startAngle, endAngle);
     }
 
+    void Graphics::ArcNegative(int x, int y, float radius, float startAngle, float endAngle) {
+        cairo_arc_negative(m_context, x, y, radius, startAngle, endAngle);
+    }
+
     void Graphics::Line(int x1, int y1, int x2, int y2) {
-        cairo_move_to(m_context, x1 + 0.5, y1);
-        cairo_line_to(m_context, x2 + 0.5, y2);
+        cairo_move_to(m_context, x1, y1);
+        cairo_line_to(m_context, x2, y2);
+    }
+
+    void Graphics::MoveTo(int x, int y) {
+        cairo_move_to(m_context, x, y);
+    }
+
+    void Graphics::LineTo(int x, int y) {
+        cairo_line_to(m_context, x, y);
+    }
+
+    void Graphics::BeginPath() {
+        cairo_new_path(m_context);
+    }
+
+    void Graphics::ClosePath() {
+        cairo_close_path(m_context);
     }
 
     void Graphics::Stroke(bool preserve) {
@@ -874,7 +914,7 @@ namespace gui {
         RoundRect(x, y, w - 1, h - 1, borderRadius);
     }
 
-    void Graphics::BeginPath() {
+    void Graphics::BeginSimplePath() {
         m_pathPoints.clear();
     }
 
@@ -889,7 +929,7 @@ namespace gui {
         m_pathPoints.push_back({x, y});
     }
 
-    void Graphics::EndPath(bool close) {
+    void Graphics::EndSimplePath(bool close) {
         if (m_pathPoints.empty())
             return;
         cairo_new_path(m_context);
@@ -941,6 +981,10 @@ namespace gui {
 
     void Graphics::Flush() {
         cairo_surface_flush(m_surface);
+        for (auto* pat : m_tempPatterns) {
+            cairo_pattern_destroy(pat);
+        }
+        m_tempPatterns.clear();
     }
 
     Graphics Graphics::CreateGraphics() {
@@ -1167,48 +1211,52 @@ namespace gui {
         return Color(r, g, b, 1.0f);
     }
 
-    Color Color::FromHSLA(float h, float s, float l, float a) {
-        h = std::fmod(h, 360.0f) / 60.0f;
-        s = std::clamp(s, 0.0f, 1.0f);
-        l = std::clamp(l, 0.0f, 1.0f);
-        a = std::clamp(a, 0.0f, 1.0f);
+    Color Color::FromHSVA(float h, float s, float v, float a) {
+        int hStep = static_cast<int>(h / 60.0f);
+        int i = hStep % 6;
+        float f = h / 60.0f - hStep;
+        float p = v * (1.0f - s);
+        float q = v * (1.0f - f * s);
+        float t = v * (1.0f - (1.0f - f) * s);
 
-        float c = (1 - std::abs(2 * l - 1)) * s;
-        float x = c * (1 - std::abs(std::fmod(h, 2) - 1));
-        float m = l - c / 2;
-
-        float r1, g1, b1;
-        if (h < 1) {
-            r1 = c;
-            g1 = x;
-            b1 = 0;
-        } else if (h < 2) {
-            r1 = x;
-            g1 = c;
-            b1 = 0;
-        } else if (h < 3) {
-            r1 = 0;
-            g1 = c;
-            b1 = x;
-        } else if (h < 4) {
-            r1 = 0;
-            g1 = x;
-            b1 = c;
-        } else if (h < 5) {
-            r1 = x;
-            g1 = 0;
-            b1 = c;
-        } else {
-            r1 = c;
-            g1 = 0;
-            b1 = x;
+        float r = 0.0f, g = 0.0f, b = 0.0f;
+        switch (i) {
+            case 0:
+                r = v;
+                g = t;
+                b = p;
+                break;
+            case 1:
+                r = q;
+                g = v;
+                b = p;
+                break;
+            case 2:
+                r = p;
+                g = v;
+                b = t;
+                break;
+            case 3:
+                r = p;
+                g = q;
+                b = v;
+                break;
+            case 4:
+                r = t;
+                g = p;
+                b = v;
+                break;
+            case 5:
+                r = v;
+                g = p;
+                b = q;
+                break;
         }
-
-        return Color(r1 + m, g1 + m, b1 + m, a);
+        return Color::FromRGBA(r, g, b, a);
     }
 
-    Color Color::FromHSL(float h, float s, float l) {
-        return Color::FromHSLA(h, s, l, 1.0f);
+    Color Color::FromHSV(float h, float s, float v) {
+        return Color::FromHSVA(h, s, v, 1.0f);
     }
 
     Color Color::FromStyle(Json style) {
