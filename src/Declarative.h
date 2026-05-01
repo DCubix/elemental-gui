@@ -45,9 +45,11 @@ namespace gui::declarative {
         opt<EdgeInsets> padding{std::nullopt};
         opt<FlexAlign> align{std::nullopt};
         opt<FlexJustify> justify{std::nullopt};
+        opt<FlexWrap> wrap{std::nullopt};
         opt<bool> showBackground{std::nullopt};
+
+        ColumnProps CopyWith(const ColumnProps& b) const;
     };
-    ColumnProps Props(const ColumnProps& a, const ColumnProps& b);
     WidgetDesc Column(const ColumnProps& props, const std::vector<WidgetDesc>& children);
 
     // --- Row widget --------------------------------------
@@ -57,9 +59,11 @@ namespace gui::declarative {
         opt<EdgeInsets> padding{std::nullopt};
         opt<FlexAlign> align{std::nullopt};
         opt<FlexJustify> justify{std::nullopt};
+        opt<FlexWrap> wrap{std::nullopt};
         opt<bool> showBackground{std::nullopt};
+
+        RowProps CopyWith(const RowProps& b) const;
     };
-    RowProps Props(const RowProps& a, const RowProps& b);
     WidgetDesc Row(const RowProps& props, const std::vector<WidgetDesc>& children);
 
     // --- Text widget -------------------------------------
@@ -67,17 +71,20 @@ namespace gui::declarative {
         opt<ElementProps> base{std::nullopt};
         opt<Alignment> align{std::nullopt};
         opt<gui::Image*> icon{std::nullopt};
+
+        TextProps CopyWith(const TextProps& b) const;
     };
-    TextProps Props(const TextProps& a, const TextProps& b);
     WidgetDesc Text(const std::string& text, const TextProps& props);
 
     // --- Button widget -----------------------------------
     struct ButtonProps {
         opt<ElementProps> base{std::nullopt};
         opt<gui::Image*> icon{std::nullopt};
+        opt<uint> iconSize{std::nullopt};
         opt<VoidCallback> onClick{std::nullopt};
+
+        ButtonProps CopyWith(const ButtonProps& b) const;
     };
-    ButtonProps Props(const ButtonProps& a, const ButtonProps& b);
     WidgetDesc Button(const std::string& text, const ButtonProps& props);
 
     // --- TextEdit widget -------------------------------------
@@ -87,8 +94,9 @@ namespace gui::declarative {
         opt<ValueChanged<std::string>> onChanged{std::nullopt};
         opt<bool> multiLine{std::nullopt};
         opt<bool> masked{std::nullopt};
+
+        TextEditProps CopyWith(const TextEditProps& b) const;
     };
-    TextEditProps Props(const TextEditProps& a, const TextEditProps& b);
     WidgetDesc TextEdit(const TextEditProps& props);
 
     // --- Image widget -------------------------------------
@@ -96,16 +104,18 @@ namespace gui::declarative {
         opt<ElementProps> base{std::nullopt};
         opt<gui::Image*> image{std::nullopt};
         opt<ImageScalingMode> scaling{std::nullopt};
+
+        ImageProps CopyWith(const ImageProps& b) const;
     };
-    ImageProps Props(const ImageProps& a, const ImageProps& b);
     WidgetDesc Image(const ImageProps& props);
 
     // --- ScrollView widget ---------------------------------
     struct ScrollViewProps {
         opt<ElementProps> base{std::nullopt};
         opt<Direction> scrollDirection{std::nullopt};
+
+        ScrollViewProps CopyWith(const ScrollViewProps& b) const;
     };
-    ScrollViewProps Props(const ScrollViewProps& a, const ScrollViewProps& b);
     WidgetDesc ScrollView(const WidgetDesc& child, const ScrollViewProps& props = {});
 
     // --- CheckBox widget ----------------------------------
@@ -113,8 +123,9 @@ namespace gui::declarative {
         opt<ElementProps> base{std::nullopt};
         opt<bool> checked{std::nullopt};
         opt<ValueChanged<bool>> onChanged{std::nullopt};
+
+        CheckBoxProps CopyWith(const CheckBoxProps& b) const;
     };
-    CheckBoxProps Props(const CheckBoxProps& a, const CheckBoxProps& b);
     WidgetDesc CheckBox(const std::string& text, const CheckBoxProps& props);
 
     // --- RadioButton widget --------------------------------
@@ -123,8 +134,9 @@ namespace gui::declarative {
         opt<std::string> group{std::nullopt};
         opt<bool> checked{std::nullopt};
         opt<ValueChanged<bool>> onChanged{std::nullopt};
+
+        RadioButtonProps CopyWith(const RadioButtonProps& b) const;
     };
-    RadioButtonProps Props(const RadioButtonProps& a, const RadioButtonProps& b);
     WidgetDesc RadioButton(const std::string& text, const RadioButtonProps& props);
 
     // --- Switch widget ------------------------------------
@@ -132,8 +144,9 @@ namespace gui::declarative {
         opt<ElementProps> base{std::nullopt};
         opt<bool> checked{std::nullopt};
         opt<ValueChanged<bool>> onChanged{std::nullopt};
+
+        SwitchProps CopyWith(const SwitchProps& b) const;
     };
-    SwitchProps Props(const SwitchProps& a, const SwitchProps& b);
     WidgetDesc Switch(const SwitchProps& props);
 
     // --- Slider widget -------------------------------------
@@ -144,8 +157,9 @@ namespace gui::declarative {
         opt<float> value{std::nullopt};
         opt<float> step{std::nullopt};
         opt<ValueChanged<float>> onValueChange{std::nullopt};
+
+        SliderProps CopyWith(const SliderProps& b) const;
     };
-    SliderProps Props(const SliderProps& a, const SliderProps& b);
     WidgetDesc Slider(const SliderProps& props);
 
     // --- MenuItem widget ----------------------------------
@@ -158,8 +172,9 @@ namespace gui::declarative {
         opt<bool> checked{std::nullopt};
         opt<VoidCallback> onClick{std::nullopt};
         opt<MenuDesc> subMenu{std::nullopt};
+
+        MenuItemProps CopyWith(const MenuItemProps& b) const;
     };
-    MenuItemProps Props(const MenuItemProps& a, const MenuItemProps& b);
     WidgetDesc MenuItem(const MenuItemProps& props);
     WidgetDesc MenuSeparator();
 
@@ -167,8 +182,9 @@ namespace gui::declarative {
     struct MenuProps {
         opt<ElementProps> base{std::nullopt};
         opt<VoidCallback> onDismiss{std::nullopt};
+
+        MenuProps CopyWith(const MenuProps& b) const;
     };
-    MenuProps Props(const MenuProps& a, const MenuProps& b);
     MenuDesc Menu(const MenuProps& props, const std::vector<WidgetDesc>& items);
 
     // --- Custom widget ------------------------------------
@@ -192,8 +208,9 @@ namespace gui::declarative {
         opt<gui::SplitViewAlign> align{std::nullopt};
         opt<WidgetDesc> first{std::nullopt};
         opt<WidgetDesc> second{std::nullopt};
+
+        SplitViewProps CopyWith(const SplitViewProps& b) const;
     };
-    SplitViewProps Props(const SplitViewProps& a, const SplitViewProps& b);
     WidgetDesc SplitView(const SplitViewProps& props);
 
     // --- List widget -------------------------------------
@@ -203,18 +220,17 @@ namespace gui::declarative {
         opt<std::vector<ListItem<T>>> items{std::nullopt};
         opt<int> selectedIndex{std::nullopt};
         opt<ValueChanged<int>> onSelectionChanged{std::nullopt};
-    };
 
-    template <typename T>
-    ListProps<T> Props(const ListProps<T>& a, const ListProps<T>& b) {
-        return ListProps<T>{
-            .base = b.base.has_value() ? b.base : a.base,
-            .items = b.items.has_value() ? b.items : a.items,
-            .selectedIndex = b.selectedIndex.has_value() ? b.selectedIndex : a.selectedIndex,
-            .onSelectionChanged =
-                b.onSelectionChanged.has_value() ? b.onSelectionChanged : a.onSelectionChanged,
-        };
-    }
+        ListProps<T> CopyWith(const ListProps<T>& b) const {
+            return ListProps<T>{
+                .base = b.base.has_value() ? b.base : base,
+                .items = b.items.has_value() ? b.items : items,
+                .selectedIndex = b.selectedIndex.has_value() ? b.selectedIndex : selectedIndex,
+                .onSelectionChanged =
+                    b.onSelectionChanged.has_value() ? b.onSelectionChanged : onSelectionChanged,
+            };
+        }
+    };
 
     template <typename T>
     WidgetDesc List(const ListProps<T>& props) {
@@ -236,8 +252,9 @@ namespace gui::declarative {
         opt<std::vector<std::string>> items{std::nullopt};
         opt<int> selectedIndex{std::nullopt};
         opt<ValueChanged<int>> onSelectionChanged{std::nullopt};
+
+        BasicListProps CopyWith(const BasicListProps& b) const;
     };
-    BasicListProps Props(const BasicListProps& a, const BasicListProps& b);
     WidgetDesc BasicList(const BasicListProps& props);
 
     // --- ToolButton widget -------------------------------------
@@ -251,7 +268,6 @@ namespace gui::declarative {
 
         ToolButtonProps CopyWith(const ToolButtonProps& b) const;
     };
-    ToolButtonProps Props(const ToolButtonProps& a, const ToolButtonProps& b);
     WidgetDesc ToolButton(const std::string& text, const ToolButtonProps& props);
     WidgetDesc ToolRadioButton(const std::string& text, const ToolButtonProps& props);
     WidgetDesc ToolToggleButton(const std::string& text, const ToolButtonProps& props);
@@ -263,8 +279,9 @@ namespace gui::declarative {
         opt<float> value{std::nullopt};
         opt<bool> indeterminate{std::nullopt};
         opt<Direction> direction{std::nullopt};
+
+        ProgressBarProps CopyWith(const ProgressBarProps& b) const;
     };
-    ProgressBarProps Props(const ProgressBarProps& a, const ProgressBarProps& b);
     WidgetDesc ProgressBar(const ProgressBarProps& props);
 
     // --- Spinner widget -------------------------------------
@@ -275,8 +292,9 @@ namespace gui::declarative {
         opt<float> step{std::nullopt};
         opt<int> decimals{std::nullopt};
         opt<ValueChanged<float>> onValueChange{std::nullopt};
+
+        SpinnerProps CopyWith(const SpinnerProps& b) const;
     };
-    SpinnerProps Props(const SpinnerProps& a, const SpinnerProps& b);
     WidgetDesc Spinner(const SpinnerProps& props = {});
 
     WidgetDesc Spacer();
@@ -294,6 +312,8 @@ namespace gui::declarative {
         opt<ElementProps> base{std::nullopt};
         opt<Color> selectedColor{std::nullopt};
         opt<ValueChanged<Color>> onChange{std::nullopt};
+
+        ColorPickerProps CopyWith(const ColorPickerProps& b) const;
     };
     WidgetDesc ColorPicker(const ColorPickerProps& props);
 } // namespace gui::declarative

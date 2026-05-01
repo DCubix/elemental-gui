@@ -160,6 +160,15 @@ namespace gui {
             ImageFiltering filter = ImageFiltering::Bilinear
         );
         void DrawShadow(float elevation, int x, int y, int w, int h, float radius);
+        void DrawCheckerboard(
+            int x,
+            int y,
+            int w,
+            int h,
+            int cellSize,
+            float shade0 = 0.5f,
+            float shade1 = 0.75f
+        );
 
         void StyledPaint(Json style);
         void StyledRect(int x, int y, int w, int h, Json style);

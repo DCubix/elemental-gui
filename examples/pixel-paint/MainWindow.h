@@ -25,6 +25,9 @@ public:
         icCircle,
         icFill,
         icPalette,
+        icSwap,
+        icAdd,
+        icRemove,
         icCount
     };
 

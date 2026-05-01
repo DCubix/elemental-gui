@@ -122,8 +122,13 @@ namespace gui {
                     return;
             }
 
+            std::vector<Element*> snapshot;
+            snapshot.reserve(m_elements.size());
+            for (auto& el : m_elements)
+                snapshot.push_back(el.get());
+
             bool consumed = false;
-            for (auto&& el : m_elements) {
+            for (auto* el : snapshot) {
                 if (!el->IsEnabled())
                     continue;
                 if (el->GetParent() != nullptr)

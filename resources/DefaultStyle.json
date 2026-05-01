@@ -57,14 +57,14 @@
     },
     "DefaultText": {
         "font": "Sans",
-        "fontSize": 14.0,
+        "fontSize": 16.0,
         "fontSlant": "normal",
         "fontWeight": "normal",
         "color": "$textPrimary"
     },
     "DefaultTextBig": {
         "font": "Sans",
-        "fontSize": 24.0,
+        "fontSize": 22.0,
         "fontSlant": "normal",
         "fontWeight": "bold"
     },

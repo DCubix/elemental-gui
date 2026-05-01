@@ -2,7 +2,164 @@
 
 #include "Canvas.h"
 
+#include <ColorPicker.h>
+#include <Panel.h>
 #include <ToolButton.h>
+
+struct DefaultProps {
+    dc::opt<dc::ElementProps> base{};
+};
+
+class ColorView : public gui::Element {
+public:
+    ColorView()
+        : gui::Element() {}
+
+    void OnDraw(gui::Graphics& g) override {
+        const gui::Size sz = GetSize();
+
+        g.ClipPushRoundRect(0, 0, sz.w, sz.h, 8.0f);
+
+        g.DrawCheckerboard(0, 0, sz.w, sz.h, 8);
+
+        g.Rect(sz.w / 2 - 2, 0, sz.w / 2 + 4, sz.h);
+        g.Color(m_color.r, m_color.g, m_color.b, m_color.a);
+        g.Fill();
+        g.Rect(0, 0, sz.w / 2, sz.h);
+        g.Color(m_color.r, m_color.g, m_color.b, 1.0f);
+        g.Fill();
+
+        g.ClipPop();
+    }
+
+    gui::Color GetColor() const { return m_color; }
+    void SetColor(const gui::Color& color) { m_color = color; }
+
+private:
+    gui::Color m_color{gui::Color::FromHex("#000")};
+};
+
+class PaletteSelector : public gui::Element {
+public:
+    PaletteSelector()
+        : gui::Element() {}
+
+    void OnDraw(gui::Graphics& g) override {
+        auto fnDrawBlock = [&g](int x, int y, int size, bool selected, const gui::Color& col) {
+            gui::Rectangle b{x + 2, y + 2, size - 4, size - 4};
+
+            g.ClipPushRoundRect(b.x, b.y, b.w, b.h, 6.0f);
+            g.DrawCheckerboard(b.x, b.y, b.w, b.h, 6);
+
+            g.Rect(b.x, b.y, b.w, b.h);
+            g.Color(col.r, col.g, col.b, col.a);
+            g.Fill();
+
+            g.ClipPushPath([&]() {
+                g.BeginPath();
+                g.MoveTo(x, y);
+                g.LineTo(x + size, y);
+                g.LineTo(x, y + size);
+                g.ClosePath();
+            });
+            g.Rect(b.x, b.y, b.w, b.h);
+            g.Color(col.r, col.g, col.b, 1.0f);
+            g.Fill();
+            g.ClipPop();
+
+            g.ClipPop();
+
+            if (selected) {
+                g.RoundRect(b.x, b.y, b.w, b.h, 6.0f);
+                g.LineWidth(4.0f);
+                g.Color(0.0f, 0.0f, 0.0f);
+                g.Stroke(true);
+
+                g.LineWidth(2.0f);
+                g.Color(1.0f, 1.0f, 1.0f);
+                g.Stroke();
+            }
+        };
+
+        const gui::Size sz = GetSize();
+        const int cellsPerRow = sz.w / cellSize;
+
+        int x = 0, y = 0;
+        int index = 0;
+        for (const auto& col : m_palette) {
+            if (x + cellSize > sz.w) {
+                x = 0;
+                y += cellSize;
+            }
+            fnDrawBlock(x, y, cellSize, index == m_selected, col);
+            x += cellSize;
+            index++;
+        }
+    }
+
+    void OnMouseUp(gui::MouseEvent e) override {
+        if (e.button != gui::MouseButton::Left)
+            return;
+        const gui::Size sz = GetSize();
+        const int cellsPerRow = sz.w / cellSize;
+        int x = 0, y = 0;
+        int index = 0;
+        for (const auto& col : m_palette) {
+            if (x + cellSize > sz.w) {
+                x = 0;
+                y += cellSize;
+            }
+            if (gui::Rectangle{x, y, cellSize, cellSize}.HasPoint(e.x, e.y)) {
+                SetSelected(index);
+                break;
+            }
+            x += cellSize;
+            index++;
+        }
+    }
+
+    void Add(const gui::Color& color) {
+        m_palette.push_back(color);
+        Invalidate();
+    }
+
+    void Remove(size_t index) {
+        if (index == (size_t)-1)
+            return;
+        m_palette.erase(m_palette.begin() + index);
+        m_selected = index == m_selected ? -1 : m_selected;
+        Invalidate();
+    }
+
+    int GetSelected() const { return m_selected; }
+    void SetSelected(int index) {
+        m_selected = index;
+        m_selected = std::clamp(m_selected, -1, int(m_palette.size()) - 1);
+        if (m_onSelect && m_selected >= 0)
+            m_onSelect(m_palette[m_selected]);
+        Invalidate();
+    }
+
+    gui::Size GetPreferredSize() const override {
+        const gui::Size sz = GetSize();
+        const int cellsPerRow = sz.w / cellSize;
+        int rowCount = (int(m_palette.size()) / cellsPerRow) + 1;
+        return {cellSize * cellsPerRow, cellSize * rowCount};
+    }
+
+    void SetOnSelect(ValueChanged<gui::Color> onSelect) { m_onSelect = onSelect; }
+
+private:
+    const int cellSize = 32;
+    int m_selected{-1};
+    std::vector<gui::Color> m_palette;
+    ValueChanged<gui::Color> m_onSelect;
+};
+
+struct PaletteSelectorProps {
+    dc::opt<dc::ElementProps> base{std::nullopt};
+    dc::opt<ValueChanged<gui::Color>> onSelect{std::nullopt};
+};
 
 MainWindow::MainWindow()
     : gui::Window(
@@ -23,6 +180,9 @@ dc::WidgetDesc MainWindow::OnBuild() {
     icons[icCircle] = gui::Image("ellipse.svg");
     icons[icFill] = gui::Image("color-fill.svg");
     icons[icPalette] = gui::Image("color-palette.svg");
+    icons[icSwap] = gui::Image("swap-horizontal.svg");
+    icons[icAdd] = gui::Image("add.svg");
+    icons[icRemove] = gui::Image("remove.svg");
 
     Show();
 
@@ -34,16 +194,17 @@ dc::WidgetDesc MainWindow::OnBuild() {
         .iconSize = 20,
     };
 
-    auto colorPickerMenu = dc::Menu({}, {
-        dc::ColorPicker({
-            .base = dc::ElementProps{
-                .bounds = gui::Rectangle::FromSize(150, 150),
-            },
-            .onChange = [this](gui::Color color) {
-                FindByTag<Canvas>("canvas")->colors[0] = color;
-            },
-        }),
-    });
+    const auto textProps = dc::TextProps{
+        .base = dc::ElementProps{
+            .autoSize = true,
+            .style = Json::parse(R"({
+                "fontSize": 17.0,
+                "fontWeight": "bold",
+                "color": "#80FFFFFF"
+            })"),
+        },
+        .align = gui::utils::Alignment::MiddleLeft,
+    };
 
     // Painting toolbar
     auto toolBar = dc::Column({
@@ -104,15 +265,109 @@ dc::WidgetDesc MainWindow::OnBuild() {
             .icon = &icons[icCircle],
             .group = "tools",
         })),
-        dc::ToolButton("", toolProps.CopyWith({
-            .base = BaseOf(toolProps).CopyWith({ .tag = "tool_palette" }),
-            .icon = &icons[icPalette],
-            .onClick = [colorPickerMenu, this]() {
-                auto* menu = colorPickerMenu(*this);
-                FindByTag<gui::ToolButton>("tool_palette")->ShowPopup(menu);
-            },
-        })),
         dc::Spacer(),
+    });
+
+    const auto colorSelectionArea = dc::Row({
+        .base = dc::ElementProps{
+            .bounds = gui::Rectangle::FromHeight(32),
+        },
+        .gap = 8,
+        .align = gui::FlexAlign::Stretch,
+    }, {
+        dc::Custom<ColorView, DefaultProps>({
+            .base = dc::ElementProps{
+                .tag = "color0",
+                .flexGrow = 1.0f,
+            },
+        }, [this](ColorView& el, const DefaultProps& props) {
+            auto* canvas = FindByTag<Canvas>("canvas");
+            el.SetColor(canvas->colors[0]);
+        }),
+        dc::Button("", {
+            .base = dc::ElementProps{
+                .bounds = gui::Rectangle::FromSize(32, 32),
+            },
+            .icon = &icons[icSwap],
+            .iconSize = 20,
+            .onClick = [this]() {
+                auto* canvas = FindByTag<Canvas>("canvas");
+                auto* colorView0 = FindByTag<ColorView>("color0");
+                auto* colorView1 = FindByTag<ColorView>("color1");
+                auto* picker = FindByTag<gui::ColorPicker>("picker");
+                std::swap(canvas->colors[0], canvas->colors[1]);
+                colorView0->SetColor(canvas->colors[0]);
+                colorView1->SetColor(canvas->colors[1]);
+                picker->SetSelected(canvas->colors[0]);
+            },
+        }),
+        dc::Custom<ColorView, DefaultProps>({
+            .base = dc::ElementProps{
+                .tag = "color1",
+                .flexGrow = 1.0f,
+            },
+        }, [this](ColorView& el, const DefaultProps& props) {
+            auto* canvas = FindByTag<Canvas>("canvas");
+            el.SetColor(canvas->colors[1]);
+        }),
+    });
+
+    const auto colorPaletteArea = dc::Column({
+        .base = dc::ElementProps{
+            .autoSize = true,
+        },
+        .gap = 4,
+        .align = gui::FlexAlign::Stretch,
+    }, {
+        dc::Row({
+            .base = dc::ElementProps{
+                .bounds = gui::Rectangle::FromHeight(32),
+            },
+            .gap = 6,
+            .justify = gui::FlexJustify::End,
+        }, {
+            dc::Text("Palette", textProps.CopyWith({
+                .base = BaseOf(textProps).CopyWith({ .flexGrow = 1.0f }),
+            })),
+            dc::Button("", {
+                .base = dc::ElementProps{
+                    .bounds = gui::Rectangle::FromSize(24, 24),
+                },
+                .icon = &icons[icAdd],
+                .onClick = [this]() {
+                    auto* picker = FindByTag<gui::ColorPicker>("picker");
+                    auto* palette = FindByTag<PaletteSelector>("palette");
+                    palette->Add(picker->GetSelected());
+                },
+            }),
+            dc::Button("", {
+                .base = dc::ElementProps{
+                    .bounds = gui::Rectangle::FromSize(24, 24),
+                },
+                .icon = &icons[icRemove],
+                .onClick = [this]() {
+                    auto* palette = FindByTag<PaletteSelector>("palette");
+                    palette->Remove(palette->GetSelected());
+                },
+            }),
+        }),
+        dc::Custom<PaletteSelector, PaletteSelectorProps>({
+            .base = dc::ElementProps{
+                .tag = "palette",
+                .bounds = gui::Rectangle::FromHeight(100),
+            },
+            .onSelect = [this](gui::Color color) {
+                if (FindByTag<PaletteSelector>("palette")->GetSelected() < 0) return;
+                auto* canvas = FindByTag<Canvas>("canvas");
+                auto* colorView0 = FindByTag<ColorView>("color0");
+                auto* picker = FindByTag<gui::ColorPicker>("picker");
+                canvas->colors[0] = color;
+                colorView0->SetColor(color);
+                picker->SetSelected(color);
+            },
+        }, [](PaletteSelector& el, const PaletteSelectorProps& props) {
+            el.SetOnSelect(props.onSelect.value_or(nullptr));
+        }),
     });
 
     return dc::Column({
@@ -174,9 +429,25 @@ dc::WidgetDesc MainWindow::OnBuild() {
                     }, [](Canvas& canvas, const CanvasProps& props) {}),
                 }),
                 .second = dc::Column({
+                    .gap = 12,
+                    .padding = gui::EdgeInsets::All(6),
                     .align = gui::FlexAlign::Stretch,
                 }, {
-                    
+                    dc::Text("Color Picker", textProps),
+                    dc::ColorPicker({
+                        .base = dc::ElementProps{
+                            .tag = "picker",
+                            .bounds = gui::Rectangle::FromSize(150, 200),
+                        },
+                        .onChange = [this](gui::Color color) {
+                            auto* canvas = FindByTag<Canvas>("canvas");
+                            auto* colorView0 = FindByTag<ColorView>("color0");
+                            canvas->colors[0] = color;
+                            colorView0->SetColor(color);
+                        },
+                    }),
+                    colorSelectionArea,
+                    colorPaletteArea,
                 }),
             }),
         }),

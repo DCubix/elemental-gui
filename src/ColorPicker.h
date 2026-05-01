@@ -53,5 +53,6 @@ namespace gui {
 
         Size GetSatValSize() const;
         void Pointer(Graphics& g, const PointI& p, int width, int height, float rotation);
+        void Update(int x, int y);
     };
 } // namespace gui

@@ -10,6 +10,7 @@ namespace gui {
     enum class FlexDirection { Row, Column };
     enum class FlexJustify { Start, Center, End, SpaceBetween, SpaceEvenly };
     enum class FlexAlign { Start, Center, End, Stretch };
+    enum class FlexWrap { NoWrap, Wrap, WrapReverse };
 
     class FlexLayout : public Layout {
     public:
@@ -33,10 +34,15 @@ namespace gui {
         void SetAlignItems(FlexAlign align) { m_align = align; }
         FlexAlign GetAlignItems() const { return m_align; }
 
+        void SetWrap(FlexWrap wrap) { m_wrap = wrap; }
+        FlexWrap GetWrap() const { return m_wrap; }
+
     private:
         FlexDirection m_direction;
         FlexJustify m_justify;
         FlexAlign m_align;
+        FlexWrap m_wrap{FlexWrap::NoWrap};
         std::vector<Element*> m_items;
+        int m_lastAppliedMainSize{0};
     };
 } // namespace gui

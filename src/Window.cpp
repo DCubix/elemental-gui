@@ -150,9 +150,13 @@ namespace gui {
                 esys.UnsubscribeAll(el);
                 m_popups.erase(std::remove(m_popups.begin(), m_popups.end(), el), m_popups.end());
                 m_elements.erase(
-                    std::remove_if(m_elements.begin(), m_elements.end(),
-                        [el](const std::unique_ptr<Element>& p) { return p.get() == el; }),
-                    m_elements.end());
+                    std::remove_if(
+                        m_elements.begin(),
+                        m_elements.end(),
+                        [el](const std::unique_ptr<Element>& p) { return p.get() == el; }
+                    ),
+                    m_elements.end()
+                );
             }
             m_pendingDestroy.clear();
             RequestRedraw();

@@ -27,24 +27,7 @@ void Canvas::OnDraw(gui::Graphics& g) {
 
     g.ClipPushRect(0, 0, b.w, b.h);
 
-    g.Rect(0, 0, b.w, b.h);
-    g.Color(shade0.r, shade0.g, shade0.b);
-    g.Fill();
-
-    const int cellsX = b.w / GRID_SIZE;
-    const int cellsY = b.h / GRID_SIZE;
-
-    g.Color(shade1.r, shade1.g, shade1.b);
-    for (int y = 0; y <= cellsY; y++) {
-        for (int x = 0; x <= cellsX; x++) {
-            if ((x & 1) != (y & 1)) {
-                int cx = x * GRID_SIZE;
-                int cy = y * GRID_SIZE;
-                g.Rect(cx, cy, GRID_SIZE, GRID_SIZE);
-                g.Fill();
-            }
-        }
-    }
+    g.DrawCheckerboard(0, 0, b.w, b.h, GRID_SIZE);
 
     g.DrawImage(&image, 0, 0, b.w, b.h, gui::ImageFiltering::Nearest);
 

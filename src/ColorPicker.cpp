@@ -46,25 +46,7 @@ namespace gui {
 
             g.ClipPushRect(0, sliderY, sz.w, SLIDER_SIZE);
 
-            g.Rect(0, sliderY, sz.w, SLIDER_SIZE);
-            g.Color(shade0.r, shade0.g, shade0.b);
-            g.Fill();
-
-            const int cellSize = 6;
-            const int cellsX = sz.w / cellSize;
-            const int cellsY = SLIDER_SIZE / cellSize;
-
-            g.Color(shade1.r, shade1.g, shade1.b);
-            for (int y = 0; y <= cellsY; y++) {
-                for (int x = 0; x <= cellsX; x++) {
-                    if ((x & 1) != (y & 1)) {
-                        int cx = x * cellSize;
-                        int cy = y * cellSize;
-                        g.Rect(cx, cy + sliderY, cellSize, cellSize);
-                        g.Fill();
-                    }
-                }
-            }
+            g.DrawCheckerboard(0, sliderY, sz.w, SLIDER_SIZE, 6);
 
             g.Rect(0, sliderY - 1, sz.w, SLIDER_SIZE + 2);
             g.LinearGradient(
@@ -141,30 +123,12 @@ namespace gui {
             m_clicked = Alpha;
         else
             m_clicked = Unknown;
+
+        Update(e.x, e.y);
     }
 
     void ColorPicker::OnMouseMove(MotionEvent e) {
-        const Size sz = GetSatValSize();
-
-        float fx = static_cast<float>(e.x) / sz.w;
-        float fy = static_cast<float>(e.y) / sz.h;
-
-        if (m_clicked != Unknown) {
-            switch (m_clicked) {
-                case SatVal:
-                    m_saturation = std::clamp(fx, 0.0f, 1.0f);
-                    m_value = 1.0f - std::clamp(fy, 0.0f, 1.0f);
-                    break;
-                case Hue:
-                    m_hue = std::clamp(fy, 0.0f, 1.0f) * 360.0f;
-                    break;
-                case Alpha:
-                    m_selected.a = std::clamp(fx, 0.0f, 1.0f);
-                    break;
-            }
-            SetSelected(Color::FromHSVA(m_hue, m_saturation, m_value, m_selected.a));
-            return;
-        }
+        Update(e.x, e.y);
     }
 
     void ColorPicker::OnMouseUp(MouseEvent e) {
@@ -234,5 +198,29 @@ namespace gui {
         g.LineTo(pts[0].x, pts[0].y);
         g.LineTo(pts[1].x, pts[1].y);
         g.ClosePath();
+    }
+
+    void ColorPicker::Update(int x, int y) {
+        const Size sz = GetSatValSize();
+
+        float fx = static_cast<float>(x) / sz.w;
+        float fy = static_cast<float>(y) / sz.h;
+
+        if (m_clicked != Unknown) {
+            switch (m_clicked) {
+                case SatVal:
+                    m_saturation = std::clamp(fx, 0.0f, 1.0f);
+                    m_value = 1.0f - std::clamp(fy, 0.0f, 1.0f);
+                    break;
+                case Hue:
+                    m_hue = std::clamp(fy, 0.0f, 1.0f) * 360.0f;
+                    break;
+                case Alpha:
+                    m_selected.a = std::clamp(fx, 0.0f, 1.0f);
+                    break;
+            }
+            SetSelected(Color::FromHSVA(m_hue, m_saturation, m_value, m_selected.a));
+            return;
+        }
     }
 } // namespace gui

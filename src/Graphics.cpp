@@ -328,6 +328,40 @@ namespace gui {
         }
     }
 
+    void Graphics::DrawCheckerboard(
+        int x,
+        int y,
+        int w,
+        int h,
+        int cellSize,
+        float shade0,
+        float shade1
+    ) {
+        Save();
+        const gui::Color col0{shade0, shade0, shade0, 1.0f};
+        const gui::Color col1{shade1, shade1, shade1, 1.0f};
+
+        Rect(x, y, w, h);
+        Color(col0.r, col0.g, col0.b);
+        Fill();
+
+        const int cellsX = w / cellSize;
+        const int cellsY = h / cellSize;
+
+        Color(col1.r, col1.g, col1.b);
+        for (int iy = 0; iy <= cellsY; iy++) {
+            for (int ix = 0; ix <= cellsX; ix++) {
+                if ((ix & 1) != (iy & 1)) {
+                    int cx = x + ix * cellSize;
+                    int cy = y + iy * cellSize;
+                    Rect(cx, cy, cellSize, cellSize);
+                    Fill();
+                }
+            }
+        }
+        Restore();
+    }
+
     void Graphics::StyledPaint(Json style) {
         if (style["background"].is_object()) {
             auto pat = ApplyPaint(style["background"]);
@@ -977,6 +1011,8 @@ namespace gui {
             m_surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
             m_context = cairo_create(m_surface);
         }
+
+        cairo_set_antialias(m_context, CAIRO_ANTIALIAS_FAST);
     }
 
     void Graphics::Flush() {
