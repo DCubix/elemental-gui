@@ -7,8 +7,46 @@ namespace gui {
     ColorPicker::ColorPicker()
         : Element() {
         SetLocalBounds({0, 0, 200, 200});
-        m_value = 1.0f;
-        m_selected = Color::FromHSVA(0.0f, 0.0f, 1.0f, 1.0f);
+
+        selected.Bind([this](const Color& col) {
+            float vMax = std::max({col.r, col.g, col.b});
+            float vMin = std::min({col.r, col.g, col.b});
+            float delta = vMax - vMin;
+
+            value = vMax;
+            saturation = (vMax < 1e-10f) ? 0.0f : delta / vMax;
+
+            if (delta < 1e-10f) {
+                hue = 0.0f;
+            } else {
+                if (vMax == col.r)
+                    hue = 60.0f * std::fmod((col.g - col.b) / delta, 6.0f);
+                else if (vMax == col.g)
+                    hue = 60.0f * ((col.b - col.r) / delta + 2.0f);
+                else
+                    hue = 60.0f * ((col.r - col.g) / delta + 4.0f);
+            }
+
+            if (hue() < 0.0f)
+                hue += 360.0f;
+
+            if (m_onChange)
+                m_onChange(selected());
+
+            Invalidate();
+        });
+
+        hue.Bind([this](const float& v) {
+            selected = Color::FromHSVA(v, saturation(), value(), selected().a);
+        });
+        saturation.Bind([this](const float& v) {
+            selected = Color::FromHSVA(hue(), v, value(), selected().a);
+        });
+        value.Bind([this](const float& v) {
+            selected = Color::FromHSVA(hue(), saturation(), v, selected().a);
+        });
+
+        selected = Color::FromHSVA(0.0f, 0.0f, 1.0f, 1.0f);
     }
 
     void ColorPicker::OnDraw(Graphics& g) {
@@ -29,7 +67,7 @@ namespace gui {
             g.LinearGradient(stops, {0, 0}, {0, float(sz.h)});
             g.Fill();
 
-            int huePos = (m_hue / 360.0f) * sz.h;
+            int huePos = (hue() / 360.0f) * sz.h;
             Pointer(g, {sliderX, huePos}, SLIDER_SIZE, 8, 0.0f);
             g.Color(1.0f, 1.0f, 1.0f);
             g.Fill(true);
@@ -51,8 +89,8 @@ namespace gui {
             g.Rect(0, sliderY - 1, sz.w, SLIDER_SIZE + 2);
             g.LinearGradient(
                 {
-                    {0.0f, Color::FromHSVA(m_hue, m_saturation, m_value, 0.0f)},
-                    {1.0f, Color::FromHSVA(m_hue, m_saturation, m_value, 1.0f)},
+                    {0.0f, Color::FromHSVA(hue(), saturation(), value(), 0.0f)},
+                    {1.0f, Color::FromHSVA(hue(), saturation(), value(), 1.0f)},
                 },
                 {0, 0},
                 {float(sz.w), 0}
@@ -61,7 +99,7 @@ namespace gui {
 
             g.ClipPop();
 
-            int alphaPos = m_selected.a * sz.w;
+            int alphaPos = selected().a * sz.w;
             Pointer(g, {alphaPos, sliderY}, SLIDER_SIZE, 8, M_PI / 2.0f);
             g.Color(1.0f, 1.0f, 1.0f);
             g.Fill(true);
@@ -78,7 +116,7 @@ namespace gui {
             g.Fill(true);
 
             // color gradient
-            auto selHue = Color::FromHSV(m_hue, 1.0f, 1.0f);
+            auto selHue = Color::FromHSV(hue(), 1.0f, 1.0f);
             g.LinearGradient(
                 {
                     {0.0f, gui::Color::FromRGBA(selHue.r, selHue.g, selHue.b, 0.0f)},
@@ -100,8 +138,8 @@ namespace gui {
             );
             g.Fill();
 
-            int svX = m_saturation * sz.w;
-            int svY = sz.h - (m_value * sz.h);
+            int svX = saturation() * sz.w;
+            int svY = sz.h - (value() * sz.h);
             g.Arc(svX, svY, 3.0f, 0.0f, 2.0f * M_PI);
             g.Color(1.0f, 1.0f, 1.0f);
             g.Fill(true);
@@ -133,36 +171,6 @@ namespace gui {
 
     void ColorPicker::OnMouseUp(MouseEvent e) {
         m_clicked = Unknown;
-    }
-
-    void ColorPicker::SetSelected(const Color& color) {
-        m_selected = color;
-
-        float vMax = std::max({color.r, color.g, color.b});
-        float vMin = std::min({color.r, color.g, color.b});
-        float delta = vMax - vMin;
-
-        m_value = vMax;
-        m_saturation = (vMax < 1e-10f) ? 0.0f : delta / vMax;
-
-        if (delta < 1e-10f) {
-            m_hue = 0.0f;
-        } else {
-            if (vMax == color.r)
-                m_hue = 60.0f * std::fmod((color.g - color.b) / delta, 6.0f);
-            else if (vMax == color.g)
-                m_hue = 60.0f * ((color.b - color.r) / delta + 2.0f);
-            else
-                m_hue = 60.0f * ((color.r - color.g) / delta + 4.0f);
-        }
-
-        if (m_hue < 0.0f)
-            m_hue += 360.0f;
-
-        if (m_onChange)
-            m_onChange(m_selected);
-
-        Invalidate();
     }
 
     Size ColorPicker::GetSatValSize() const {
@@ -209,17 +217,23 @@ namespace gui {
         if (m_clicked != Unknown) {
             switch (m_clicked) {
                 case SatVal:
-                    m_saturation = std::clamp(fx, 0.0f, 1.0f);
-                    m_value = 1.0f - std::clamp(fy, 0.0f, 1.0f);
+                    saturation = std::clamp(fx, 0.0f, 1.0f);
+                    value = 1.0f - std::clamp(fy, 0.0f, 1.0f);
                     break;
                 case Hue:
-                    m_hue = std::clamp(fy, 0.0f, 1.0f) * 360.0f;
+                    hue = std::clamp(fy, 0.0f, 1.0f) * 360.0f;
                     break;
                 case Alpha:
-                    m_selected.a = std::clamp(fx, 0.0f, 1.0f);
+                    selected.Set(
+                        gui::Color{
+                            selected().r,
+                            selected().g,
+                            selected().b,
+                            std::clamp(fx, 0.0f, 1.0f)
+                        }
+                    );
                     break;
             }
-            SetSelected(Color::FromHSVA(m_hue, m_saturation, m_value, m_selected.a));
             return;
         }
     }

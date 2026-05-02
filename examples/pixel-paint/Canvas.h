@@ -85,7 +85,7 @@ public:
 
     std::vector<gui::Color> ExtractPalette(uint paletteSize = 32, uint iterations = 10);
 
-    gui::Color GetCurrentColor() const { return secondaryColor ? colors[1] : colors[0]; }
+    gui::Color GetCurrentColor() const { return secondaryColor ? colors[1]() : colors[0](); }
 
     gui::Image image, preview;
     ToolType selectedTool{ToolType::Pencil};
@@ -94,15 +94,18 @@ public:
     bool dragging{false}, toolActive{false}, shiftPressed{false}, secondaryColor{false};
     float zoom{1.0f};
     gui::PointI viewPosition{0, 0}, prevMouse{0, 0};
-    gui::Color colors[2] = {gui::Color::FromHex("#000"), gui::Color::FromHex("#FFF")};
+    gui::Property<gui::Color> colors[2] = {
+        gui::Color::FromHex("#000"),
+        gui::Color::FromHex("#FFF")
+    };
 
     UndoRedo undoRedo;
-    VoidCallback onColorPicked, onImageChanged;
+    VoidCallback onImageChanged;
 };
 
 struct CanvasProps {
     dc::opt<dc::ElementProps> base;
-    dc::opt<VoidCallback> onColorPicked, onImageChanged;
+    dc::opt<VoidCallback> onImageChanged;
 };
 
 struct PencilTool : public Tool {

@@ -502,7 +502,7 @@ namespace gui::declarative {
             ElementSetup(picker, base);
 
             if (props.selectedColor.has_value())
-                picker.SetSelected(props.selectedColor.value());
+                picker.selected = props.selectedColor.value();
             picker.SetOnChange(onChange);
 
             return &picker;

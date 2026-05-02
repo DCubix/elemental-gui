@@ -46,7 +46,7 @@ namespace gui {
         template <DerivedFromElement E>
         E* FindByTag(const std::string& tag) {
             for (auto&& el : m_elements) {
-                if (el->GetTag() == tag) {
+                if (el->GetTag()() == tag) {
                     return dynamic_cast<E*>(el.get());
                 }
             }

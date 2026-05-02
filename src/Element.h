@@ -1,5 +1,6 @@
 #pragma once
 
+#include "DataBinding.h"
 #include "EventSystem.h"
 #include "Graphics.h"
 #include "Utils.h"
@@ -28,6 +29,11 @@ namespace gui {
     public:
         Element();
         ~Element() = default;
+
+        Element(const Element&) = delete;
+        Element& operator=(const Element&) = delete;
+        Element(Element&&) = delete;
+        Element& operator=(Element&&) = delete;
 
         virtual void OnDraw(Graphics& g);
 
@@ -112,7 +118,7 @@ namespace gui {
         virtual std::string StyleKey() const { return ""; }
         virtual bool NeedsTextInput() const { return false; }
 
-        std::string GetTag() const { return m_tag; }
+        Property<std::string>& GetTag() { return m_tag; }
         void SetTag(const std::string& tag) { m_tag = tag; }
 
         Window* GetWindow() const { return m_window; }
@@ -129,7 +135,7 @@ namespace gui {
 
         Json m_style{};
 
-        std::string m_tag{""};
+        Property<std::string> m_tag{""};
 
         virtual bool IsDirty() { return m_dirty; }
     };

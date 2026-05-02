@@ -656,8 +656,6 @@ void PickerTool::OnMouseDown(Canvas& canvas, int x, int y) {
         canvas.colors[1] = canvas.image.GetPixel(x, y);
     canvas.image.Unlock();
     canvas.toolActive = false;
-    if (canvas.onColorPicked)
-        canvas.onColorPicked();
 }
 
 void RectTool::OnMouseDown(Canvas& canvas, int x, int y) {

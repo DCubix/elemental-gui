@@ -12,40 +12,16 @@ namespace gui {
         void OnMouseMove(MotionEvent e) override;
         void OnMouseUp(MouseEvent e) override;
 
-        Color GetSelected() const { return m_selected; }
-        void SetSelected(const Color& color);
-
-        float GetHue() const { return m_hue; }
-        void SetHue(float hue) {
-            m_hue = hue;
-            m_selected = Color::FromHSVA(m_hue, m_saturation, m_value, m_selected.a);
-            Invalidate();
-        }
-
-        float GetSaturation() const { return m_saturation; }
-        void SetSaturation(float sat) {
-            m_saturation = sat;
-            m_selected = Color::FromHSVA(m_hue, m_saturation, m_value, m_selected.a);
-            Invalidate();
-        }
-
-        float GetValue() const { return m_value; }
-        void SetValue(float val) {
-            m_value = val;
-            m_selected = Color::FromHSVA(m_hue, m_saturation, m_value, m_selected.a);
-            Invalidate();
-        }
-
         void SetOnChange(ValueChanged<Color> onChange) { m_onChange = onChange; }
+
+        Property<Color> selected{Color::FromHex("#000")};
+        Property<float> hue{0.0f}, saturation{0.0f}, value{0.0f};
 
     private:
         enum Region { Unknown = 0, SatVal, Hue, Alpha };
         Region m_clicked{Unknown};
 
         bool m_dragging{false};
-
-        float m_hue{0.0f}, m_saturation{0.0f}, m_value{0.0f};
-        Color m_selected{Color::FromHex("#000")};
 
         ValueChanged<Color> m_onChange;
         // Image m_hueCircle;

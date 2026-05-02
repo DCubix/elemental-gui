@@ -14,7 +14,9 @@ struct DefaultProps {
 class ColorView : public gui::Element {
 public:
     ColorView()
-        : gui::Element() {}
+        : gui::Element() {
+        color.SetOnUpdate([this]() { Invalidate(); });
+    }
 
     void OnDraw(gui::Graphics& g) override {
         const gui::Size sz = GetSize();
@@ -24,20 +26,16 @@ public:
         g.DrawCheckerboard(0, 0, sz.w, sz.h, 8);
 
         g.Rect(sz.w / 2 - 2, 0, sz.w / 2 + 4, sz.h);
-        g.Color(m_color.r, m_color.g, m_color.b, m_color.a);
+        g.Color(color().r, color().g, color().b, color().a);
         g.Fill();
         g.Rect(0, 0, sz.w / 2, sz.h);
-        g.Color(m_color.r, m_color.g, m_color.b, 1.0f);
+        g.Color(color().r, color().g, color().b, 1.0f);
         g.Fill();
 
         g.ClipPop();
     }
 
-    gui::Color GetColor() const { return m_color; }
-    void SetColor(const gui::Color& color) { m_color = color; }
-
-private:
-    gui::Color m_color{gui::Color::FromHex("#000")};
+    gui::Property<gui::Color> color{gui::Color::FromHex("#000")};
 };
 
 class PaletteSelector : public gui::Element {
@@ -92,7 +90,7 @@ public:
                 x = 0;
                 y += cellSize;
             }
-            fnDrawBlock(x, y, cellSize, index == m_selected, col);
+            fnDrawBlock(x, y, cellSize, index == selected(), col);
             x += cellSize;
             index++;
         }
@@ -111,7 +109,7 @@ public:
                 y += cellSize;
             }
             if (gui::Rectangle{x, y, cellSize, cellSize}.HasPoint(e.x, e.y)) {
-                SetSelected(index);
+                selected = index;
                 break;
             }
             x += cellSize;
@@ -128,22 +126,13 @@ public:
         if (index == (size_t)-1)
             return;
         m_palette.erase(m_palette.begin() + index);
-        m_selected = index == m_selected ? -1 : m_selected;
+        selected = index == selected() ? -1 : selected();
         Invalidate();
     }
 
     void Clear() {
         m_palette.clear();
-        m_selected = -1;
-        Invalidate();
-    }
-
-    int GetSelected() const { return m_selected; }
-    void SetSelected(int index) {
-        m_selected = index;
-        m_selected = std::clamp(m_selected, -1, int(m_palette.size()) - 1);
-        if (m_onSelect && m_selected >= 0)
-            m_onSelect(m_palette[m_selected]);
+        selected = -1;
         Invalidate();
     }
 
@@ -156,9 +145,18 @@ public:
 
     void SetOnSelect(ValueChanged<gui::Color> onSelect) { m_onSelect = onSelect; }
 
+    gui::Property<int> selected{-1};
+    gui::Computed<gui::Color> selectedColor{gui::Computed<gui::Color>(
+        [this]() {
+            if (selected() < 0)
+                return gui::Color{0, 0, 0, 1};
+            return m_palette[selected()];
+        },
+        selected
+    )};
+
 private:
     const int cellSize = 32;
-    int m_selected{-1};
     std::vector<gui::Color> m_palette;
     ValueChanged<gui::Color> m_onSelect;
 };
@@ -303,10 +301,7 @@ dc::WidgetDesc MainWindow::OnBuild() {
                 .tag = "color0",
                 .flexGrow = 1.0f,
             },
-        }, [this](ColorView& el, const DefaultProps& props) {
-            auto* canvas = FindByTag<Canvas>("canvas");
-            el.SetColor(canvas->colors[0]);
-        }),
+        }, [this](ColorView& el, const DefaultProps& props) {}),
         dc::Button("", {
             .base = dc::ElementProps{
                 .bounds = gui::Rectangle::FromSize(32, 32),
@@ -315,13 +310,9 @@ dc::WidgetDesc MainWindow::OnBuild() {
             .iconSize = 20,
             .onClick = [this]() {
                 auto* canvas = FindByTag<Canvas>("canvas");
-                auto* colorView0 = FindByTag<ColorView>("color0");
-                auto* colorView1 = FindByTag<ColorView>("color1");
-                auto* picker = FindByTag<gui::ColorPicker>("picker");
-                std::swap(canvas->colors[0], canvas->colors[1]);
-                colorView0->SetColor(canvas->colors[0]);
-                colorView1->SetColor(canvas->colors[1]);
-                picker->SetSelected(canvas->colors[0]);
+                auto tmp = canvas->colors[0]();
+                canvas->colors[0] = canvas->colors[1]();
+                canvas->colors[1] = tmp;
             },
         }),
         dc::Custom<ColorView, DefaultProps>({
@@ -329,10 +320,7 @@ dc::WidgetDesc MainWindow::OnBuild() {
                 .tag = "color1",
                 .flexGrow = 1.0f,
             },
-        }, [this](ColorView& el, const DefaultProps& props) {
-            auto* canvas = FindByTag<Canvas>("canvas");
-            el.SetColor(canvas->colors[1]);
-        }),
+        }, [this](ColorView& el, const DefaultProps& props) {}),
     });
 
     const auto colorPaletteArea = dc::Column({
@@ -360,7 +348,7 @@ dc::WidgetDesc MainWindow::OnBuild() {
                 .onClick = [this]() {
                     auto* picker = FindByTag<gui::ColorPicker>("picker");
                     auto* palette = FindByTag<PaletteSelector>("palette");
-                    palette->Add(picker->GetSelected());
+                    palette->Add(picker->selected());
                 },
             }),
             dc::Button("", {
@@ -370,7 +358,7 @@ dc::WidgetDesc MainWindow::OnBuild() {
                 .icon = &icons[icRemove],
                 .onClick = [this]() {
                     auto* palette = FindByTag<PaletteSelector>("palette");
-                    palette->Remove(palette->GetSelected());
+                    palette->Remove(palette->selected());
                 },
             }),
         }),
@@ -380,13 +368,9 @@ dc::WidgetDesc MainWindow::OnBuild() {
                 .bounds = gui::Rectangle::FromHeight(100),
             },
             .onSelect = [this](gui::Color color) {
-                if (FindByTag<PaletteSelector>("palette")->GetSelected() < 0) return;
+                if (FindByTag<PaletteSelector>("palette")->selected() < 0) return;
                 auto* canvas = FindByTag<Canvas>("canvas");
-                auto* colorView0 = FindByTag<ColorView>("color0");
-                auto* picker = FindByTag<gui::ColorPicker>("picker");
                 canvas->colors[0] = color;
-                colorView0->SetColor(color);
-                picker->SetSelected(color);
             },
         }, [](PaletteSelector& el, const PaletteSelectorProps& props) {
             el.SetOnSelect(props.onSelect.value_or(nullptr));
@@ -546,20 +530,10 @@ dc::WidgetDesc MainWindow::OnBuild() {
                                 "elevation": 8.0
                             })"),
                         },
-                        .onColorPicked = [this]() {
-                            auto* canvas = FindByTag<Canvas>("canvas");
-                            auto* colorView0 = FindByTag<ColorView>("color0");
-                            auto* colorView1 = FindByTag<ColorView>("color1");
-                            auto* picker = FindByTag<gui::ColorPicker>("picker");
-                            colorView0->SetColor(canvas->colors[0]);
-                            colorView1->SetColor(canvas->colors[1]);
-                            picker->SetSelected(canvas->colors[0]);
-                        },
                         .onImageChanged = [this]() {
                             saved = false;
                         },
                     }, [](Canvas& canvas, const CanvasProps& props) {
-                        canvas.onColorPicked = props.onColorPicked.value_or(nullptr);
                         canvas.onImageChanged = props.onImageChanged.value_or(nullptr);
                     }),
                 }),
@@ -576,9 +550,7 @@ dc::WidgetDesc MainWindow::OnBuild() {
                         },
                         .onChange = [this](gui::Color color) {
                             auto* canvas = FindByTag<Canvas>("canvas");
-                            auto* colorView0 = FindByTag<ColorView>("color0");
                             canvas->colors[0] = color;
-                            colorView0->SetColor(color);
                         },
                     }),
                     colorSelectionArea,
@@ -596,6 +568,19 @@ void MainWindow::OnResize() {
 
 void MainWindow::OnCreate() {
     RepositionCanvas();
+
+    // DataBinding setup
+    auto* canvas = FindByTag<Canvas>("canvas");
+    auto* colorView0 = FindByTag<ColorView>("color0");
+    auto* colorView1 = FindByTag<ColorView>("color1");
+    auto* picker = FindByTag<gui::ColorPicker>("picker");
+    auto* palette = FindByTag<PaletteSelector>("palette");
+
+    picker->selected.Bind(canvas->colors[0]);
+    palette->selectedColor.Bind(canvas->colors[0]);
+
+    canvas->colors[0].Bind(colorView0->color);
+    canvas->colors[1].Bind(colorView1->color);
 }
 
 void MainWindow::RepositionCanvas() {
