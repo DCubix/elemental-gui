@@ -3,7 +3,9 @@
 namespace gui {
 
     ImageView::ImageView()
-        : m_image(nullptr) {}
+        : m_image(nullptr) {
+        scalingMode.SetOnUpdate([this]{ Invalidate(); });
+    }
 
     void ImageView::OnDraw(Graphics& g) {
         if (!m_image)
@@ -14,7 +16,7 @@ namespace gui {
         Size pref = GetPreferredSize();
 
         Rectangle imgRect{0, 0, pref.w, pref.h};
-        switch (m_scalingMode) {
+        switch (scalingMode()) {
             case ImageScalingMode::Stretch:
                 break;
             case ImageScalingMode::Contain: {

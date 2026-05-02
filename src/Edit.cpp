@@ -11,7 +11,7 @@ namespace gui {
     }
 
     void Edit::OnCreate() {
-        SetText("");
+        text = "";
     }
 
     void Edit::OnDraw(Graphics& g) {

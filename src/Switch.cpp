@@ -6,6 +6,14 @@ namespace gui {
     Switch::Switch()
         : Element() {
         SetLocalBounds(Rectangle(0, 0, 40, 22));
+        checked.SetOnUpdate([this]{
+            m_state = checked() ? State::Checked : State::Unchecked;
+            Invalidate();
+        });
+        indeterminate.SetOnUpdate([this]{
+            m_state = indeterminate() ? State::Indeterminate : State::Unchecked;
+            Invalidate();
+        });
     }
 
     void Switch::OnMouseDown(MouseEvent e) {
@@ -20,11 +28,7 @@ namespace gui {
             return;
         if (m_pressed) {
             m_pressed = false;
-            bool newChecked = (m_state != State::Checked);
-            m_state = newChecked ? State::Checked : State::Unchecked;
-            if (m_onChanged)
-                m_onChanged(newChecked);
-            Invalidate();
+            checked = (m_state != State::Checked);
         }
     }
 
@@ -78,23 +82,5 @@ namespace gui {
             thumbRadius * 2,
             style["thumb"][thumbState]
         );
-    }
-
-    void Switch::SetChecked(bool checked) {
-        if (checked) {
-            m_state = State::Checked;
-        } else {
-            m_state = State::Unchecked;
-        }
-        Invalidate();
-    }
-
-    void Switch::SetIndeterminate(bool indeterminate) {
-        if (indeterminate) {
-            m_state = State::Indeterminate;
-        } else {
-            m_state = State::Unchecked;
-        }
-        Invalidate();
     }
 } // namespace gui

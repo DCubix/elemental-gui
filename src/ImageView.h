@@ -15,17 +15,12 @@ namespace gui {
             Invalidate();
         }
 
-        ImageScalingMode GetScalingMode() const { return m_scalingMode; }
-        void SetScalingMode(ImageScalingMode mode) {
-            m_scalingMode = mode;
-            Invalidate();
-        }
-
         void OnDraw(Graphics& g) override;
         Size GetPreferredSize() const override;
 
+        Property<ImageScalingMode> scalingMode{ImageScalingMode::Stretch};
+
     private:
         Image* m_image;
-        ImageScalingMode m_scalingMode{ImageScalingMode::Stretch};
     };
 } // namespace gui

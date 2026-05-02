@@ -239,10 +239,11 @@ namespace gui::declarative {
             ElementSetup(list, props.base.value_or(ElementProps{}));
             auto items = props.items.value_or(std::vector<ListItem<T>>{});
             for (const auto& item : items) {
-                list.AddItem(item.data, item.label);
+                list.AddItem(item.value, item.label);
             }
-            list.SetSelectedIndex(props.selectedIndex.value_or(-1));
-            list.SetOnSelectionChanged(props.onSelectionChanged.value_or(nullptr));
+            list.selectedIndex = props.selectedIndex.value_or(-1);
+            if (props.onSelectionChanged.has_value() && *props.onSelectionChanged)
+                list.selectedIndex.Bind(*props.onSelectionChanged);
             return &list;
         };
     }

@@ -5,9 +5,10 @@
 namespace gui {
 
     CheckBox::CheckBox()
-        : Element(),
-          m_text("") {
+        : Element() {
         SetLocalBounds(Rectangle(0, 0, 100, 22));
+        checked.SetOnUpdate([this]{ Invalidate(); });
+        text.SetOnUpdate([this]{ Invalidate(); });
     }
 
     void CheckBox::OnMouseDown(MouseEvent e) {
@@ -22,10 +23,7 @@ namespace gui {
             return;
         if (m_pressed) {
             m_pressed = false;
-            m_checked = !m_checked;
-            if (m_onChanged)
-                m_onChanged(m_checked);
-            Invalidate();
+            checked = !checked();
         }
     }
 
@@ -47,7 +45,7 @@ namespace gui {
 
         // Select state-based style
         std::string boxState = "normal";
-        if (m_checked) {
+        if (checked()) {
             boxState = (m_hovered && !m_pressed) ? "checkedHover" : "checked";
         } else if (m_pressed) {
             boxState = "click";
@@ -59,19 +57,19 @@ namespace gui {
         g.StyledRect(boxX, boxY, boxSize, boxSize, style[boxState]);
 
         // Draw checkmark when checked
-        if (m_checked && style["checkmark"].is_object()) {
+        if (checked() && style["checkmark"].is_object()) {
             g.DrawSVG(style["checkmark"], boxX, boxY, boxSize, boxSize);
         }
 
         // Draw label text
-        if (!m_text.empty()) {
+        if (!text().empty()) {
             int textX = boxX + boxSize + 6;
             int textY = boxY;
 
             g.StyledTextBegin(style);
-            auto ex = g.MeasureText(m_text);
+            auto ex = g.MeasureText(text());
             int textOffY = boxSize / 2 + static_cast<int>(ex.size.h) / 2;
-            g.StyledTextEnd(m_text, textX, textY + textOffY);
+            g.StyledTextEnd(text(), textX, textY + textOffY);
         }
     }
 
@@ -79,10 +77,5 @@ namespace gui {
         Json style = GetStyle();
         int boxSize = style.value("size", m_bounds.h);
         return {m_bounds.w, boxSize};
-    }
-
-    void CheckBox::SetChecked(bool checked) {
-        m_checked = checked;
-        Invalidate();
     }
 } // namespace gui

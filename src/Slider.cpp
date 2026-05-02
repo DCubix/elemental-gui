@@ -8,30 +8,34 @@ namespace gui {
 
     Slider::Slider()
         : Element(),
-          m_direction(Direction::Horizontal),
           m_range(Range(0, 100)),
-          m_value(0),
-          m_step(1),
           m_state(ButtonState::Normal),
           m_thumbPos(0),
           m_dragOffset(0) {
         SetLocalBounds(Rectangle(0, 0, 120, 22));
+        value.SetTransformer([this](const float& v) {
+            float constrained = m_range.Constrain(v);
+            return std::floor(constrained / step()) * step();
+        });
+        direction.SetOnUpdate([this] { Invalidate(); });
+        value.SetOnUpdate([this] { Invalidate(); });
+        step.SetOnUpdate([this] { Invalidate(); });
     }
 
     void Slider::OnDraw(Graphics& g) {
         auto sz = GetSize();
         int thumb = SliderThumbSize;
-        int trackLen = (m_direction == Direction::Horizontal ? sz.w : sz.h) - thumb;
-        m_thumbPos = int(m_range.Normalized(m_value) * float(trackLen));
+        int trackLen = (direction() == Direction::Horizontal ? sz.w : sz.h) - thumb;
+        m_thumbPos = int(m_range.Normalized(value()) * float(trackLen));
 
         // reverse when vertical to have min at bottom and max at top
-        if (m_direction == Direction::Vertical)
+        if (direction() == Direction::Vertical)
             m_thumbPos = trackLen - m_thumbPos;
 
         // Draw thin track centered in the element
         Json trackStyle = GetStyle()["track"];
         int trackSize = trackStyle.value("size", 8);
-        if (m_direction == Direction::Horizontal) {
+        if (direction() == Direction::Horizontal) {
             int trackH = trackSize;
             int trackY = (sz.h - trackH) / 2;
             g.StyledRect(0, trackY, sz.w, trackH, trackStyle);
@@ -56,7 +60,7 @@ namespace gui {
         }
 
         Json thumbStyle = GetStyle()["thumb"][state];
-        if (m_direction == Direction::Horizontal) {
+        if (direction() == Direction::Horizontal) {
             g.StyledRect(m_thumbPos, 0, thumb, sz.h, thumbStyle);
         } else {
             g.StyledRect(0, m_thumbPos, sz.w, thumb, thumbStyle);
@@ -66,7 +70,7 @@ namespace gui {
     void Slider::OnMouseDown(MouseEvent e) {
         if (e.button != MouseButton::Left)
             return;
-        int p = (m_direction == Direction::Horizontal ? e.x : e.y);
+        int p = (direction() == Direction::Horizontal ? e.x : e.y);
         int thumb = SliderThumbSize;
 
         if (m_state == ButtonState::Hover) {
@@ -106,14 +110,13 @@ namespace gui {
     }
 
     void Slider::OnScroll(ScrollEvent e) {
-        float delta = (m_direction == Direction::Horizontal ? e.scrollY : -e.scrollY);
-        SetValue(m_range.Constrain(m_value + delta * m_step));
+        float delta = (direction() == Direction::Horizontal ? e.scrollY : -e.scrollY);
+        value = m_range.Constrain(value() + delta * step());
     }
 
     void Slider::OnMouseMove(MotionEvent e) {
-        // Only handle dragging during Click state - hover is handled by OnMouseEnter/OnMouseLeave
         if (m_state == ButtonState::Click) {
-            int p = (m_direction == Direction::Horizontal ? e.x : e.y);
+            int p = (direction() == Direction::Horizontal ? e.x : e.y);
             UpdateValue(p - m_dragOffset);
         }
     }
@@ -121,14 +124,7 @@ namespace gui {
     void Slider::SetRange(float min, float max) {
         m_range.minimum = min;
         m_range.maximum = max;
-        SetValue(m_range.Constrain(m_value));
-        Invalidate();
-    }
-
-    void Slider::SetValue(float v) {
-        if (m_onValueChange && m_value != v)
-            m_onValueChange(m_value);
-        m_value = v;
+        value = m_range.Constrain(value());
         Invalidate();
     }
 
@@ -136,16 +132,14 @@ namespace gui {
         int thumb = SliderThumbSize;
         Size size = GetSize();
         p -= thumb / 2;
-        int axisLen = (m_direction == Direction::Horizontal ? size.w : size.h) - thumb;
+        int axisLen = (direction() == Direction::Horizontal ? size.w : size.h) - thumb;
 
         // reverse when vertical to have min at bottom and max at top
-        if (m_direction == Direction::Vertical)
+        if (direction() == Direction::Vertical)
             p = axisLen - p;
 
         Range vp{0, float(axisLen)};
-        m_value = m_range.Constrain(m_range.Remap(vp, p));
-        SetValue(std::floor(m_value / m_step) * m_step);
-        Invalidate();
+        value = m_range.Remap(vp, p);
     }
 
 } // namespace gui

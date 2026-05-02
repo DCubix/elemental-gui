@@ -4,9 +4,10 @@
 
 namespace gui {
     RadioButton::RadioButton()
-        : Element(),
-          m_text("") {
+        : Element() {
         SetLocalBounds(Rectangle(0, 0, 100, 22));
+        checked.SetOnUpdate([this]{ Invalidate(); });
+        text.SetOnUpdate([this]{ Invalidate(); });
     }
 
     void RadioButton::OnMouseDown(MouseEvent e) {
@@ -23,12 +24,12 @@ namespace gui {
             m_pressed = false;
 
             auto* prev = m_window->Find<RadioButton>([this](RadioButton* rb) {
-                return rb != this && rb->GetGroup() == GetGroup() && rb->IsChecked();
+                return rb != this && rb->group() == group() && rb->checked();
             });
             if (prev) {
-                prev->SetChecked(false);
+                prev->checked = false;
             }
-            SetChecked(true);
+            checked = true;
 
             Invalidate();
         }
@@ -49,12 +50,10 @@ namespace gui {
         int circleSize = style.value("size", size.h);
         int circleX = 0;
         int circleY = (size.h - circleSize) / 2;
-        int textX = circleSize + 6;
-        int textY = size.h / 2;
 
         // Select state-based style
         std::string circleState = "normal";
-        if (m_checked) {
+        if (checked()) {
             circleState = (m_hovered && !m_pressed) ? "selectedHover" : "selected";
         } else if (m_pressed) {
             circleState = "click";
@@ -68,7 +67,7 @@ namespace gui {
         g.StyledRect(circleX, circleY, circleSize, circleSize, style[circleState]);
 
         // Draw inner filled circle when checked
-        if (m_checked && style["dot"].is_object()) {
+        if (checked() && style["dot"].is_object()) {
             int dotSize = circleSize / 2;
             int dotX = circleX + (circleSize - dotSize) / 2;
             int dotY = circleY + (circleSize - dotSize) / 2;
@@ -76,14 +75,14 @@ namespace gui {
         }
 
         // Draw label text
-        if (!m_text.empty()) {
+        if (!text().empty()) {
             int textX = circleX + circleSize + 6;
             int textY = circleY;
 
             g.StyledTextBegin(style);
-            auto ex = g.MeasureText(m_text);
+            auto ex = g.MeasureText(text());
             int textOffY = circleSize / 2 + static_cast<int>(ex.size.h) / 2;
-            g.StyledTextEnd(m_text, textX, textY + textOffY);
+            g.StyledTextEnd(text(), textX, textY + textOffY);
         }
     }
 
@@ -91,15 +90,5 @@ namespace gui {
         Json style = GetStyle();
         int circleSize = style.value("size", m_bounds.h);
         return {m_bounds.w, circleSize};
-    }
-
-    void RadioButton::SetChecked(bool checked) {
-        if (m_checked != checked) {
-            m_checked = checked;
-            if (m_onChanged) {
-                m_onChanged(m_checked);
-            }
-            Invalidate();
-        }
     }
 } // namespace gui

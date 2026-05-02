@@ -25,32 +25,17 @@ namespace gui {
         }
         void SetRange(float min, float max);
 
-        float GetValue() const { return m_value; }
-        void SetValue(float v);
-
-        float GetStep() const { return m_step; }
-        void SetStep(float s) { m_step = s; }
-
-        Direction GetDirection() const { return m_direction; }
-        void SetDirection(Direction dir) {
-            m_direction = dir;
-            Invalidate();
-        }
-
-        void SetOnValueChange(const ValueChanged<float>& cb) { m_onValueChange = cb; }
+        Property<float> value{0.0f};
+        Property<float> step{1.0f};
+        Property<Direction> direction{Direction::Horizontal};
 
     private:
-        Direction m_direction;
         Range m_range;
-        float m_value;
-        float m_step;
 
         int m_buttonPos;
         int m_dragOffset;
 
         ButtonState m_state;
-
-        ValueChanged<float> m_onValueChange;
 
         void UpdateValue(int p);
         int GetButtonSize();

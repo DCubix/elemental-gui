@@ -17,25 +17,11 @@ namespace gui {
 
         Size GetPreferredSize() const override;
 
-        std::string GetGroup() const { return m_group; }
-        void SetGroup(const std::string& group) { m_group = group; }
-
-        std::string GetText() const { return m_text; }
-        void SetText(const std::string& text) {
-            m_text = text;
-            Invalidate();
-        }
-
-        bool IsChecked() const { return m_checked; }
-        void SetChecked(bool checked);
-
-        void SetOnChanged(ValueChanged<bool> cb) { m_onChanged = cb; }
+        Property<bool> checked{false};
+        Property<std::string> text;
+        Property<std::string> group;
 
     private:
-        std::string m_group{""}, m_text;
-        bool m_checked{false};
         bool m_pressed{false};
-
-        ValueChanged<bool> m_onChanged;
     };
 } // namespace gui

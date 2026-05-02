@@ -17,22 +17,10 @@ namespace gui {
 
         Size GetPreferredSize() const override;
 
-        bool IsChecked() const { return m_checked; }
-        void SetChecked(bool checked);
-
-        std::string GetText() const { return m_text; }
-        void SetText(const std::string& text) {
-            m_text = text;
-            Invalidate();
-        }
-
-        void SetOnChanged(ValueChanged<bool> cb) { m_onChanged = cb; }
+        Property<bool> checked{false};
+        Property<std::string> text;
 
     private:
-        std::string m_text;
-        bool m_checked{false};
         bool m_pressed{false};
-
-        ValueChanged<bool> m_onChanged;
     };
 } // namespace gui

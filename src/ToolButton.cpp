@@ -7,9 +7,10 @@ namespace gui {
     ToolButton::ToolButton()
         : Label() {
         SetLocalBounds(Rectangle(0, 0, 50, 22));
-        m_alignment = Alignment::MiddleCenter;
-        m_text = "Button";
+        alignment = Alignment::MiddleCenter;
+        text = "Button";
         m_state = ButtonState::Normal;
+        toggled.SetOnUpdate([this]{ Invalidate(); });
     }
 
     void ToolButton::OnDraw(Graphics& g) {
@@ -28,7 +29,7 @@ namespace gui {
                 break;
         }
 
-        if (m_toggled) {
+        if (toggled()) {
             state = "click";
         }
 
@@ -44,9 +45,9 @@ namespace gui {
         if (m_state == ButtonState::Hover) {
             m_state = ButtonState::Click;
             if (m_mode == Mode::Toggle) {
-                m_toggled = !m_toggled;
+                toggled = !toggled();
             } else if (m_mode == Mode::Radio) {
-                m_toggled = true;
+                toggled = true;
             }
             Invalidate();
         }
@@ -61,10 +62,10 @@ namespace gui {
             if (m_mode == Mode::Radio) {
                 auto* prev = m_window->Find<ToolButton>([this](ToolButton* tb) {
                     return tb != this && tb->GetGroup() == GetGroup() &&
-                           tb->GetMode() == Mode::Radio && tb->IsToggled();
+                           tb->GetMode() == Mode::Radio && tb->toggled();
                 });
                 if (prev) {
-                    prev->SetToggled(false);
+                    prev->toggled = false;
                 }
             }
             m_state = ButtonState::Hover;

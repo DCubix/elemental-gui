@@ -24,9 +24,6 @@ namespace gui {
 
         Size GetPreferredSize() const override;
 
-        std::string GetText() const { return m_textRaw; }
-        void SetText(const std::string& txt);
-
         bool IsMasked() const { return m_masked; }
         void SetMasked(bool m) {
             m_masked = m;
@@ -41,20 +38,19 @@ namespace gui {
         void Deselect();
         bool IsSelected() const;
 
-        void SetOnChange(const ValueChanged<std::string>& cb) { m_onChange = cb; }
+        Property<std::string> text;
 
     protected:
-        std::string m_textRaw;
-        text::Line m_text;
+        text::Line m_textLine;
 
         bool m_masked{false}, m_editable{true};
+        bool m_internalEdit{false};
         int m_caretIndex{0};
         int m_selectionStart{-1}, m_selectionEnd{-1};
         int m_offsetX{0};
         Size m_textSize{0, 0};
 
         text::EditState m_state{text::EditState::Normal};
-        ValueChanged<std::string> m_onChange;
 
         Timer m_blinkTimer;
         bool m_showCaret{true};

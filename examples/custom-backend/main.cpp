@@ -403,20 +403,20 @@ public:
         Show();
 
         // clang-format off
-        auto ui = Column({
+        auto ui = Column(ColumnProps{
             .gap = 16,
             .padding = EdgeInsets::All(32),
             .align = FlexAlign::Stretch,
             .justify = FlexJustify::Center
         }, {
-            Text("Elemental GUI with SmolBackend", { .base = { .autoSize = true } }),
-            Button("Click Me!", { 
-                .onClick = [this]() { 
-                    std::cout << "Button clicked!" << std::endl; 
+            Text("Elemental GUI with SmolBackend", TextProps{ .base = ElementProps{ .autoSize = true } }),
+            Button("Click Me!", ButtonProps{
+                .onClick = [this]() {
+                    std::cout << "Button clicked!" << std::endl;
                 }
             }),
-            Slider({ 
-                .range = {0.0f, 100.0f}, 
+            Slider(SliderProps{
+                .range = Range{0.0f, 100.0f},
                 .value = 50.0f,
                 .onValueChange = [this](float value) {
                     std::cout << "Slider value: " << value << std::endl;

@@ -9,6 +9,8 @@ namespace gui {
     SplitView::SplitView()
         : Container() {
         SetLocalBounds(Rectangle(0, 0, 300, 300));
+        direction.SetOnUpdate([this]{ Invalidate(); });
+        splitPosition.SetOnUpdate([this]{ Invalidate(); });
     }
 
     void SplitView::Add(Element* element) {
@@ -19,7 +21,7 @@ namespace gui {
     }
 
     void SplitView::OnDraw(Graphics& g) {
-        if (m_direction == Direction::Horizontal) {
+        if (direction() == Direction::Horizontal) {
             ResolveHorizontal();
         } else {
             ResolveVertical();
@@ -29,7 +31,7 @@ namespace gui {
 
         Rectangle grip = GripRect();
         g.Color(0.5f, 0.5f, 0.5f, 0.5f);
-        if (m_direction == Direction::Horizontal) {
+        if (direction() == Direction::Horizontal) {
             int x = (grip.x + grip.w / 2) - (GRIPPER_SIZE / 2);
             for (int i = 0; i < 3; i++) {
                 int off = static_cast<int>(((float(i) / 2.0f) * 2.0f - 1.0f) * GRIPPER_SIZE * 2);
@@ -93,7 +95,7 @@ namespace gui {
         if (!m_mouseDown)
             return;
 
-        if (m_direction == Direction::Horizontal) {
+        if (direction() == Direction::Horizontal) {
             HandleDragHorizontal(e.y);
         } else {
             HandleDragVertical(e.x);
@@ -124,7 +126,7 @@ namespace gui {
             secondSize = second->GetPreferredSize();
         }
 
-        if (m_direction == Direction::Horizontal) {
+        if (direction() == Direction::Horizontal) {
             return {firstSize.w + secondSize.w + GRIPPER_SIZE, std::max(firstSize.h, secondSize.h)};
         } else {
             return {std::max(firstSize.w, secondSize.w), firstSize.h + secondSize.h + GRIPPER_SIZE};
@@ -134,7 +136,7 @@ namespace gui {
     void SplitView::ResolveHorizontal() {
         const int halfGrip = GRIPPER_SIZE / 2;
         Size size = GetSize();
-        int splitPos = std::clamp(m_splitPosition, MIN_SPLIT, size.h - MIN_SPLIT);
+        int splitPos = std::clamp(splitPosition(), MIN_SPLIT, size.h - MIN_SPLIT);
         if (Element* first = GetFirst()) {
             if (m_align == SplitViewAlign::Start) {
                 first->SetPosition({0, 0});
@@ -158,7 +160,7 @@ namespace gui {
     void SplitView::ResolveVertical() {
         const int halfGrip = GRIPPER_SIZE / 2;
         Size size = GetSize();
-        int splitPos = std::clamp(m_splitPosition, MIN_SPLIT, size.w - MIN_SPLIT);
+        int splitPos = std::clamp(splitPosition(), MIN_SPLIT, size.w - MIN_SPLIT);
         if (Element* first = GetFirst()) {
             if (m_align == SplitViewAlign::Start) {
                 first->SetPosition({0, 0});
@@ -187,10 +189,7 @@ namespace gui {
         } else {
             newSplitPos = std::clamp(size.h - mouseY, MIN_SPLIT, size.h - MIN_SPLIT);
         }
-        if (newSplitPos != m_splitPosition) {
-            m_splitPosition = newSplitPos;
-            Invalidate();
-        }
+        splitPosition = newSplitPos;
     }
 
     void SplitView::HandleDragVertical(int mouseX) {
@@ -201,27 +200,24 @@ namespace gui {
         } else {
             newSplitPos = std::clamp(size.w - mouseX, MIN_SPLIT, size.w - MIN_SPLIT);
         }
-        if (newSplitPos != m_splitPosition) {
-            m_splitPosition = newSplitPos;
-            Invalidate();
-        }
+        splitPosition = newSplitPos;
     }
 
     Rectangle SplitView::GripRectHorizontal() const {
         Size size = GetSize();
-        int splitPos = std::clamp(m_splitPosition, MIN_SPLIT, size.h - MIN_SPLIT);
+        int splitPos = std::clamp(splitPosition(), MIN_SPLIT, size.h - MIN_SPLIT);
         int y = m_align == SplitViewAlign::Start ? splitPos : size.h - splitPos;
         return Rectangle(0, y - GRIPPER_SIZE / 2, size.w, GRIPPER_SIZE);
     }
 
     Rectangle SplitView::GripRectVertical() const {
         Size size = GetSize();
-        int splitPos = std::clamp(m_splitPosition, MIN_SPLIT, size.w - MIN_SPLIT);
+        int splitPos = std::clamp(splitPosition(), MIN_SPLIT, size.w - MIN_SPLIT);
         int x = m_align == SplitViewAlign::Start ? splitPos : size.w - splitPos;
         return Rectangle(x - GRIPPER_SIZE / 2, 0, GRIPPER_SIZE, size.h);
     }
 
     Rectangle SplitView::GripRect() const {
-        return m_direction == Direction::Horizontal ? GripRectHorizontal() : GripRectVertical();
+        return direction() == Direction::Horizontal ? GripRectHorizontal() : GripRectVertical();
     }
 } // namespace gui

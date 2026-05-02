@@ -19,25 +19,25 @@ namespace gui {
     void TextArea::InsertChar(char c) {
         if (m_caretIndex < 0)
             m_caretIndex = 0;
-        if (m_caretIndex > (int)m_textRaw.size())
-            m_caretIndex = (int)m_textRaw.size();
+        if (m_caretIndex > (int)text().size())
+            m_caretIndex = (int)text().size();
 
-        m_textRaw.insert(m_caretIndex, 1, c);
+        std::string s = text();
+        s.insert(m_caretIndex, 1, c);
         m_caretIndex++;
-        Rebuild();
-        Invalidate();
-        if (m_onChange)
-            m_onChange(m_textRaw);
+        m_internalEdit = true;
+        text = s;
+        m_internalEdit = false;
     }
 
     void TextArea::RemoveChar(int i) {
-        if (i < 0 || i >= (int)m_textRaw.size())
+        if (i < 0 || i >= (int)text().size())
             return;
-        m_textRaw.erase(i, 1);
-        Rebuild();
-        Invalidate();
-        if (m_onChange)
-            m_onChange(m_textRaw);
+        std::string s = text();
+        s.erase(i, 1);
+        m_internalEdit = true;
+        text = s;
+        m_internalEdit = false;
     }
 
     void TextArea::DeleteSelected() {
@@ -47,14 +47,14 @@ namespace gui {
         if (a > b)
             std::swap(a, b);
         a = std::max(0, a);
-        b = std::min(b, (int)m_textRaw.size());
-        m_textRaw.erase(a, b - a);
+        b = std::min(b, (int)text().size());
+        std::string s = text();
+        s.erase(a, b - a);
         m_caretIndex = a;
         Deselect();
-        Rebuild();
-        Invalidate();
-        if (m_onChange)
-            m_onChange(m_textRaw);
+        m_internalEdit = true;
+        text = s;
+        m_internalEdit = false;
     }
 
     void TextArea::Rebuild() {
@@ -63,7 +63,7 @@ namespace gui {
         auto textStyle = GetStyle();
         auto& g = GetWindow()->GetGraphics();
 
-        m_lines = text::ComputeLines(g, textStyle, m_textRaw);
+        m_lines = text::ComputeLines(g, textStyle, text());
 
         Color defaultColor = Color::FromStyle(textStyle["color"]);
         for (auto& line : m_lines) {
@@ -87,7 +87,7 @@ namespace gui {
 
     // -------------------------------------------------------------------------
     // ComputeLineStarts
-    // Returns the global m_textRaw index at which each line begins.
+    // Returns the global text() index at which each line begins.
     // -------------------------------------------------------------------------
     std::vector<int> TextArea::ComputeLineStarts() const {
         std::vector<int> starts;
@@ -341,7 +341,7 @@ namespace gui {
     }
 
     void TextArea::Format(int from, int len, FontStyle style, float r, float g, float b) {
-        int textSize = (int)m_textRaw.size();
+        int textSize = (int)text().size();
         from = std::max(0, std::min(from, textSize));
         int to = std::min(from + len, textSize);
         Color color = Color::FromRGB(r, g, b);

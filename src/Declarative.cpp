@@ -124,8 +124,8 @@ namespace gui::declarative {
 
             auto& label = window.Create<Label>();
             ElementSetup(label, base);
-            label.SetText(text);
-            label.SetAlignment(align);
+            label.text = text;
+            label.alignment = align;
             label.SetIcon(icon);
             return &label;
         };
@@ -140,9 +140,9 @@ namespace gui::declarative {
 
             auto& button = window.Create<gui::Button>();
             ElementSetup(button, base);
-            button.SetText(text);
+            button.text = text;
             button.SetIcon(icon);
-            button.SetIconSize(iconSize);
+            button.iconSize = iconSize;
             button.SetOnClick(onClick);
             return &button;
         };
@@ -159,15 +159,17 @@ namespace gui::declarative {
             if (multiLine) {
                 auto& edit = window.Create<TextArea>();
                 ElementSetup(edit, base);
-                edit.SetText(text);
-                edit.SetOnChange(onChanged);
+                edit.text = text;
+                if (onChanged)
+                    edit.text.Bind(onChanged);
                 return &edit;
             } else {
                 auto& edit = window.Create<Edit>();
                 ElementSetup(edit, base);
-                edit.SetText(text);
+                edit.text = text;
                 edit.SetMasked(masked);
-                edit.SetOnChange(onChanged);
+                if (onChanged)
+                    edit.text.Bind(onChanged);
                 return &edit;
             }
         };
@@ -182,7 +184,7 @@ namespace gui::declarative {
             auto& imageView = window.Create<ImageView>();
             ElementSetup(imageView, base);
             imageView.SetImage(image);
-            imageView.SetScalingMode(scaling);
+            imageView.scalingMode = scaling;
             return &imageView;
         };
     }
@@ -209,9 +211,10 @@ namespace gui::declarative {
 
             auto& cb = window.Create<gui::CheckBox>();
             ElementSetup(cb, base);
-            cb.SetText(text);
-            cb.SetChecked(checked);
-            cb.SetOnChanged(onChanged);
+            cb.text = text;
+            cb.checked = checked;
+            if (onChanged)
+                cb.checked.Bind(onChanged);
             return &cb;
         };
     }
@@ -225,10 +228,11 @@ namespace gui::declarative {
 
             auto& rb = window.Create<gui::RadioButton>();
             ElementSetup(rb, base);
-            rb.SetText(text);
-            rb.SetGroup(group);
-            rb.SetChecked(checked);
-            rb.SetOnChanged(onChanged);
+            rb.text = text;
+            rb.group = group;
+            rb.checked = checked;
+            if (onChanged)
+                rb.checked.Bind(onChanged);
             return &rb;
         };
     }
@@ -241,8 +245,9 @@ namespace gui::declarative {
 
             auto& sw = window.Create<gui::Switch>();
             ElementSetup(sw, base);
-            sw.SetChecked(checked);
-            sw.SetOnChanged(onChanged);
+            sw.checked = checked;
+            if (onChanged)
+                sw.checked.Bind(onChanged);
             return &sw;
         };
     }
@@ -258,11 +263,12 @@ namespace gui::declarative {
 
             auto& slider = window.Create<gui::Slider>();
             ElementSetup(slider, base);
-            slider.SetDirection(direction);
+            slider.direction = direction;
             slider.SetRange(range.minimum, range.maximum);
-            slider.SetValue(value);
-            slider.SetStep(step);
-            slider.SetOnValueChange(onValueChange);
+            slider.value = value;
+            slider.step = step;
+            if (onValueChange)
+                slider.value.Bind(onValueChange);
             return &slider;
         };
     }
@@ -278,9 +284,9 @@ namespace gui::declarative {
 
             auto& item = window.Create<gui::MenuItem>();
             ElementSetup(item, base);
-            item.SetText(text);
+            item.text = text;
             item.SetIcon(icon);
-            item.SetChecked(checked);
+            item.checked = checked;
             item.SetOnClick(onClick);
             if (subMenu) {
                 gui::Menu* sm = subMenu(window);
@@ -330,9 +336,9 @@ namespace gui::declarative {
 
             auto& splitView = window.Create<gui::SplitView>();
             ElementSetup(splitView, base);
-            splitView.SetDirection(direction);
+            splitView.direction = direction;
             splitView.SetAlign(align);
-            splitView.SetSplitPosition(splitPosition);
+            splitView.splitPosition = splitPosition;
             if (first) {
                 Element* firstEl = first(window);
                 splitView.Add(firstEl);
@@ -356,8 +362,9 @@ namespace gui::declarative {
             ElementSetup(list, base);
             for (const auto& item : items)
                 list.AddItem(item, item);
-            list.SetSelectedIndex(selectedIndex);
-            list.SetOnSelectionChanged(onSelectionChanged);
+            list.selectedIndex = selectedIndex;
+            if (onSelectionChanged)
+                list.selectedIndex.Bind(onSelectionChanged);
             return &list;
         };
     }
@@ -372,9 +379,9 @@ namespace gui::declarative {
 
             auto& button = window.Create<gui::ToolButton>();
             ElementSetup(button, base);
-            button.SetText(text);
+            button.text = text;
             button.SetIcon(icon);
-            button.SetIconSize(iconSize);
+            button.iconSize = iconSize;
             button.SetMode(gui::ToolButton::Mode::Normal);
             button.SetGroup(group);
             button.SetOnClick(onClick);
@@ -393,12 +400,12 @@ namespace gui::declarative {
 
             auto& button = window.Create<gui::ToolButton>();
             ElementSetup(button, base);
-            button.SetText(text);
+            button.text = text;
             button.SetIcon(icon);
-            button.SetIconSize(iconSize);
+            button.iconSize = iconSize;
             button.SetMode(gui::ToolButton::Mode::Radio);
             button.SetGroup(group);
-            button.SetToggled(toggled);
+            button.toggled = toggled;
             button.SetOnClick(onClick);
             return &button;
         };
@@ -414,11 +421,11 @@ namespace gui::declarative {
 
             auto& button = window.Create<gui::ToolButton>();
             ElementSetup(button, base);
-            button.SetText(text);
+            button.text = text;
             button.SetIcon(icon);
-            button.SetIconSize(iconSize);
+            button.iconSize = iconSize;
             button.SetMode(gui::ToolButton::Mode::Toggle);
-            button.SetToggled(toggled);
+            button.toggled = toggled;
             button.SetOnClick(onClick);
             return &button;
         };
@@ -435,9 +442,9 @@ namespace gui::declarative {
             auto& progressBar = window.Create<gui::ProgressBar>();
             ElementSetup(progressBar, base);
             progressBar.SetRange(range.minimum, range.maximum);
-            progressBar.SetValue(value);
+            progressBar.value = value;
             progressBar.SetIndeterminate(indeterminate);
-            progressBar.SetDirection(direction);
+            progressBar.direction = direction;
             return &progressBar;
         };
     }
@@ -454,11 +461,11 @@ namespace gui::declarative {
             auto& spinner = window.Create<gui::Spinner>();
             ElementSetup(spinner, base);
             spinner.SetRange(range.minimum, range.maximum);
-            spinner.SetValue(value);
-            spinner.SetStep(step);
-            spinner.SetDecimals(decimals);
+            spinner.value = value;
+            spinner.step = step;
+            spinner.decimals = decimals;
             if (onValueChange)
-                spinner.SetOnValueChange(onValueChange);
+                spinner.value.Bind(onValueChange);
             return &spinner;
         };
     }

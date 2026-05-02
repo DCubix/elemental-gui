@@ -22,12 +22,6 @@ namespace gui {
 
         Size GetPreferredSize() const override;
 
-        std::string GetText() const { return m_text; }
-        void SetText(const std::string& text) {
-            m_text = text;
-            Invalidate();
-        }
-
         Image* GetIcon() const { return m_icon; }
         void SetIcon(Image* icon) {
             m_icon = icon;
@@ -35,12 +29,6 @@ namespace gui {
         }
 
         void SetOnClick(VoidCallback callback) { m_onClick = callback; }
-
-        bool IsChecked() const { return m_checked; }
-        void SetChecked(bool checked) {
-            m_checked = checked;
-            Invalidate();
-        }
 
         bool IsSeparator() const { return m_separator; }
         void SetSeparator(bool separator) {
@@ -56,8 +44,10 @@ namespace gui {
 
         Menu* GetParentMenu() const;
 
+        Property<std::string> text;
+        Property<bool> checked{false};
+
     private:
-        std::string m_text;
         Image* m_icon{nullptr};
         Menu* m_subMenu{nullptr};
         VoidCallback m_onClick;

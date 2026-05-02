@@ -26,16 +26,14 @@ namespace gui {
         std::string GetGroup() const { return m_group; }
         void SetGroup(const std::string& group) { m_group = group; }
 
-        bool IsToggled() const { return m_toggled; }
-        void SetToggled(bool toggled) { m_toggled = toggled; }
-
         void SetOnClick(const VoidCallback& cb) { m_onClick = cb; }
+
+        Property<bool> toggled{false};
 
     private:
         VoidCallback m_onClick;
         ButtonState m_state;
         Mode m_mode;
-        std::string m_group{""}; // For radio buttons
-        bool m_toggled{false};   // For toggle and radio buttons
+        std::string m_group{""};
     };
 } // namespace gui

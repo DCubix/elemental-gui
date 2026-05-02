@@ -11,11 +11,13 @@ static constexpr int SUBMENU_ARROW_AREA = 16;
 
 namespace gui {
 
-    MenuItem::MenuItem(const std::string& text)
-        : Element(),
-          m_text(text) {
+    MenuItem::MenuItem(const std::string& t)
+        : Element() {
         SetLocalBounds({0, 0, 100, 20});
         SetAutoSize(true);
+        text.SetOnUpdate([this]{ Invalidate(); });
+        checked.SetOnUpdate([this]{ Invalidate(); });
+        text = t;
     }
 
     void MenuItem::OnDraw(Graphics& g) {
@@ -46,7 +48,7 @@ namespace gui {
         int contentH = size.h - (int)padding.GetVertical();
 
         // Checkmark
-        if (m_checked) {
+        if (checked()) {
             Json checkmarkStyle = GetStyle()["checkmark"];
             g.DrawSVG(checkmarkStyle, cx + 2, cy, ICON_SIZE, ICON_SIZE);
         }
@@ -60,8 +62,8 @@ namespace gui {
 
         // Text
         g.StyledTextBegin(style);
-        auto ex = g.MeasureText(m_text);
-        g.StyledTextEnd(m_text, cx, cy + (contentH + (int)ex.size.h) / 2);
+        auto ex = g.MeasureText(text());
+        g.StyledTextEnd(text(), cx, cy + (contentH + (int)ex.size.h) / 2);
 
         // Submenu arrow
         if (m_subMenu) {
@@ -161,7 +163,7 @@ namespace gui {
 
             g.Save();
             g.StyledTextBegin(style);
-            auto sz = g.MeasureText(m_text);
+            auto sz = g.MeasureText(text());
             g.Restore();
 
             int w = (int)padding.GetHorizontal() + CHECK_AREA + (int)sz.xAdvance;

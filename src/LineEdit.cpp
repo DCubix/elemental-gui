@@ -10,6 +10,17 @@ namespace gui {
         : Element() {
         SetLocalBounds(Rectangle(0, 0, 120, 28));
 
+        text.SetOnUpdate([this]{
+            if (!m_internalEdit) {
+                m_caretIndex = (int)text().size();
+                m_selectionStart = -1;
+                m_selectionEnd = -1;
+                m_offsetX = 0;
+            }
+            Rebuild();
+            Invalidate();
+        });
+
         m_blinkTimer.Start(500, [this]() {
             m_showCaret = !m_showCaret;
             if (IsFocused())
@@ -34,9 +45,9 @@ namespace gui {
         int ty = (sz.h - lineHeight) / 2; // vertical center
 
         // Update horizontal scroll offset so caret stays visible
-        if (!m_text.chars.empty()) {
+        if (!m_textLine.chars.empty()) {
             int caretX =
-                m_text.chars[std::min(m_caretIndex, (int)m_text.chars.size() - 1)].bounds.x;
+                m_textLine.chars[std::min(m_caretIndex, (int)m_textLine.chars.size() - 1)].bounds.x;
             int pos = m_offsetX + caretX;
             if (pos >= visW)
                 m_offsetX = visW - caretX - 1;
@@ -55,10 +66,10 @@ namespace gui {
             int a = m_selectionStart, b = m_selectionEnd;
             if (a > b)
                 std::swap(a, b);
-            a = std::max(0, std::min(a, (int)m_text.chars.size() - 1));
-            b = std::max(0, std::min(b, (int)m_text.chars.size() - 1));
-            int x0 = m_text.chars[a].bounds.x;
-            int x1 = m_text.chars[b].bounds.x;
+            a = std::max(0, std::min(a, (int)m_textLine.chars.size() - 1));
+            b = std::max(0, std::min(b, (int)m_textLine.chars.size() - 1));
+            int x0 = m_textLine.chars[a].bounds.x;
+            int x1 = m_textLine.chars[b].bounds.x;
             g.BeginSimplePath();
             g.AddPathRect(x0, 0, x1 - x0, lineHeight);
             g.EndSimplePath(true);
@@ -68,7 +79,7 @@ namespace gui {
         // Text
         const std::string fontName = style.value("font", "Sans");
         const double fontSize = style.value("fontSize", 14.0);
-        for (const text::Char& chr : m_text.chars) {
+        for (const text::Char& chr : m_textLine.chars) {
             if (chr.value == '\0')
                 continue;
             g.Color(chr.color.r, chr.color.g, chr.color.b, chr.color.a);
@@ -79,9 +90,9 @@ namespace gui {
         // Caret
         if (IsFocused() && m_editable && m_showCaret) {
             int caretX =
-                m_text.chars.empty()
+                m_textLine.chars.empty()
                     ? 0
-                    : m_text.chars[std::min(m_caretIndex, (int)m_text.chars.size() - 1)].bounds.x;
+                    : m_textLine.chars[std::min(m_caretIndex, (int)m_textLine.chars.size() - 1)].bounds.x;
             Color caretColor = Color::FromStyle(style["color"]);
             g.Color(caretColor.r, caretColor.g, caretColor.b, 1.0f);
             g.LineWidth(1.0f);
@@ -101,7 +112,7 @@ namespace gui {
 
         EdgeInsets pad = EdgeInsets::FromStyle(GetStyle()["padding"]);
         int effectiveX = e.x - pad.left - m_offsetX;
-        for (const text::Char& c : m_text.chars) {
+        for (const text::Char& c : m_textLine.chars) {
             if (effectiveX >= c.bounds.x && effectiveX < c.bounds.x + c.bounds.w) {
                 m_caretIndex = c.index;
                 break;
@@ -127,7 +138,7 @@ namespace gui {
             return;
         EdgeInsets pad = EdgeInsets::FromStyle(GetStyle()["padding"]);
         int effectiveX = e.x - pad.left - m_offsetX;
-        for (const text::Char& c : m_text.chars) {
+        for (const text::Char& c : m_textLine.chars) {
             if (effectiveX >= c.bounds.x && effectiveX < c.bounds.x + c.bounds.w) {
                 m_selectionEnd = c.index;
                 m_caretIndex = c.index;
@@ -158,7 +169,7 @@ namespace gui {
             endSel();
         } else if (e.key == Key::End) {
             beginSel();
-            m_caretIndex = (int)m_textRaw.size();
+            m_caretIndex = (int)text().size();
             endSel();
         } else if (e.key == Key::Backspace) {
             if (IsSelected())
@@ -170,7 +181,7 @@ namespace gui {
         } else if (e.key == Key::Delete) {
             if (IsSelected())
                 DeleteSelected();
-            else if (m_caretIndex < (int)m_textRaw.size()) {
+            else if (m_caretIndex < (int)text().size()) {
                 RemoveChar(m_caretIndex);
             }
         } else if (e.key == Key::Left) {
@@ -180,19 +191,19 @@ namespace gui {
             endSel();
         } else if (e.key == Key::Right) {
             beginSel();
-            if (m_caretIndex < (int)m_textRaw.size())
+            if (m_caretIndex < (int)text().size())
                 m_caretIndex++;
             endSel();
         } else if (e.key == Key::C && e.mod.control && IsSelected()) {
             int a = m_selectionStart, b = m_selectionEnd;
             if (a > b)
                 std::swap(a, b);
-            m_window->GetApp()->SetClipboard(m_textRaw.substr(a, b - a));
+            m_window->GetApp()->SetClipboard(text().substr(a, b - a));
         } else if (e.key == Key::X && e.mod.control && IsSelected()) {
             int a = m_selectionStart, b = m_selectionEnd;
             if (a > b)
                 std::swap(a, b);
-            m_window->GetApp()->SetClipboard(m_textRaw.substr(a, b - a));
+            m_window->GetApp()->SetClipboard(text().substr(a, b - a));
             DeleteSelected();
         } else if (e.key == Key::V && e.mod.control) {
             if (IsSelected())
@@ -229,23 +240,9 @@ namespace gui {
         return m_textSize.w > 0 ? m_textSize : Size{120, 28};
     }
 
-    void LineEdit::SetText(const std::string& txt) {
-        if (m_textRaw == txt)
-            return;
-        m_textRaw = txt;
-        m_caretIndex = (int)m_textRaw.size();
-        m_selectionStart = -1;
-        m_selectionEnd = -1;
-        m_offsetX = 0;
-        Rebuild();
-        Invalidate();
-        if (m_onChange)
-            m_onChange(m_textRaw);
-    }
-
     void LineEdit::Select(int from, int len) {
         if (len < 0)
-            len = (int)m_textRaw.size() - from;
+            len = (int)text().size() - from;
         m_selectionStart = from;
         m_selectionEnd = from + len;
         Invalidate();
@@ -266,22 +263,24 @@ namespace gui {
             return; // single-line blocks newlines
         if (m_caretIndex < 0)
             m_caretIndex = 0;
-        if (m_caretIndex > (int)m_textRaw.size())
-            m_caretIndex = (int)m_textRaw.size();
-        m_textRaw.insert(m_caretIndex, 1, c);
+        if (m_caretIndex > (int)text().size())
+            m_caretIndex = (int)text().size();
+        std::string s = text();
+        s.insert(m_caretIndex, 1, c);
         m_caretIndex++;
-        Rebuild();
-        if (m_onChange)
-            m_onChange(m_textRaw);
+        m_internalEdit = true;
+        text = s;
+        m_internalEdit = false;
     }
 
     void LineEdit::RemoveChar(int i) {
-        if (i < 0 || i >= (int)m_textRaw.size())
+        if (i < 0 || i >= (int)text().size())
             return;
-        m_textRaw.erase(i, 1);
-        Rebuild();
-        if (m_onChange)
-            m_onChange(m_textRaw);
+        std::string s = text();
+        s.erase(i, 1);
+        m_internalEdit = true;
+        text = s;
+        m_internalEdit = false;
     }
 
     void LineEdit::DeleteSelected() {
@@ -291,28 +290,29 @@ namespace gui {
         if (a > b)
             std::swap(a, b);
         a = std::max(0, a);
-        b = std::min(b, (int)m_textRaw.size());
-        m_textRaw.erase(a, b - a);
+        b = std::min(b, (int)text().size());
+        std::string s = text();
+        s.erase(a, b - a);
         m_caretIndex = a;
         Deselect();
-        Rebuild();
-        if (m_onChange)
-            m_onChange(m_textRaw);
+        m_internalEdit = true;
+        text = s;
+        m_internalEdit = false;
     }
 
     void LineEdit::Rebuild() {
         if (!m_window)
             return;
         auto textStyle = GetStyle();
-        const std::string display = m_masked ? std::string(m_textRaw.size(), '*') : m_textRaw;
+        const std::string display = m_masked ? std::string(text().size(), '*') : text();
         auto& g = GetWindow()->GetGraphics();
 
         auto lines = text::ComputeLines(g, textStyle, display);
-        m_text = lines.empty() ? text::Line{} : lines[0];
+        m_textLine = lines.empty() ? text::Line{} : lines[0];
 
         // Apply default text color to all chars
         Color defaultColor = Color::FromStyle(textStyle["color"]);
-        for (auto& ch : m_text.chars)
+        for (auto& ch : m_textLine.chars)
             ch.color = defaultColor;
 
         m_textSize = text::ComputeTextSize(g, textStyle, display);

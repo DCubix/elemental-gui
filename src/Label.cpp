@@ -7,10 +7,11 @@
 namespace gui {
 
     Label::Label()
-        : Element(),
-          m_text(""),
-          m_alignment(Alignment::TopLeft),
-          m_icon(nullptr) {}
+        : Element() {
+        text.SetOnUpdate([this]{ Invalidate(); });
+        alignment.SetOnUpdate([this]{ Invalidate(); });
+        iconSize.SetOnUpdate([this]{ Invalidate(); });
+    }
 
     void Label::OnDraw(Graphics& g) {
         auto textStyle = GetStyle();
@@ -24,8 +25,8 @@ namespace gui {
         g.StyledTextBegin(textStyle);
         g.ClipPushRect(clip.x, clip.y, clip.w, clip.h);
 
-        int iconSz = m_icon ? m_iconSize : 0;
-        bool hasText = !m_text.empty();
+        int iconSz = m_icon ? (int)iconSize() : 0;
+        bool hasText = !text().empty();
 
         // Icon-only: always center+middle
         if (m_icon && !hasText) {
@@ -36,9 +37,9 @@ namespace gui {
         }
 
         int maxW = 0, maxH = 0;
-        auto&& lines = utils::SplitString(m_text, "\n");
-        for (auto&& text : lines) {
-            auto&& ex = g.MeasureText(text);
+        auto&& lines = utils::SplitString(text(), "\n");
+        for (auto&& line : lines) {
+            auto&& ex = g.MeasureText(line);
             maxH += ex.size.h;
             maxW = std::max(maxW, static_cast<int>(ex.size.w));
         }
@@ -49,7 +50,7 @@ namespace gui {
 
         // Content block origin based on alignment
         int cx = 0, cy = 0;
-        switch (m_alignment) {
+        switch (alignment()) {
             case Alignment::TopCenter:
             case Alignment::MiddleCenter:
             case Alignment::BottomCenter:
@@ -63,7 +64,7 @@ namespace gui {
             default:
                 break;
         }
-        switch (m_alignment) {
+        switch (alignment()) {
             case Alignment::MiddleLeft:
             case Alignment::MiddleCenter:
             case Alignment::MiddleRight:
@@ -84,10 +85,10 @@ namespace gui {
 
         int textX = cx + iconSz + gap;
         int textY = cy + totalH / 2 - maxH / 2;
-        for (auto&& text : lines) {
-            auto&& ex = g.MeasureText(text);
+        for (auto&& line : lines) {
+            auto&& ex = g.MeasureText(line);
             int tx = textX;
-            switch (m_alignment) {
+            switch (alignment()) {
                 case Alignment::TopCenter:
                 case Alignment::MiddleCenter:
                 case Alignment::BottomCenter:
@@ -101,7 +102,7 @@ namespace gui {
                 default:
                     break;
             }
-            g.StyledTextEnd(text, tx, textY + ex.size.h);
+            g.StyledTextEnd(line, tx, textY + ex.size.h);
             textY += ex.size.h;
         }
 
@@ -111,9 +112,9 @@ namespace gui {
 
     Size Label::GetPreferredSize() const {
         if (IsAutoSize()) {
-            int iconSz = m_icon ? m_iconSize : 0;
+            int iconSz = m_icon ? (int)iconSize() : 0;
 
-            if (m_text.empty()) {
+            if (text().empty()) {
                 return {iconSz, iconSz};
             }
 
@@ -126,9 +127,9 @@ namespace gui {
 
             const auto fm = g.GetFontExtents();
             const int lineHeight = static_cast<int>(fm.ascent + fm.descent);
-            auto&& lines = utils::SplitString(m_text, "\n");
-            for (auto&& text : lines) {
-                auto&& ex = g.MeasureText(text);
+            auto&& lines = utils::SplitString(text(), "\n");
+            for (auto&& line : lines) {
+                auto&& ex = g.MeasureText(line);
                 maxH += std::max(lineHeight, ex.size.h);
                 maxW = std::max(maxW, static_cast<int>(ex.size.w));
             }

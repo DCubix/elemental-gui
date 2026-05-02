@@ -30,7 +30,7 @@ public:
 
         // clang-format off
         const auto columnProps = dec::ColumnProps{
-            .base = {
+            .base = dec::ElementProps{
                 .flexGrow = 1.0f,
             },
             .gap = 8,
@@ -40,21 +40,21 @@ public:
         };
 
         const auto sectionTextProps = dec::TextProps{
-            .base = {
+            .base = dec::ElementProps{
                 .autoSize = true,
             },
             .align = Alignment::MiddleLeft,
         };
 
-        return dec::Row({
+        return dec::Row(dec::RowProps{
             .gap = 10,
             .padding = EdgeInsets::All(16),
             .align = FlexAlign::Stretch,
             .showBackground = false
         }, {
             dec::Column(columnProps, {
-                dec::Text("Data Input", {
-                    .base = {
+                dec::Text("Data Input", dec::TextProps{
+                    .base = dec::ElementProps{
                         .autoSize = true,
                         .style = GetApp()->GetStyle()["DefaultTextBig"],
                     },
@@ -62,30 +62,30 @@ public:
                 }),
 
                 dec::Text("Simple TextEdit", sectionTextProps),
-                dec::TextEdit({}),
+                dec::TextEdit(dec::TextEditProps{}),
 
                 dec::Text("Masked TextEdit", sectionTextProps),
-                dec::TextEdit({
+                dec::TextEdit(dec::TextEditProps{
                     .text = "password123",
                     .masked = true,
                 }),
 
                 dec::Text("Multi-line TextEdit", sectionTextProps),
-                dec::TextEdit({
-                    .base = {
+                dec::TextEdit(dec::TextEditProps{
+                    .base = dec::ElementProps{
                         .tag = "multiLineEdit",
                     },
                     .text = "Hello, world!\nThis is a multi-line TextEdit.",
                     .multiLine = true,
                 }),
-                dec::Row({
-                    .base = {
+                dec::Row(dec::RowProps{
+                    .base = dec::ElementProps{
                         .autoSize = true,
                     },
                     .justify = FlexJustify::End
                 }, {
-                    dec::Button("Bold", {
-                        .base = {
+                    dec::Button("Bold", dec::ButtonProps{
+                        .base = dec::ElementProps{
                             .autoSize = true,
                         },
                         .onClick = [this]() {
@@ -98,8 +98,8 @@ public:
                 }),
 
                 dec::Text("List", sectionTextProps),
-                dec::BasicList({
-                    .base = { .flexGrow = 1.0f },
+                dec::BasicList(dec::BasicListProps{
+                    .base = dec::ElementProps{ .flexGrow = 1.0f },
                     .items = {
                         "Item 1",
                         "Item 2",
@@ -115,24 +115,24 @@ public:
             }),
             dec::ScrollView(
                 dec::Column(columnProps, {
-                    dec::Text("Interactive", {
-                        .base = {
+                    dec::Text("Interactive", dec::TextProps{
+                        .base = dec::ElementProps{
                             .autoSize = true,
                             .style = GetApp()->GetStyle()["DefaultTextBig"],
                         },
                         .align = Alignment::MiddleCenter,
                     }),
 
-                    dec::Button("Simple Button", {
-                        .base = {
+                    dec::Button("Simple Button", dec::ButtonProps{
+                        .base = dec::ElementProps{
                             .autoSize = true,
                         },
                         .onClick = []() {
                             printf("Button clicked!\n");
                         }
                     }),
-                    dec::Button("Icon Button", {
-                        .base = {
+                    dec::Button("Icon Button", dec::ButtonProps{
+                        .base = dec::ElementProps{
                             .autoSize = true,
                         },
                         .icon = &icons[0],
@@ -143,16 +143,16 @@ public:
 
                     // ToolButton row
                     dec::Text("ToolButtons", sectionTextProps),
-                    dec::Row({
-                        .base = {
+                    dec::Row(dec::RowProps{
+                        .base = dec::ElementProps{
                             .autoSize = true,
                         },
                         .gap = 5,
                         .padding = EdgeInsets::All(4),
                         .showBackground = true,
                     }, {
-                        dec::ToolRadioButton("", {
-                            .base = {
+                        dec::ToolRadioButton("", dec::ToolButtonProps{
+                            .base = dec::ElementProps{
                                 .autoSize = true,
                                 .flexGrow = 1.0f,
                             },
@@ -162,8 +162,8 @@ public:
                             },
                             .group = "tools",
                         }),
-                        dec::ToolRadioButton("", {
-                            .base = {
+                        dec::ToolRadioButton("", dec::ToolButtonProps{
+                            .base = dec::ElementProps{
                                 .autoSize = true,
                                 .flexGrow = 1.0f,
                             },
@@ -173,8 +173,8 @@ public:
                             },
                             .group = "tools",
                         }),
-                        dec::ToolRadioButton("", {
-                            .base = {
+                        dec::ToolRadioButton("", dec::ToolButtonProps{
+                            .base = dec::ElementProps{
                                 .autoSize = true,
                                 .flexGrow = 1.0f,
                             },
@@ -184,8 +184,8 @@ public:
                             },
                             .group = "tools",
                         }),
-                        dec::ToolRadioButton("", {
-                            .base = {
+                        dec::ToolRadioButton("", dec::ToolButtonProps{
+                            .base = dec::ElementProps{
                                 .autoSize = true,
                                 .flexGrow = 1.0f,
                             },
@@ -195,8 +195,8 @@ public:
                             },
                             .group = "tools",
                         }),
-                        dec::ToolRadioButton("", {
-                            .base = {
+                        dec::ToolRadioButton("", dec::ToolButtonProps{
+                            .base = dec::ElementProps{
                                 .autoSize = true,
                                 .flexGrow = 1.0f,
                             },
@@ -209,21 +209,21 @@ public:
                     }),
 
                     dec::Text("Switch", sectionTextProps),
-                    dec::Row({
-                        .base = {
+                    dec::Row(dec::RowProps{
+                        .base = dec::ElementProps{
                             .autoSize = true,
                         },
                         .gap = 10,
                         .align = FlexAlign::Center,
                     }, {
-                        dec::Text("Enable feature", {
-                            .base = {
+                        dec::Text("Enable feature", dec::TextProps{
+                            .base = dec::ElementProps{
                                 .autoSize = true,
                                 .flexGrow = 1.0f,
                             },
                             .align = Alignment::MiddleLeft,
                         }),
-                        dec::Switch({
+                        dec::Switch(dec::SwitchProps{
                             .onChanged = [](bool checked) {
                                 printf("Switch is now %s\n", checked ? "ON" : "OFF");
                             }
@@ -231,7 +231,7 @@ public:
                     }),
 
                     dec::Text("Sliders", sectionTextProps),
-                    dec::Slider({
+                    dec::Slider(dec::SliderProps{
                         .direction = Direction::Horizontal,
                         .range = {0, 100},
                         .value = 50,
@@ -239,15 +239,15 @@ public:
                             printf("Slider value: %.2f\n", value);
                         },
                     }),
-                    dec::Row({
-                        .base = {
+                    dec::Row(dec::RowProps{
+                        .base = dec::ElementProps{
                             .autoSize = true,
                         },
                         .gap = 10,
                         .justify = FlexJustify::Center,
                     }, {
-                        dec::Slider({
-                            .base = {
+                        dec::Slider(dec::SliderProps{
+                            .base = dec::ElementProps{
                                 .autoSize = true,
                                 .bounds = {0, 0, 30, 100},
                             },
@@ -258,8 +258,8 @@ public:
                                 printf("Vertical slider value: %.2f\n", value);
                             },
                         }),
-                        dec::Slider({
-                            .base = {
+                        dec::Slider(dec::SliderProps{
+                            .base = dec::ElementProps{
                                 .autoSize = true,
                                 .bounds = {0, 0, 30, 100},
                             },
@@ -270,8 +270,8 @@ public:
                                 printf("Vertical slider value: %.2f\n", value);
                             },
                         }),
-                        dec::Slider({
-                            .base = {
+                        dec::Slider(dec::SliderProps{
+                            .base = dec::ElementProps{
                                 .autoSize = true,
                                 .bounds = {0, 0, 30, 100},
                             },
@@ -285,8 +285,8 @@ public:
                     }),
 
                     dec::Text("Radio Buttons", sectionTextProps),
-                    dec::RadioButton("Option 1", {
-                        .base = {
+                    dec::RadioButton("Option 1", dec::RadioButtonProps{
+                        .base = dec::ElementProps{
                             .autoSize = true,
                         },
                         .group = "options",
@@ -295,8 +295,8 @@ public:
                                 printf("Option 1 selected\n");
                         }
                     }),
-                    dec::RadioButton("Option 2", {
-                        .base = {
+                    dec::RadioButton("Option 2", dec::RadioButtonProps{
+                        .base = dec::ElementProps{
                             .autoSize = true,
                         },
                         .group = "options",
@@ -305,8 +305,8 @@ public:
                                 printf("Option 2 selected\n");
                         }
                     }),
-                    dec::RadioButton("Option 3", {
-                        .base = {
+                    dec::RadioButton("Option 3", dec::RadioButtonProps{
+                        .base = dec::ElementProps{
                             .autoSize = true,
                         },
                         .group = "options",
@@ -317,40 +317,40 @@ public:
                     }),
 
                     dec::Text("Check Boxes", sectionTextProps),
-                    dec::CheckBox("Check 1", {
-                        .base = {
+                    dec::CheckBox("Check 1", dec::CheckBoxProps{
+                        .base = dec::ElementProps{
                             .autoSize = true,
                         },
                         .onChanged = [](bool checked) {
                             printf("Check 1 is now %s\n", checked ? "Checked" : "Unchecked");
                         }
                     }),
-                    dec::CheckBox("Check 2", {
-                        .base = {
+                    dec::CheckBox("Check 2", dec::CheckBoxProps{
+                        .base = dec::ElementProps{
                             .autoSize = true,
                         },
                         .onChanged = [](bool checked) {
                             printf("Check 2 is now %s\n", checked ? "Checked" : "Unchecked");
                         },
                     }),
-                    dec::CheckBox("Check 3", {
-                        .base = {
+                    dec::CheckBox("Check 3", dec::CheckBoxProps{
+                        .base = dec::ElementProps{
                             .autoSize = true,
                         },
                         .onChanged = [](bool checked) {
                             printf("Check 3 is now %s\n", checked ? "Checked" : "Unchecked");
                         },
                     }),
-                }), {
-                    .base = {
+                }), dec::ScrollViewProps{
+                    .base = dec::ElementProps{
                         .flexGrow = 1.0f,
                     },
                     .scrollDirection = Direction::Vertical
                 }
             ),
             dec::Column(columnProps, {
-                dec::Text("Data Display", {
-                    .base = {
+                dec::Text("Data Display", dec::TextProps{
+                    .base = dec::ElementProps{
                         .autoSize = true,
                         .style = GetApp()->GetStyle()["DefaultTextBig"],
                     },
@@ -358,52 +358,52 @@ public:
                 }),
 
                 dec::Text("Image View (Stretch)", sectionTextProps),
-                dec::Image({
+                dec::Image(dec::ImageProps{
                     .image = &test,
                     .scaling = ImageScalingMode::Stretch
                 }),
                 dec::Text("Image View (Contain)", sectionTextProps),
-                dec::Image({
+                dec::Image(dec::ImageProps{
                     .image = &test,
                     .scaling = ImageScalingMode::Contain
                 }),
                 dec::Text("Image View (Cover)", sectionTextProps),
-                dec::Image({
+                dec::Image(dec::ImageProps{
                     .image = &test,
                     .scaling = ImageScalingMode::Cover
                 }),
 
                 dec::Text("Progress Bars", sectionTextProps),
-                dec::ProgressBar({
-                    .base = {
+                dec::ProgressBar(dec::ProgressBarProps{
+                    .base = dec::ElementProps{
                         .autoSize = true,
                     },
                     .value = 0.5f
                 }),
-                dec::ProgressBar({
-                    .base = {
+                dec::ProgressBar(dec::ProgressBarProps{
+                    .base = dec::ElementProps{
                         .autoSize = true,
                     },
                     .indeterminate = true,
                 }),
                 dec::Spacer(),
-                dec::Row({
-                    .base = {
+                dec::Row(dec::RowProps{
+                    .base = dec::ElementProps{
                         .autoSize = true,
                     },
                     .gap = 5,
                     .justify = FlexJustify::End,
                 }, {
-                    dec::Button("Light", {
-                        .base = {
+                    dec::Button("Light", dec::ButtonProps{
+                        .base = dec::ElementProps{
                             .autoSize = true,
                         },
                         .onClick = [this]() {
                             GetApp()->LoadTheme("LightStyle.json");
                         }
                     }),
-                    dec::Button("Dark", {
-                        .base = {
+                    dec::Button("Dark", dec::ButtonProps{
+                        .base = dec::ElementProps{
                             .autoSize = true,
                         },
                         .onClick = [this]() {

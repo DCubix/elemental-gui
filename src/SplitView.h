@@ -22,30 +22,19 @@ namespace gui {
 
         Size GetPreferredSize() const override;
 
-        Direction GetDirection() const { return m_direction; }
-        void SetDirection(Direction dir) {
-            m_direction = dir;
-            Invalidate();
-        }
-
         SplitViewAlign GetAlign() const { return m_align; }
         void SetAlign(SplitViewAlign align) {
             m_align = align;
             Invalidate();
         }
 
-        int GetSplitPosition() const { return m_splitPosition; }
-        void SetSplitPosition(int pos) {
-            m_splitPosition = pos;
-            Invalidate();
-        }
+        Property<Direction> direction{Direction::Horizontal};
+        Property<int> splitPosition{100};
 
     private:
         enum class ButtonState { Normal = 0, Hover, Click };
 
-        Direction m_direction{Direction::Horizontal};
         SplitViewAlign m_align{SplitViewAlign::Start};
-        int m_splitPosition{100}; // px
 
         ButtonState m_state{ButtonState::Normal};
 

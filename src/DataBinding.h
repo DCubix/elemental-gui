@@ -18,6 +18,8 @@ namespace gui {
     template <PropertyValue T>
     class Property {
     public:
+        using Transformer = std::function<T(const T&)>;
+
         Property(const Property&) = delete;
         Property& operator=(const Property&) = delete;
         Property(Property&&) = delete;
@@ -97,14 +99,17 @@ namespace gui {
         const T& Get() const { return m_value; }
 
         void Set(const T& value) {
-            if (m_updating || m_value == value)
+            T newValue = m_transformer ? m_transformer(value) : value;
+
+            if (m_updating || m_value == newValue)
                 return;
             m_updating = true;
-            m_value = value;
+
+            m_value = newValue;
             for (auto* peer : m_peers)
-                peer->Set(value);
+                peer->Set(newValue);
             for (auto& cb : m_oneWayBindings)
-                cb(value);
+                cb(newValue);
             m_updating = false;
             if (m_onUpdate)
                 m_onUpdate();
@@ -129,6 +134,7 @@ namespace gui {
         }
 
         void SetOnUpdate(utils::VoidCallback onUpdate) { m_onUpdate = onUpdate; }
+        void SetTransformer(Transformer transformer) { m_transformer = transformer; }
 
     private:
         T m_value{};
@@ -136,6 +142,7 @@ namespace gui {
         std::vector<Property<T>*> m_peers;
         std::vector<OneWayBinding<T>> m_oneWayBindings;
         utils::VoidCallback m_onUpdate;
+        Transformer m_transformer;
     };
 
     template <PropertyValue T>

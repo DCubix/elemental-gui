@@ -11,6 +11,9 @@ namespace gui {
     Spinner::Spinner()
         : Element() {
         SetLocalBounds(Rectangle(0, 0, 90, 24));
+        value.SetOnUpdate([this]{ Invalidate(); });
+        step.SetOnUpdate([this]{ Invalidate(); });
+        decimals.SetOnUpdate([this]{ Invalidate(); });
     }
 
     Rectangle Spinner::GetUpButtonRect() const {
@@ -26,13 +29,14 @@ namespace gui {
 
     std::string Spinner::FormatValue() const {
         std::ostringstream ss;
-        ss << std::fixed << std::setprecision(m_decimals) << m_value;
+        ss << std::fixed << std::setprecision(decimals()) << value();
         return ss.str();
     }
 
-    void Spinner::Step(float direction) {
-        float snapped = std::round(m_value / m_step) * m_step;
-        SetValue(m_range.Constrain(snapped + direction * m_step));
+    void Spinner::Step(float dir) {
+        float snapped = std::round(value() / step()) * step();
+        float clamped = m_range.Constrain(snapped + dir * step());
+        value = clamped;
     }
 
     void Spinner::OnDraw(Graphics& g) {
@@ -164,15 +168,7 @@ namespace gui {
     void Spinner::SetRange(float min, float max) {
         m_range.minimum = min;
         m_range.maximum = max;
-        SetValue(m_range.Constrain(m_value));
-        Invalidate();
-    }
-
-    void Spinner::SetValue(float v) {
-        float clamped = m_range.Constrain(v);
-        if (m_onValueChange && m_value != clamped)
-            m_onValueChange(clamped);
-        m_value = clamped;
+        value = m_range.Constrain(value());
         Invalidate();
     }
 

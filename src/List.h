@@ -19,9 +19,12 @@ namespace gui {
             : Element(),
               m_scrollbar(nullptr) {
             SetLocalBounds({0, 0, 200, 200});
+            selectedIndex.SetOnUpdate([this]{ Invalidate(); });
         }
 
         std::string StyleKey() const override { return "List"; }
+
+        Property<int> selectedIndex{-1};
 
         void OnDraw(Graphics& g) override {
             auto style = GetStyle();
@@ -34,8 +37,8 @@ namespace gui {
             if (m_scrollbar == nullptr) {
                 m_scrollbar = &m_window->template Create<Scrollbar>();
                 m_scrollbar->m_parent = this;
-                m_scrollbar->SetDirection(Direction::Vertical);
-                m_scrollbar->SetStep(1);
+                m_scrollbar->direction = Direction::Vertical;
+                m_scrollbar->step = 1;
             }
 
             EdgeInsets pad = EdgeInsets::FromStyle(style["padding"]);
@@ -58,10 +61,10 @@ namespace gui {
                 m_scrollbar->SetRange(0, totalContentHeight - padB.h);
                 m_scrollbar->SetLocalBounds(Rectangle(size.w - barsize, 0, barsize, size.h));
             } else {
-                m_scrollbar->SetValue(0);
+                m_scrollbar->value = 0;
             }
 
-            int scrollOffset = static_cast<int>(m_scrollbar->GetValue());
+            int scrollOffset = static_cast<int>(m_scrollbar->value());
 
             g.ClipPushRect(padB.x, padB.y, contentWidth, padB.h);
 
@@ -77,7 +80,7 @@ namespace gui {
                 auto itemStyle = style["item"];
 
                 // Highlight selected item
-                if (static_cast<int>(i) == m_selectedIndex) {
+                if (static_cast<int>(i) == selectedIndex()) {
                     g.StyledRect(
                         itemRect.x,
                         itemRect.y,
@@ -121,25 +124,25 @@ namespace gui {
             if (m_scrollbar == nullptr || !m_scrollbar->IsEnabled())
                 return;
             const float scrollSpeed = 30.0f;
-            float newVal = m_scrollbar->GetValue() - e.scrollY * scrollSpeed;
+            float newVal = m_scrollbar->value() - e.scrollY * scrollSpeed;
             newVal = std::max(
                 m_scrollbar->GetRange().minimum,
                 std::min(newVal, m_scrollbar->GetRange().maximum)
             );
-            m_scrollbar->SetValue(newVal);
+            m_scrollbar->value = newVal;
         }
 
         void OnMouseDown(MouseEvent e) override {
             if (e.button != MouseButton::Left)
                 return;
             Rectangle b = GetLocalIntersectedBounds();
-            int scrollOffset = m_scrollbar ? static_cast<int>(m_scrollbar->GetValue()) : 0;
+            int scrollOffset = m_scrollbar ? static_cast<int>(m_scrollbar->value()) : 0;
             int contentWidth = GetContentWidth();
 
             for (size_t i = 0; i < m_items.size(); i++) {
                 auto rect = GetItemRect(static_cast<int>(i), scrollOffset, contentWidth);
                 if (rect.HasPoint(e.x, e.y) && rect.Intersects(b)) {
-                    SetSelectedIndex(static_cast<int>(i));
+                    selectedIndex = static_cast<int>(i);
                     break;
                 }
             }
@@ -173,36 +176,17 @@ namespace gui {
             }
         }
 
-        void SetSelectedIndex(int index) {
-            if (index < static_cast<int>(m_items.size())) {
-                if (m_selectedIndex != index) {
-                    m_selectedIndex = index;
-                    Invalidate();
-                    if (m_onSelectionChanged) {
-                        m_onSelectionChanged(m_selectedIndex);
-                    }
-                }
-            }
-        }
-        int GetSelectedIndex() const { return m_selectedIndex; }
-
         const ListItem<T>& GetSelectedItem() const {
-            if (m_selectedIndex >= 0 && m_selectedIndex < static_cast<int>(m_items.size())) {
-                return m_items[m_selectedIndex];
+            if (selectedIndex() >= 0 && selectedIndex() < static_cast<int>(m_items.size())) {
+                return m_items[selectedIndex()];
             }
             throw std::out_of_range("No item selected");
-        }
-
-        void SetOnSelectionChanged(const ValueChanged<int>& callback) {
-            m_onSelectionChanged = callback;
         }
 
         const std::vector<ListItem<T>>& GetItems() const { return m_items; }
 
     private:
-        int m_selectedIndex{-1};
         std::vector<ListItem<T>> m_items;
-        ValueChanged<int> m_onSelectionChanged;
         Scrollbar* m_scrollbar;
 
         int GetContentWidth() const {

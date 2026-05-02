@@ -15,12 +15,12 @@ namespace gui {
     void ScrollView::OnScroll(ScrollEvent e) {
         const float scrollSpeed = 30.0f;
         if (m_scrollBar && m_scrollBar->IsEnabled()) {
-            float newVal = m_scrollBar->GetValue() - e.scrollY * scrollSpeed;
+            float newVal = m_scrollBar->value() - e.scrollY * scrollSpeed;
             newVal = std::max(
                 (float)m_scrollBar->GetRange().minimum,
                 std::min(newVal, (float)m_scrollBar->GetRange().maximum)
             );
-            m_scrollBar->SetValue(newVal);
+            m_scrollBar->value = newVal;
         }
     }
 
@@ -50,8 +50,8 @@ namespace gui {
         if (!m_scrollBar) {
             m_scrollBar = &m_window->template Create<Scrollbar>();
             m_scrollBar->m_parent = this;
-            m_scrollBar->SetDirection(m_scrollDirection);
-            m_scrollBar->SetStep(1);
+            m_scrollBar->direction = m_scrollDirection;
+            m_scrollBar->step = 1;
         }
 
         m_scrollBar->SetEnabled(false);
@@ -98,7 +98,7 @@ namespace gui {
     void ScrollView::SetScrollDirection(Direction dir) {
         m_scrollDirection = dir;
         if (m_scrollBar) {
-            m_scrollBar->SetDirection(dir);
+            m_scrollBar->direction = dir;
         }
         Invalidate();
     }
@@ -130,11 +130,11 @@ namespace gui {
                 Rectangle(size.w - SCROLLBAR_SIZE, 0, SCROLLBAR_SIZE, size.h)
             );
         } else {
-            m_scrollBar->SetValue(0);
+            m_scrollBar->value = 0;
         }
 
         m_element->SetLocalBounds(
-            {0, -static_cast<int>(m_scrollBar->GetValue()), crossAxisSize, ps.h}
+            {0, -static_cast<int>(m_scrollBar->value()), crossAxisSize, ps.h}
         );
     }
 
@@ -154,11 +154,11 @@ namespace gui {
                 Rectangle(0, size.h - SCROLLBAR_SIZE, size.w, SCROLLBAR_SIZE)
             );
         } else {
-            m_scrollBar->SetValue(0);
+            m_scrollBar->value = 0;
         }
 
         m_element->SetLocalBounds(
-            {-static_cast<int>(m_scrollBar->GetValue()), 0, ps.w, crossAxisSize}
+            {-static_cast<int>(m_scrollBar->value()), 0, ps.w, crossAxisSize}
         );
     }
 } // namespace gui
