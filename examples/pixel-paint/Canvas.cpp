@@ -39,6 +39,17 @@ void Canvas::OnDraw(gui::Graphics& g) {
         g.DrawImage(&preview, 0, 0, b.w, b.h, gui::ImageFiltering::Nearest);
     }
 
+    if (zoom >= 3.0f) {
+        auto sz = image.GetSize();
+        g.Color(0.5f, 0.5f, 0.5f, 0.4f);
+        g.LineWidth(1.0f);
+        for (int x = 1; x < sz.w; x++)
+            g.Line(x * zoom, 0, x * zoom, b.h);
+        for (int y = 1; y < sz.h; y++)
+            g.Line(0, y * zoom, b.w, y * zoom);
+        g.Stroke();
+    }
+
     g.ClipPop();
 }
 
