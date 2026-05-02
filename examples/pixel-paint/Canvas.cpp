@@ -9,12 +9,16 @@ Canvas::Canvas()
     SetLocalBounds({0, 0, 64, 64});
     image = gui::Image(64, 64);
     preview = gui::Image(64, 64);
+    undoRedo = UndoRedo(this);
 
     tools[static_cast<size_t>(ToolType::Pencil)] = std::make_unique<PencilTool>();
     tools[static_cast<size_t>(ToolType::Curve)] = std::make_unique<CurveTool>();
     tools[static_cast<size_t>(ToolType::Fill)] = std::make_unique<FillTool>();
     tools[static_cast<size_t>(ToolType::Eraser)] =
         std::make_unique<PencilTool>(gui::Color{0, 0, 0, 0});
+    tools[static_cast<size_t>(ToolType::Eyedrop)] = std::make_unique<PickerTool>();
+    tools[static_cast<size_t>(ToolType::Square)] = std::make_unique<RectTool>();
+    tools[static_cast<size_t>(ToolType::Circle)] = std::make_unique<EllipseTool>();
 }
 
 void Canvas::OnDraw(gui::Graphics& g) {
@@ -89,8 +93,8 @@ void Canvas::OnMouseUp(gui::MouseEvent e) {
 
 void Canvas::OnScroll(gui::ScrollEvent e) {
     float oldZoom = zoom;
-    zoom += e.scrollY * 0.25f;
-    zoom = std::clamp(zoom, 1.0f, 10.0f);
+    zoom += e.scrollY * 0.2f;
+    zoom = std::clamp(zoom, 1.0f, 20.0f);
 
     auto sz = image.GetSize();
     float imgX = static_cast<float>(e.mouseX) / oldZoom;
@@ -105,6 +109,10 @@ void Canvas::OnScroll(gui::ScrollEvent e) {
 void Canvas::OnKeyDown(gui::KeyEvent e) {
     if (e.key == gui::Key::LeftShift || e.key == gui::Key::RightShift) {
         shiftPressed = true;
+    } else if (e.key == gui::Key::Z && e.mod.control && undoRedo.CanUndo()) {
+        Undo();
+    } else if (e.key == gui::Key::Y && e.mod.control && undoRedo.CanRedo()) {
+        Redo();
     }
 }
 
@@ -151,13 +159,126 @@ void Canvas::Preview(const std::vector<algos::Pixel>& data) {
 }
 
 void Canvas::Draw(const std::vector<algos::Pixel>& data) {
-    // TODO: undo/redo
+    CmdDrawPixels* cmd = new CmdDrawPixels();
+    cmd->data = data;
+    undoRedo.Run(cmd);
+    if (onImageChanged)
+        onImageChanged();
+    Invalidate();
+}
+
+void Canvas::Undo() {
+    undoRedo.Undo();
+    Invalidate();
+}
+
+void Canvas::Redo() {
+    undoRedo.Redo();
+    Invalidate();
+}
+
+void Canvas::LoadFromFile(const std::string& fileName) {
+    gui::Image img{fileName};
+
+    image.Resize(img.GetWidth(), img.GetHeight());
+    preview.Resize(img.GetWidth(), img.GetHeight());
+    zoom = 1.0f;
+    viewPosition = {0, 0};
+
+    undoRedo.Reset();
+
+    Reposition();
+
+    img.Lock();
     image.Lock();
-    for (auto px : data) {
-        image.SetPixel(px.position.x, px.position.y, px.color);
+    for (int y = 0; y < img.GetHeight(); y++)
+        for (int x = 0; x < img.GetWidth(); x++) {
+            image.SetPixel(x, y, img.GetPixel(x, y));
+        }
+    image.Unlock();
+    img.Unlock();
+
+    Invalidate();
+}
+
+void Canvas::LoadEmpty() {
+    image.Resize(64, 64);
+    preview.Resize(64, 64);
+    zoom = 1.0f;
+    viewPosition = {0, 0};
+
+    undoRedo.Reset();
+
+    Reposition();
+
+    image.Lock();
+    for (int y = 0; y < image.GetHeight(); y++)
+        for (int x = 0; x < image.GetWidth(); x++) {
+            image.SetPixel(x, y, gui::Color{0, 0, 0, 0});
+        }
+    image.Unlock();
+
+    Invalidate();
+}
+
+std::vector<gui::Color> Canvas::ExtractPalette(uint paletteSize, uint iterations) {
+    image.Lock();
+    std::vector<gui::Color> centers(paletteSize);
+    for (int i = 0; i < paletteSize; ++i)
+        centers[i] = image.GetPixel(rand() % image.GetWidth(), rand() % image.GetHeight());
+
+    const uint pixelCount = image.GetWidth() * image.GetHeight();
+    std::vector<int> assignment(pixelCount);
+
+    for (uint iter = 0; iter < iterations; iter++) {
+        for (int i = 0; i < int(pixelCount); i++) {
+            int x = i % image.GetWidth();
+            int y = i / image.GetWidth();
+            float best = 1e30f;
+            for (uint k = 0; k < paletteSize; k++) {
+                auto col = image.GetPixel(x, y);
+                float dr = col.r - centers[k].r;
+                float dg = col.g - centers[k].g;
+                float db = col.b - centers[k].b;
+                float da = col.a - centers[k].a;
+                float d = dr * dr + dg * dg + db * db + da * da;
+                if (d < best) {
+                    best = d;
+                    assignment[size_t(i)] = k;
+                }
+            }
+        }
+
+        std::vector<double> sumR(paletteSize, 0.0), sumG(paletteSize, 0.0), sumB(paletteSize, 0.0),
+            sumA(paletteSize, 0.0);
+        std::vector<int> count(paletteSize, 0);
+
+        for (std::size_t i = 0; i < pixelCount; ++i) {
+            int k = assignment[i];
+            int x = i % image.GetWidth();
+            int y = i / image.GetWidth();
+            auto col = image.GetPixel(x, y);
+            sumR[k] += col.r;
+            sumG[k] += col.g;
+            sumB[k] += col.b;
+            sumA[k] += col.a;
+            count[k]++;
+        }
+
+        for (int k = 0; k < paletteSize; ++k) {
+            if (count[k] == 0)
+                continue;
+            centers[k] = {
+                float(sumR[k] / count[k]),
+                float(sumG[k] / count[k]),
+                float(sumB[k] / count[k]),
+                float(sumA[k] / count[k])
+            };
+        }
     }
     image.Unlock();
-    Invalidate();
+
+    return centers;
 }
 
 void PencilTool::OnMouseDown(Canvas& canvas, int x, int y) {
@@ -341,8 +462,231 @@ namespace algos {
 
         return ret;
     }
+
+    std::vector<Pixel> GetEllipse(gui::PointI center, int rx, int ry, gui::Color color) {
+        std::vector<Pixel> ret;
+
+        auto plot4 = [&](int x, int y) {
+            ret.push_back({{center.x + x, center.y + y}, color});
+            if (x != 0)
+                ret.push_back({{center.x - x, center.y + y}, color});
+            if (y != 0)
+                ret.push_back({{center.x + x, center.y - y}, color});
+            if (x != 0 && y != 0)
+                ret.push_back({{center.x - x, center.y - y}, color});
+        };
+
+        if (rx <= 0 && ry <= 0) {
+            plot4(0, 0);
+            return ret;
+        }
+        if (rx <= 0) {
+            for (int y = -ry; y <= ry; y++)
+                ret.push_back({{center.x, center.y + y}, color});
+            return ret;
+        }
+        if (ry <= 0) {
+            for (int x = -rx; x <= rx; x++)
+                ret.push_back({{center.x + x, center.y}, color});
+            return ret;
+        }
+
+        long rx2 = (long)rx * rx, ry2 = (long)ry * ry;
+        long x = 0, y = ry;
+        long dx = 0, dy = 2 * rx2 * y;
+        long d = ry2 - rx2 * ry + (rx2 + 2) / 4;
+
+        plot4((int)x, (int)y);
+        while (dx < dy) {
+            x++;
+            dx += 2 * ry2;
+            if (d < 0)
+                d += ry2 + dx;
+            else {
+                y--;
+                dy -= 2 * rx2;
+                d += ry2 + dx - dy;
+            }
+            plot4((int)x, (int)y);
+        }
+
+        d = (long)std::round(
+            (double)ry2 * (x + 0.5) * (x + 0.5) + (double)rx2 * (y - 1) * (y - 1) -
+            (double)rx2 * ry2
+        );
+        y--;
+        dy -= 2 * rx2;
+        if (d > 0)
+            d += rx2 - dy;
+        else {
+            x++;
+            dx += 2 * ry2;
+            d += rx2 - dy + dx;
+        }
+        while (y >= 0) {
+            plot4((int)x, (int)y);
+            y--;
+            dy -= 2 * rx2;
+            if (d > 0)
+                d += rx2 - dy;
+            else {
+                x++;
+                dx += 2 * ry2;
+                d += rx2 - dy + dx;
+            }
+        }
+
+        return ret;
+    }
 } // namespace algos
+
+void EllipseTool::OnMouseDown(Canvas& canvas, int x, int y) {
+    p0 = {x, y};
+    canvas.Preview({{{x, y}, canvas.GetCurrentColor()}});
+}
+
+void EllipseTool::OnMouseDrag(Canvas& canvas, int x, int y) {
+    canvas.Preview(BuildEllipse({x, y}, canvas.GetCurrentColor(), canvas.shiftPressed));
+}
+
+void EllipseTool::OnMouseUp(Canvas& canvas, int x, int y) {
+    canvas.Draw(BuildEllipse({x, y}, canvas.GetCurrentColor(), canvas.shiftPressed));
+    canvas.toolActive = false;
+}
+
+std::vector<algos::Pixel>
+EllipseTool::BuildEllipse(gui::PointI p1, gui::Color col, bool fromCenter) {
+    gui::PointI center;
+    int rx, ry;
+    if (fromCenter) {
+        center = p0;
+        int r = std::min(std::abs(p1.x - p0.x), std::abs(p1.y - p0.y));
+        rx = ry = r;
+    } else {
+        center = {(p0.x + p1.x) / 2, (p0.y + p1.y) / 2};
+        rx = std::abs(p1.x - p0.x) / 2;
+        ry = std::abs(p1.y - p0.y) / 2;
+    }
+    return algos::GetEllipse(center, rx, ry, col);
+}
 
 void FillTool::OnMouseDown(Canvas& canvas, int x, int y) {
     canvas.Draw(algos::GetFloodFill(canvas.image, {x, y}, canvas.GetCurrentColor()));
+    canvas.toolActive = false;
+}
+
+void UndoRedo::Run(ICommand* command) {
+    command->Execute(*m_canvas);
+    m_undoStack.push(std::unique_ptr<ICommand>(command));
+    while (!m_redoStack.empty())
+        m_redoStack.pop();
+}
+
+void UndoRedo::Undo() {
+    if (!CanUndo())
+        return;
+    auto cmd = std::move(m_undoStack.top());
+    m_undoStack.pop();
+    cmd->Undo(*m_canvas);
+    m_redoStack.push(std::move(cmd));
+}
+
+void UndoRedo::Redo() {
+    if (!CanRedo())
+        return;
+    auto cmd = std::move(m_redoStack.top());
+    m_redoStack.pop();
+    cmd->Execute(*m_canvas);
+    m_undoStack.push(std::move(cmd));
+}
+
+void UndoRedo::Reset() {
+    while (!m_undoStack.empty())
+        m_undoStack.pop();
+    while (!m_redoStack.empty())
+        m_redoStack.pop();
+}
+
+bool UndoRedo::CanUndo() const {
+    return !m_undoStack.empty();
+}
+
+bool UndoRedo::CanRedo() const {
+    return !m_redoStack.empty();
+}
+
+void CmdDrawPixels::Execute(Canvas& canvas) {
+    previousData.reserve(data.size());
+    canvas.image.Lock();
+    for (auto px : data) {
+        auto prev = canvas.image.GetPixel(px.position.x, px.position.y);
+        previousData.push_back({px.position, prev});
+    }
+    for (auto px : data) {
+        canvas.image.SetPixel(px.position.x, px.position.y, px.color);
+    }
+    canvas.image.Unlock();
+}
+
+void CmdDrawPixels::Undo(Canvas& canvas) {
+    canvas.image.Lock();
+    for (auto px : previousData) {
+        canvas.image.SetPixel(px.position.x, px.position.y, px.color);
+    }
+    canvas.image.Unlock();
+    previousData.clear();
+}
+
+void PickerTool::OnMouseDown(Canvas& canvas, int x, int y) {
+    canvas.image.Lock();
+    if (!canvas.secondaryColor)
+        canvas.colors[0] = canvas.image.GetPixel(x, y);
+    else
+        canvas.colors[1] = canvas.image.GetPixel(x, y);
+    canvas.image.Unlock();
+    canvas.toolActive = false;
+    if (canvas.onColorPicked)
+        canvas.onColorPicked();
+}
+
+void RectTool::OnMouseDown(Canvas& canvas, int x, int y) {
+    p0 = {x, y};
+    p1 = {x, y};
+    canvas.Preview({{{x, y}, canvas.GetCurrentColor()}});
+}
+
+void RectTool::OnMouseDrag(Canvas& canvas, int x, int y) {
+    p1 = {x, y};
+    canvas.Preview(BuildRect(p1, canvas.GetCurrentColor(), canvas.shiftPressed));
+}
+
+void RectTool::OnMouseUp(Canvas& canvas, int x, int y) {
+    p1 = {x, y};
+    canvas.Draw(BuildRect(p1, canvas.GetCurrentColor(), canvas.shiftPressed));
+    canvas.toolActive = false;
+}
+
+std::vector<algos::Pixel> RectTool::BuildRect(gui::PointI p1, gui::Color col, bool fromCenter) {
+    std::vector<algos::Pixel> ret;
+
+    gui::PointI tl, br;
+    if (fromCenter) {
+        int s = std::min(std::abs(p1.x - p0.x), std::abs(p1.y - p0.y));
+        tl = {p0.x - s, p0.y - s};
+        br = {p0.x + s, p0.y + s};
+    } else {
+        tl = {std::min(p0.x, p1.x), std::min(p0.y, p1.y)};
+        br = {std::max(p0.x, p1.x), std::max(p0.y, p1.y)};
+    }
+
+    auto l1 = algos::GetLine({tl.x, tl.y}, {br.x, tl.y}, col);
+    auto l2 = algos::GetLine({br.x, tl.y + 1}, {br.x, br.y}, col);
+    auto l3 = algos::GetLine({br.x - 1, br.y}, {tl.x, br.y}, col);
+    auto l4 = algos::GetLine({tl.x, br.y - 1}, {tl.x, tl.y + 1}, col);
+    ret.insert(ret.end(), l1.begin(), l1.end());
+    ret.insert(ret.end(), l2.begin(), l2.end());
+    ret.insert(ret.end(), l3.begin(), l3.end());
+    ret.insert(ret.end(), l4.begin(), l4.end());
+
+    return ret;
 }

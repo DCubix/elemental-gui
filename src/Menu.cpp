@@ -36,17 +36,16 @@ namespace gui {
 
             MenuItem* item = dynamic_cast<MenuItem*>(el);
             if (item && item->IsSeparator()) {
-                Json sepStyle = GetStyle()["MenuSeparator"];
+                Json sepStyle = GetWindow()->GetApp()->GetStyle()["MenuSeparator"];
                 auto margins = EdgeInsets::FromStyle(sepStyle["margin"]);
-                auto mx = margins.GetHorizontal();
-                const auto& ib = item->GetLocalBounds();
+                Rectangle ib = item->GetLocalBounds();
 
                 auto col = Color::FromStyle(sepStyle["color"]);
                 g.Color(col.r, col.g, col.b, col.a);
                 g.LineWidth(1.0f);
 
-                int lineY = ib.y + ib.h / 2;
-                g.Line(ib.x + mx, lineY, ib.x + ib.w - mx, lineY);
+                int lineY = ib.y + margins.top;
+                g.Line(ib.x + margins.left, lineY, ib.x + ib.w - margins.right, lineY);
                 g.Stroke();
             } else {
                 const auto& lb = el->GetLocalBounds();
@@ -71,7 +70,8 @@ namespace gui {
 
         // Forward events to items
         for (auto* item : m_items) {
-            if (item->OnEvent(event) == EventStatus::Consumed)
+            if (item->OnEvent(event) == EventStatus::Consumed &&
+                event->Type() != EventType::MouseMotion)
                 return EventStatus::Consumed;
         }
 

@@ -54,6 +54,10 @@ namespace gui {
                 m_windows.end()
             );
 
+            if (m_windows.empty()) {
+                m_running = false;
+            }
+
             for (auto& win : m_windows) {
                 win->Update();
             }

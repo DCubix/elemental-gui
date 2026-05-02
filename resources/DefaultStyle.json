@@ -533,7 +533,7 @@
     "MenuSeparator": {
         "color": "$borderDark",
         "margin": {
-            "horizontal": 8.0,
+            "horizontal": 4.0,
             "vertical": 4.0
         }
     },

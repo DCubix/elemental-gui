@@ -22,9 +22,8 @@ namespace gui {
         if (m_separator)
             return;
 
-        Json style = GetStyle()["MenuItem"];
+        Json style = GetStyle();
         EdgeInsets padding = EdgeInsets::FromStyle(style["padding"]);
-        Json textStyle = GetStyle()["DefaultText"];
         Size size = GetSize();
 
         // Background
@@ -60,7 +59,7 @@ namespace gui {
         }
 
         // Text
-        g.StyledTextBegin(textStyle);
+        g.StyledTextBegin(style);
         auto ex = g.MeasureText(m_text);
         g.StyledTextEnd(m_text, cx, cy + (contentH + (int)ex.size.h) / 2);
 
@@ -148,18 +147,20 @@ namespace gui {
     }
 
     Size MenuItem::GetPreferredSize() const {
-        Json style = GetStyle()["MenuItem"];
+        Json style = GetStyle();
         EdgeInsets padding = EdgeInsets::FromStyle(style["padding"]);
 
         if (IsAutoSize()) {
-            if (m_separator)
-                return {0, 8};
+            if (m_separator) {
+                Json sepStyle = GetWindow()->GetApp()->GetStyle()["MenuSeparator"];
+                auto margins = EdgeInsets::FromStyle(sepStyle["margin"]);
+                return {0, 1 + int(margins.GetVertical())};
+            }
 
             auto& g = m_window->GetGraphics();
-            const auto textStyle = GetStyle()["DefaultText"];
 
             g.Save();
-            g.StyledTextBegin(textStyle);
+            g.StyledTextBegin(style);
             auto sz = g.MeasureText(m_text);
             g.Restore();
 

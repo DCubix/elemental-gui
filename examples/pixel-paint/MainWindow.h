@@ -32,4 +32,6 @@ public:
     };
 
     gui::Image icons[icCount];
+    bool saved{true};
+    std::string fileName;
 };

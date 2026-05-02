@@ -1,6 +1,7 @@
 #include "MainWindow.h"
 
 #include "Canvas.h"
+#include "portable-file-dialogs.h"
 
 #include <ColorPicker.h>
 #include <Panel.h>
@@ -131,6 +132,12 @@ public:
         Invalidate();
     }
 
+    void Clear() {
+        m_palette.clear();
+        m_selected = -1;
+        Invalidate();
+    }
+
     int GetSelected() const { return m_selected; }
     void SetSelected(int index) {
         m_selected = index;
@@ -248,21 +255,37 @@ dc::WidgetDesc MainWindow::OnBuild() {
         dc::ToolRadioButton("", toolProps.CopyWith({
             .base = BaseOf(toolProps).CopyWith({ .tag = "tool_eraser" }),
             .icon = &icons[icEraser],
+            .onClick = [this]() {
+                if (auto* c = FindByTag<Canvas>("canvas"))
+                    c->selectedTool = Canvas::ToolType::Eraser;
+            },
             .group = "tools",
         })),
         dc::ToolRadioButton("", toolProps.CopyWith({
             .base = BaseOf(toolProps).CopyWith({ .tag = "tool_eyedrop" }),
             .icon = &icons[icEyedrop],
+            .onClick = [this]() {
+                if (auto* c = FindByTag<Canvas>("canvas"))
+                    c->selectedTool = Canvas::ToolType::Eyedrop;
+            },
             .group = "tools",
         })),
         dc::ToolRadioButton("", toolProps.CopyWith({
             .base = BaseOf(toolProps).CopyWith({ .tag = "tool_square" }),
             .icon = &icons[icSquare],
+            .onClick = [this]() {
+                if (auto* c = FindByTag<Canvas>("canvas"))
+                    c->selectedTool = Canvas::ToolType::Square;
+            },
             .group = "tools",
         })),
         dc::ToolRadioButton("", toolProps.CopyWith({
             .base = BaseOf(toolProps).CopyWith({ .tag = "tool_circle" }),
             .icon = &icons[icCircle],
+            .onClick = [this]() {
+                if (auto* c = FindByTag<Canvas>("canvas"))
+                    c->selectedTool = Canvas::ToolType::Circle;
+            },
             .group = "tools",
         })),
         dc::Spacer(),
@@ -370,6 +393,93 @@ dc::WidgetDesc MainWindow::OnBuild() {
         }),
     });
 
+    const auto mnuFile = dc::Menu({}, {
+        dc::MenuItem({ .text = "New", .onClick = [this]() {
+            if (!saved) {
+                auto res = pfd::message(
+                    "New Image",
+                    "Your current image is going to be lost. Continue?",
+                    pfd::choice::yes_no,
+                    pfd::icon::warning
+                ).result();
+                if (res == pfd::button::yes) {
+                    FindByTag<Canvas>("canvas")->LoadEmpty();
+                    fileName = "";
+                    saved = true;
+                }
+            } else {
+                FindByTag<Canvas>("canvas")->LoadEmpty();
+                fileName = "";
+                saved = true;
+            }
+        } }),
+        dc::MenuSeparator(),
+        dc::MenuItem({ .text = "Open", .onClick = [this]() {
+            auto fnOpen = [this]() {
+                auto res = pfd::open_file(
+                    "Open Image", ".",
+                    { "Portable Network Graphics", "*.png" },
+                    pfd::opt::none
+                ).result();
+                if (!res.empty()) {
+                    auto* canvas = FindByTag<Canvas>("canvas");
+                    auto* palette = FindByTag<PaletteSelector>("palette");
+                    canvas->LoadFromFile(res.front());
+                    palette->Clear();
+                    for (auto col : canvas->ExtractPalette()) {
+                        palette->Add(col);
+                    }
+                    saved = true;
+                    fileName = res.front();
+                }
+            };
+            if (!saved) {
+                auto res = pfd::message(
+                    "Open Image",
+                    "Your current image is going to be lost. Continue?",
+                    pfd::choice::yes_no,
+                    pfd::icon::warning
+                ).result();
+                if (res == pfd::button::yes) {
+                    fnOpen();
+                }
+            } else {
+                fnOpen();
+            }
+        } }),
+        dc::MenuItem({ .text = "Save", .onClick = []() {
+            // TODO: saving...
+        } }),
+        dc::MenuItem({ .text = "Save As...", .onClick = []() {
+            // TODO: saving...
+        } }),
+        dc::MenuSeparator(),
+        dc::MenuItem({ .text = "Exit", .onClick = [this]() {
+            if (!saved) {
+                auto res = pfd::message(
+                    "Open Image",
+                    "Your current image is going to be lost. Continue?",
+                    pfd::choice::yes_no,
+                    pfd::icon::warning
+                ).result();
+                if (res == pfd::button::yes) {
+                    Close();
+                }
+            } else {
+                Close();
+            }
+        } }),
+    });
+
+    const auto mnuEdit = dc::Menu({}, {
+        dc::MenuItem({ .base = dc::ElementProps{ .tag = "undo" }, .text = "Undo", .onClick = [this]() {
+            FindByTag<Canvas>("canvas")->Undo();
+        } }),
+        dc::MenuItem({ .base = dc::ElementProps{ .tag = "redo" }, .text = "Redo", .onClick = [this]() {
+            FindByTag<Canvas>("canvas")->Redo();
+        } }),
+    });
+
     return dc::Column({
         .align = gui::FlexAlign::Stretch,
         .justify = gui::FlexJustify::Start,
@@ -381,10 +491,20 @@ dc::WidgetDesc MainWindow::OnBuild() {
             .gap = 4,
             .padding = gui::EdgeInsets::All(4),
         }, {
-            dc::ToolButton("File", toolProps.CopyWith({ .base = BaseOf(toolProps).CopyWith({ .tag = "file" }) })),
-            dc::ToolButton("Edit", toolProps.CopyWith({ .base = BaseOf(toolProps).CopyWith({ .tag = "edit" }) })),
-            dc::ToolButton("View", toolProps.CopyWith({ .base = BaseOf(toolProps).CopyWith({ .tag = "view" }) })),
-            dc::ToolButton("Help", toolProps.CopyWith({ .base = BaseOf(toolProps).CopyWith({ .tag = "help" }) })),
+            dc::ToolButton("File", toolProps.CopyWith({
+                .base = BaseOf(toolProps).CopyWith({ .tag = "file" }),
+                .onClick = [mnuFile, this]() {
+                    auto* menu = mnuFile(*this);
+                    FindByTag<gui::ToolButton>("file")->ShowPopup(menu);
+                },
+            })),
+            dc::ToolButton("Edit", toolProps.CopyWith({
+                .base = BaseOf(toolProps).CopyWith({ .tag = "edit" }),
+                .onClick = [mnuEdit, this]() {
+                    auto* menu = mnuEdit(*this);
+                    FindByTag<gui::ToolButton>("edit")->ShowPopup(menu);
+                },
+            })),
         }),
         dc::Row({
             .base = dc::ElementProps{
@@ -426,7 +546,22 @@ dc::WidgetDesc MainWindow::OnBuild() {
                                 "elevation": 8.0
                             })"),
                         },
-                    }, [](Canvas& canvas, const CanvasProps& props) {}),
+                        .onColorPicked = [this]() {
+                            auto* canvas = FindByTag<Canvas>("canvas");
+                            auto* colorView0 = FindByTag<ColorView>("color0");
+                            auto* colorView1 = FindByTag<ColorView>("color1");
+                            auto* picker = FindByTag<gui::ColorPicker>("picker");
+                            colorView0->SetColor(canvas->colors[0]);
+                            colorView1->SetColor(canvas->colors[1]);
+                            picker->SetSelected(canvas->colors[0]);
+                        },
+                        .onImageChanged = [this]() {
+                            saved = false;
+                        },
+                    }, [](Canvas& canvas, const CanvasProps& props) {
+                        canvas.onColorPicked = props.onColorPicked.value_or(nullptr);
+                        canvas.onImageChanged = props.onImageChanged.value_or(nullptr);
+                    }),
                 }),
                 .second = dc::Column({
                     .gap = 12,

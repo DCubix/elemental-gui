@@ -2,12 +2,40 @@
 
 #include <array>
 #include <memory>
+#include <stack>
 
 #include <Declarative.h>
 #include <Element.h>
 #include <Graphics.h>
 
 namespace dc = gui::declarative;
+
+class Canvas;
+struct ICommand {
+    virtual void Execute(Canvas& canvas) = 0;
+    virtual void Undo(Canvas& canvas) = 0;
+};
+
+class UndoRedo {
+public:
+    UndoRedo() = default;
+    UndoRedo(Canvas* canvas)
+        : m_canvas(canvas) {}
+
+    void Run(ICommand* command);
+
+    void Undo();
+    void Redo();
+
+    void Reset();
+
+    bool CanUndo() const;
+    bool CanRedo() const;
+
+private:
+    Canvas* m_canvas{nullptr};
+    std::stack<std::unique_ptr<ICommand>> m_undoStack, m_redoStack;
+};
 
 namespace algos {
     struct Pixel {
@@ -18,6 +46,7 @@ namespace algos {
     std::vector<Pixel> GetLine(gui::PointI a, gui::PointI b, gui::Color color);
     std::vector<Pixel> GetQuadBezier(gui::PointI a, gui::PointI b, gui::PointI c, gui::Color color);
     std::vector<Pixel> GetFloodFill(gui::Image& image, gui::PointI p, gui::Color color);
+    std::vector<Pixel> GetEllipse(gui::PointI center, int rx, int ry, gui::Color color);
 } // namespace algos
 
 class Canvas;
@@ -48,6 +77,16 @@ public:
     void Preview(const std::vector<algos::Pixel>& data);
     void Draw(const std::vector<algos::Pixel>& data);
 
+    void Undo();
+    void Redo();
+
+    void LoadFromFile(const std::string& fileName);
+    void LoadEmpty();
+
+    std::vector<gui::Color> ExtractPalette(uint paletteSize = 32, uint iterations = 10);
+
+    gui::Color GetCurrentColor() const { return secondaryColor ? colors[1] : colors[0]; }
+
     gui::Image image, preview;
     ToolType selectedTool{ToolType::Pencil};
     std::array<std::unique_ptr<Tool>, 7> tools;
@@ -57,11 +96,13 @@ public:
     gui::PointI viewPosition{0, 0}, prevMouse{0, 0};
     gui::Color colors[2] = {gui::Color::FromHex("#000"), gui::Color::FromHex("#FFF")};
 
-    gui::Color GetCurrentColor() const { return secondaryColor ? colors[1] : colors[0]; }
+    UndoRedo undoRedo;
+    VoidCallback onColorPicked, onImageChanged;
 };
 
 struct CanvasProps {
     dc::opt<dc::ElementProps> base;
+    dc::opt<VoidCallback> onColorPicked, onImageChanged;
 };
 
 struct PencilTool : public Tool {
@@ -90,4 +131,36 @@ struct CurveTool : public Tool {
 
 struct FillTool : public Tool {
     void OnMouseDown(Canvas& canvas, int x, int y) override;
+};
+
+struct PickerTool : public Tool {
+    void OnMouseDown(Canvas& canvas, int x, int y) override;
+};
+
+struct RectTool : public Tool {
+    void OnMouseDown(Canvas& canvas, int x, int y) override;
+    void OnMouseDrag(Canvas& canvas, int x, int y) override;
+    void OnMouseUp(Canvas& canvas, int x, int y) override;
+
+    std::vector<algos::Pixel> BuildRect(gui::PointI p1, gui::Color col, bool fromCenter = false);
+
+    gui::PointI p0{0, 0}, p1{0, 0};
+};
+
+struct EllipseTool : public Tool {
+    void OnMouseDown(Canvas& canvas, int x, int y) override;
+    void OnMouseDrag(Canvas& canvas, int x, int y) override;
+    void OnMouseUp(Canvas& canvas, int x, int y) override;
+
+    std::vector<algos::Pixel> BuildEllipse(gui::PointI p1, gui::Color col, bool fromCenter);
+
+    gui::PointI p0{0, 0};
+};
+
+// --- Undo/Redo Commands ------------------------------------------
+struct CmdDrawPixels : public ICommand {
+    void Execute(Canvas& canvas) override;
+    void Undo(Canvas& canvas) override;
+
+    std::vector<algos::Pixel> data, previousData;
 };
