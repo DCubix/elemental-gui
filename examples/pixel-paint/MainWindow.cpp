@@ -223,7 +223,7 @@ dc::WidgetDesc MainWindow::OnBuild() {
         .showBackground = true,
     }, {
         dc::ToolRadioButton("", toolProps.CopyWith({
-            .base = BaseOf(toolProps).CopyWith({ .tag = "tool_pencil" }),
+            .base = BaseOf(toolProps).CopyWith({ .tag = "tool_pencil", .tooltip = "Pencil" }),
             .icon = &icons[icPencil],
             .toggled = true,
             .onClick = [this]() {
@@ -233,7 +233,7 @@ dc::WidgetDesc MainWindow::OnBuild() {
             .group = "tools",
         })),
         dc::ToolRadioButton("", toolProps.CopyWith({
-            .base = BaseOf(toolProps).CopyWith({ .tag = "tool_curve" }),
+            .base = BaseOf(toolProps).CopyWith({ .tag = "tool_curve", .tooltip = "Curve" }),
             .icon = &icons[icCurve],
             .onClick = [this]() {
                 if (auto* c = FindByTag<Canvas>("canvas"))
@@ -242,7 +242,7 @@ dc::WidgetDesc MainWindow::OnBuild() {
             .group = "tools",
         })),
         dc::ToolRadioButton("", toolProps.CopyWith({
-            .base = BaseOf(toolProps).CopyWith({ .tag = "tool_fill" }),
+            .base = BaseOf(toolProps).CopyWith({ .tag = "tool_fill", .tooltip = "Fill" }),
             .icon = &icons[icFill],
             .onClick = [this]() {
                 if (auto* c = FindByTag<Canvas>("canvas"))
@@ -251,7 +251,7 @@ dc::WidgetDesc MainWindow::OnBuild() {
             .group = "tools",
         })),
         dc::ToolRadioButton("", toolProps.CopyWith({
-            .base = BaseOf(toolProps).CopyWith({ .tag = "tool_eraser" }),
+            .base = BaseOf(toolProps).CopyWith({ .tag = "tool_eraser", .tooltip = "Eraser" }),
             .icon = &icons[icEraser],
             .onClick = [this]() {
                 if (auto* c = FindByTag<Canvas>("canvas"))
@@ -260,7 +260,7 @@ dc::WidgetDesc MainWindow::OnBuild() {
             .group = "tools",
         })),
         dc::ToolRadioButton("", toolProps.CopyWith({
-            .base = BaseOf(toolProps).CopyWith({ .tag = "tool_eyedrop" }),
+            .base = BaseOf(toolProps).CopyWith({ .tag = "tool_eyedrop", .tooltip = "Eyedropper" }),
             .icon = &icons[icEyedrop],
             .onClick = [this]() {
                 if (auto* c = FindByTag<Canvas>("canvas"))
@@ -269,7 +269,7 @@ dc::WidgetDesc MainWindow::OnBuild() {
             .group = "tools",
         })),
         dc::ToolRadioButton("", toolProps.CopyWith({
-            .base = BaseOf(toolProps).CopyWith({ .tag = "tool_square" }),
+            .base = BaseOf(toolProps).CopyWith({ .tag = "tool_square", .tooltip = "Rectangle/Square" }),
             .icon = &icons[icSquare],
             .onClick = [this]() {
                 if (auto* c = FindByTag<Canvas>("canvas"))
@@ -278,7 +278,7 @@ dc::WidgetDesc MainWindow::OnBuild() {
             .group = "tools",
         })),
         dc::ToolRadioButton("", toolProps.CopyWith({
-            .base = BaseOf(toolProps).CopyWith({ .tag = "tool_circle" }),
+            .base = BaseOf(toolProps).CopyWith({ .tag = "tool_circle", .tooltip = "Ellipse/Circle" }),
             .icon = &icons[icCircle],
             .onClick = [this]() {
                 if (auto* c = FindByTag<Canvas>("canvas"))
@@ -305,6 +305,7 @@ dc::WidgetDesc MainWindow::OnBuild() {
         dc::Button("", {
             .base = dc::ElementProps{
                 .bounds = gui::Rectangle::FromSize(32, 32),
+                .tooltip = "Swap Colors",
             },
             .icon = &icons[icSwap],
             .iconSize = 20,
@@ -343,6 +344,7 @@ dc::WidgetDesc MainWindow::OnBuild() {
             dc::Button("", {
                 .base = dc::ElementProps{
                     .bounds = gui::Rectangle::FromSize(24, 24),
+                    .tooltip = "Add to palette",
                 },
                 .icon = &icons[icAdd],
                 .onClick = [this]() {
@@ -354,6 +356,7 @@ dc::WidgetDesc MainWindow::OnBuild() {
             dc::Button("", {
                 .base = dc::ElementProps{
                     .bounds = gui::Rectangle::FromSize(24, 24),
+                    .tooltip = "Remove selected",
                 },
                 .icon = &icons[icRemove],
                 .onClick = [this]() {

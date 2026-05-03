@@ -1,6 +1,7 @@
 #include "Window.h"
 
 #include "Application.h"
+#include "Tooltip.h"
 
 #include <algorithm>
 
@@ -141,7 +142,70 @@ namespace gui {
         return m_application->GetBackend().GetWindowId(m_handle);
     }
 
+    void Window::StartTooltip(const std::string& text, Element* anchor) {
+        if (m_tooltip && m_tooltip->IsVisible()) {
+            DismissPopup(m_tooltip);
+            m_tooltip->SetVisible(false);
+        }
+        m_tooltipAnchor = anchor;
+        m_tooltipPendingText = text;
+        m_tooltipHoverStart = std::chrono::steady_clock::now();
+        m_tooltipShown = false;
+    }
+
+    void Window::CancelTooltip() {
+        m_tooltipAnchor = nullptr;
+        m_tooltipPendingText.clear();
+        m_tooltipShown = false;
+        if (m_tooltip && m_tooltip->IsVisible()) {
+            DismissPopup(m_tooltip);
+            m_tooltip->SetVisible(false);
+        }
+    }
+
+    void Window::ShowTooltipNow() {
+        if (!m_tooltipAnchor || m_tooltipPendingText.empty())
+            return;
+
+        if (!m_tooltip)
+            m_tooltip = &Create<Tooltip>();
+
+        m_tooltip->text = m_tooltipPendingText;
+        m_tooltip->SetAutoSize(true);
+        m_tooltip->SetVisible(true);
+        m_tooltip->Invalidate();
+
+        Size tipSize = m_tooltip->GetPreferredSize();
+        Rectangle ab = m_tooltipAnchor->GetBounds();
+        Size wsz = GetSize();
+
+        const int gap = 4;
+        int tx = ab.x;
+        int ty = ab.y + ab.h + gap;
+
+        if (tx + tipSize.w > wsz.w)
+            tx = wsz.w - tipSize.w - gap;
+        if (tx < 0)
+            tx = 0;
+        if (ty + tipSize.h > wsz.h)
+            ty = ab.y - tipSize.h - gap;
+        if (ty < 0)
+            ty = gap;
+
+        m_tooltip->SetLocalBounds({tx, ty, tipSize.w, tipSize.h});
+        ShowPopup(m_tooltip);
+    }
+
     void Window::Update() {
+        if (m_tooltipAnchor && !m_tooltipShown) {
+            auto elapsed = std::chrono::steady_clock::now() - m_tooltipHoverStart;
+            if (elapsed >= std::chrono::milliseconds(500)) {
+                m_tooltipShown = true;
+                ShowTooltipNow();
+                RequestRedraw();
+            }
+        }
+
         if (!m_pendingDestroy.empty()) {
             auto& esys = m_application->GetEventSystem();
             for (auto* el : m_pendingDestroy) {

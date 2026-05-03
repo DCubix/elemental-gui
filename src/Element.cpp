@@ -66,6 +66,8 @@ namespace gui {
                     if (m_hovered) {
                         m_hovered = false;
                         OnMouseLeave();
+                        if (!m_tooltip.empty() && m_window)
+                            m_window->CancelTooltip();
                     }
                     // If not dragging from this element, stop handling the event
                     if (!m_mouseDown) {
@@ -75,6 +77,8 @@ namespace gui {
                     if (!m_hovered) {
                         m_hovered = true;
                         OnMouseEnter();
+                        if (!m_tooltip.empty() && m_window)
+                            m_window->StartTooltip(m_tooltip, this);
                     }
                 }
 
@@ -181,9 +185,9 @@ namespace gui {
     Json Element::GetStyle() const {
         const auto styleKey = StyleKey();
         Json appStyle = GetWindow()->GetApp()->GetStyle();
-        Json mergedStyle = appStyle[styleKey];
-        if (appStyle["DefaultText"].is_object()) {
-            mergedStyle.update(appStyle["DefaultText"]);
+        Json mergedStyle = appStyle["DefaultText"].is_object() ? appStyle["DefaultText"] : Json{};
+        if (appStyle[styleKey].is_object()) {
+            mergedStyle.update(appStyle[styleKey]);
         }
         if (mergedStyle.is_object() && m_style.is_object()) {
             mergedStyle.update(m_style);

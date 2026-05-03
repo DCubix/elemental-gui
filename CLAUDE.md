@@ -17,6 +17,7 @@ immediate-mode and retained-mode UI paradigms. It provides:
 - **JSON-based theming** with state-aware styles (normal/hover/click/checked)
 - **Backend abstraction** for platform independence (SDL3 reference
   implementation)
+- **Property system** with reactive data binding via `Property<T>::Bind()`
 
 ## Build Commands
 

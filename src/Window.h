@@ -3,8 +3,10 @@
 #include "Application.h"
 #include "Element.h"
 #include "Graphics.h"
+#include "Tooltip.h"
 #include "WindowConfig.h"
 
+#include <chrono>
 #include <string>
 
 namespace gui {
@@ -68,6 +70,9 @@ namespace gui {
         void DismissPopup(Element* popup);
         void ScheduleDestroy(Element* el);
 
+        void StartTooltip(const std::string& text, Element* anchor);
+        void CancelTooltip();
+
         Element& GetRoot() { return *m_root; }
         void SetRoot(Element* root);
 
@@ -105,6 +110,12 @@ namespace gui {
 
         bool m_shouldRedraw{false}, m_closeRequested{false};
 
+        Tooltip* m_tooltip{nullptr};
+        Element* m_tooltipAnchor{nullptr};
+        std::string m_tooltipPendingText{};
+        std::chrono::steady_clock::time_point m_tooltipHoverStart{};
+        bool m_tooltipShown{false};
+
         Backend& GetBackend();
 
         void ResizeScreenBuffer();
@@ -113,6 +124,7 @@ namespace gui {
         void Update();
 
         void HookEventsUp(Element* el);
+        void ShowTooltipNow();
 
         template <DerivedFromEvent E, typename... Args>
         void DispatchEvent(Args&&... args) {

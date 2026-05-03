@@ -27,6 +27,7 @@ namespace gui::declarative {
         opt<float> flexGrow{std::nullopt};
         opt<Rectangle> bounds{std::nullopt};
         opt<Json> style{std::nullopt};
+        opt<std::string> tooltip{std::nullopt};
 
         ElementProps CopyWith(const ElementProps& b) const;
     };

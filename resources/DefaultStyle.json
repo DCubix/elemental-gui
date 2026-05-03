@@ -13,6 +13,7 @@
         "textSecondary": "#FFA1A1AA",
         "textDisabled": "#FF71717A",
         "backgroundDark": "#FF09090B",
+        "backgroundLight": "#FFFCFCFC",
         "borderDark": "#FF27272A",
         "panelBackground": "#FF18181B",
         "textPrimaryBright": "#FFFAFAFA",
@@ -673,6 +674,21 @@
                     "color": "$spinnerButtonClick"
                 }
             }
+        }
+    },
+    "Tooltip": {
+        "font": "Sans",
+        "fontSize": 13.0,
+        "color": "#FF18181B",
+        "padding": 5.0,
+        "elevation": 2.0,
+        "border": {
+            "radius": 2.0,
+            "color": "$borderDark",
+            "width": 1.0
+        },
+        "background": {
+            "color": "$backgroundLight"
         }
     }
 }

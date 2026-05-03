@@ -29,6 +29,7 @@ namespace gui::declarative {
             MergeField(flexGrow),
             MergeField(bounds),
             MergeField(style),
+            MergeField(tooltip),
         };
     }
 
@@ -50,6 +51,8 @@ namespace gui::declarative {
         element.SetFlexGrow(flexGrow);
         element.SetStyle(style);
         element.SetEnabled(enabled);
+        if (props.tooltip.has_value())
+            element.SetTooltip(*props.tooltip);
     }
 
     WidgetDesc Column(const ColumnProps& props, const std::vector<WidgetDesc>& children) {

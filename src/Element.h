@@ -123,6 +123,9 @@ namespace gui {
 
         Window* GetWindow() const { return m_window; }
 
+        void SetTooltip(const std::string& t) { m_tooltip = t; }
+        const std::string& GetTooltip() const { return m_tooltip; }
+
     protected:
         Window* m_window{nullptr};
         Element* m_parent{nullptr};
@@ -136,6 +139,7 @@ namespace gui {
         Json m_style{};
 
         Property<std::string> m_tag{""};
+        std::string m_tooltip{};
 
         virtual bool IsDirty() { return m_dirty; }
     };
