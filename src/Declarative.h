@@ -218,8 +218,10 @@ namespace gui::declarative {
     template <typename T>
     struct ListProps {
         opt<ElementProps> base{std::nullopt};
-        opt<std::vector<ListItem<T>>> items{std::nullopt};
+        opt<std::vector<T>> items{std::nullopt};
         opt<int> selectedIndex{std::nullopt};
+        opt<typename gui::List<T>::template Builder<std::string>> labelBuilder{std::nullopt};
+        opt<typename gui::List<T>::template Builder<gui::Image*>> iconBuilder{std::nullopt};
         opt<ValueChanged<int>> onSelectionChanged{std::nullopt};
 
         ListProps<T> CopyWith(const ListProps<T>& b) const {
@@ -227,6 +229,8 @@ namespace gui::declarative {
                 .base = b.base.has_value() ? b.base : base,
                 .items = b.items.has_value() ? b.items : items,
                 .selectedIndex = b.selectedIndex.has_value() ? b.selectedIndex : selectedIndex,
+                .labelBuilder = b.labelBuilder.has_value() ? b.labelBuilder : labelBuilder,
+                .iconBuilder = b.iconBuilder.has_value() ? b.iconBuilder : iconBuilder,
                 .onSelectionChanged =
                     b.onSelectionChanged.has_value() ? b.onSelectionChanged : onSelectionChanged,
             };
@@ -238,13 +242,12 @@ namespace gui::declarative {
         return [props](Window& window) -> Element* {
             auto& list = window.Create<gui::List<T>>();
             ElementSetup(list, props.base.value_or(ElementProps{}));
-            auto items = props.items.value_or(std::vector<ListItem<T>>{});
-            for (const auto& item : items) {
-                list.AddItem(item.value, item.label);
-            }
+            list.items = props.items.value_or(std::vector<T>{});
             list.selectedIndex = props.selectedIndex.value_or(-1);
             if (props.onSelectionChanged.has_value() && *props.onSelectionChanged)
                 list.selectedIndex.Bind(*props.onSelectionChanged);
+            list.SetLabelBuilder(props.labelBuilder.value_or(nullptr));
+            list.SetIconBuilder(props.iconBuilder.value_or(nullptr));
             return &list;
         };
     }

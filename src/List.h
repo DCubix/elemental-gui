@@ -6,25 +6,39 @@
 #include "Window.h"
 
 namespace gui {
-    template <typename T>
-    struct ListItem {
-        T value;
-        std::string label;
-    };
 
     template <typename T>
     class List : public Element {
     public:
+        template <typename R>
+        using Builder = std::function<R(uint, const T&)>;
+
         List()
             : Element(),
               m_scrollbar(nullptr) {
             SetLocalBounds({0, 0, 200, 200});
-            selectedIndex.SetOnUpdate([this]{ Invalidate(); });
+            selectedIndex.SetOnUpdate([this] { Invalidate(); });
+            items.SetOnUpdate([this] { Invalidate(); });
         }
 
         std::string StyleKey() const override { return "List"; }
 
         Property<int> selectedIndex{-1};
+        Property<std::vector<T>> items;
+        Computed<T> selectedItem = Computed<T>{
+            [this]() -> T {
+                auto index = selectedIndex();
+                auto& v = items();
+                if (index >= 0 && index < static_cast<int>(v.size()))
+                    return v[size_t(index)];
+                if constexpr (std::is_assignable_v<T&, std::nullptr_t>) {
+                    return nullptr;
+                }
+                return T{};
+            },
+            selectedIndex,
+            items
+        };
 
         void OnDraw(Graphics& g) override {
             auto style = GetStyle();
@@ -44,8 +58,12 @@ namespace gui {
             EdgeInsets pad = EdgeInsets::FromStyle(style["padding"]);
             EdgeInsets itemPad = EdgeInsets::FromStyle(style["item"]["padding"]);
             int itemHeight = style["item"].value("height", 22);
+            int iconSize = style["item"].value("iconSize", 20);
+            int itemGap = style["item"].value("gap", 8);
             int totalContentHeight =
-                static_cast<int>(m_items.size()) * (itemHeight + itemPad.GetVertical());
+                static_cast<int>(items().size()) * (itemHeight + itemPad.GetVertical());
+
+            iconSize = std::min(iconSize, itemHeight);
 
             Rectangle local{0, 0, size.w, size.h};
             Rectangle padB = pad.Apply(local);
@@ -69,8 +87,10 @@ namespace gui {
             g.ClipPushRect(padB.x, padB.y, contentWidth, padB.h);
 
             // Draw items
-            for (size_t i = 0; i < m_items.size(); i++) {
-                const auto& item = m_items[i];
+            for (size_t i = 0; i < items().size(); i++) {
+                const auto& item = items()[i];
+                Image* icon = m_iconBuilder ? m_iconBuilder(i, item) : nullptr;
+                bool hasIcon = icon != nullptr;
                 Rectangle itemRect = GetItemRect(static_cast<int>(i), scrollOffset, contentWidth);
 
                 // Skip items outside visible area
@@ -80,6 +100,7 @@ namespace gui {
                 auto itemStyle = style["item"];
 
                 // Highlight selected item
+                Json newTextStyle;
                 if (static_cast<int>(i) == selectedIndex()) {
                     g.StyledRect(
                         itemRect.x,
@@ -88,26 +109,39 @@ namespace gui {
                         itemRect.h,
                         style["itemSelected"]
                     );
-                    Json newTextStyle = style["itemSelected"].value("text", style);
+                    newTextStyle = style["itemSelected"].value("text", style);
                     newTextStyle.update(style);
                     g.StyledTextBegin(newTextStyle);
-                    auto sz = g.MeasureText(item.label);
-                    g.StyledTextEnd(
-                        item.label,
-                        itemRect.x + itemPad.left,
-                        itemRect.y + (itemRect.h + sz.size.h) / 2
-                    );
                 } else {
-                    Json newTextStyle = itemStyle.value("text", style);
+                    newTextStyle = itemStyle.value("text", style);
                     newTextStyle.update(style);
                     g.StyledTextBegin(newTextStyle);
-                    auto sz = g.MeasureText(item.label);
-                    g.StyledTextEnd(
-                        item.label,
-                        itemRect.x + itemPad.left,
-                        itemRect.y + (itemRect.h + sz.size.h) / 2
-                    );
                 }
+
+                if (hasIcon) {
+                    Json iconStyle = style["item"]["icon"];
+                    float radius = iconStyle["border"].is_object()
+                                       ? iconStyle["border"].value("radius", 0.0f)
+                                       : 0.0f;
+                    Rectangle iconRect{
+                        itemRect.x + int(itemPad.left),
+                        itemRect.y + (itemRect.h / 2 - iconSize / 2),
+                        iconSize,
+                        iconSize
+                    };
+                    g.StyledRect(iconRect.x, iconRect.y, iconRect.w, iconRect.h, iconStyle);
+                    g.ClipPushRoundRect(iconRect.x, iconRect.y, iconRect.w, iconRect.h, radius);
+                    g.DrawImage(icon, iconRect.x, iconRect.y, iconRect.w, iconRect.h);
+                    g.ClipPop();
+                }
+
+                auto label = m_labelBuilder ? m_labelBuilder(i, item) : "Item " + std::to_string(i);
+                auto sz = g.MeasureText(label);
+                g.StyledTextEnd(
+                    label,
+                    itemRect.x + itemPad.left + (hasIcon ? iconSize + itemGap : 0),
+                    itemRect.y + (itemRect.h + sz.size.h) / 2
+                );
             }
             g.ClipPop();
 
@@ -139,7 +173,7 @@ namespace gui {
             int scrollOffset = m_scrollbar ? static_cast<int>(m_scrollbar->value()) : 0;
             int contentWidth = GetContentWidth();
 
-            for (size_t i = 0; i < m_items.size(); i++) {
+            for (size_t i = 0; i < items().size(); i++) {
                 auto rect = GetItemRect(static_cast<int>(i), scrollOffset, contentWidth);
                 if (rect.HasPoint(e.x, e.y) && rect.Intersects(b)) {
                     selectedIndex = static_cast<int>(i);
@@ -168,25 +202,20 @@ namespace gui {
             return EventStatus::Active;
         }
 
-        void AddItem(const T& data, const std::string& label) { m_items.push_back({data, label}); }
+        void AddItem(const T& data) { items.PushBack(data); }
 
-        void RemoveItem(size_t index) {
-            if (index < m_items.size()) {
-                m_items.erase(m_items.begin() + index);
-            }
-        }
+        void RemoveItem(size_t index) { items.EraseAt(index); }
 
-        const ListItem<T>& GetSelectedItem() const {
-            if (selectedIndex() >= 0 && selectedIndex() < static_cast<int>(m_items.size())) {
-                return m_items[selectedIndex()];
-            }
-            throw std::out_of_range("No item selected");
-        }
+        void Clear() { items.Clear(); }
 
-        const std::vector<ListItem<T>>& GetItems() const { return m_items; }
+        const std::vector<T>& GetItems() const { return items.Get(); }
+
+        void SetLabelBuilder(Builder<std::string> cb) { m_labelBuilder = cb; }
+        void SetIconBuilder(Builder<Image*> cb) { m_iconBuilder = cb; }
 
     private:
-        std::vector<ListItem<T>> m_items;
+        Builder<std::string> m_labelBuilder;
+        Builder<Image*> m_iconBuilder;
         Scrollbar* m_scrollbar;
 
         int GetContentWidth() const {
@@ -197,7 +226,7 @@ namespace gui {
             EdgeInsets itemPad = EdgeInsets::FromStyle(GetStyle()["item"]["padding"]);
             int itemHeight = GetStyle()["item"].value("height", 22);
             int totalContentHeight =
-                static_cast<int>(m_items.size()) * (itemHeight + itemPad.GetVertical());
+                static_cast<int>(items().size()) * (itemHeight + itemPad.GetVertical());
             bool needsScrollbar = totalContentHeight > padB.h;
             return needsScrollbar ? padB.w - barsize : padB.w;
         }

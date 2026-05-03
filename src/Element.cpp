@@ -190,7 +190,7 @@ namespace gui {
             mergedStyle.update(appStyle[styleKey]);
         }
         if (mergedStyle.is_object() && m_style.is_object()) {
-            mergedStyle.update(m_style);
+            mergedStyle.update(m_style, true);
         }
         return mergedStyle;
     }

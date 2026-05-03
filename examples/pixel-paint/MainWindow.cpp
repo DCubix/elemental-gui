@@ -170,8 +170,8 @@ MainWindow::MainWindow()
     : gui::Window(
           gui::WindowConfig{
               .title = "Pixel Paint",
-              .width = 1024,
-              .height = 768,
+              .width = 1280,
+              .height = 800,
               .resizable = true,
           }
       ) {}
@@ -188,6 +188,10 @@ dc::WidgetDesc MainWindow::OnBuild() {
     icons[icSwap] = gui::Image("swap-horizontal.svg");
     icons[icAdd] = gui::Image("add.svg");
     icons[icRemove] = gui::Image("remove.svg");
+    icons[icTrash] = gui::Image("trash.svg");
+    icons[icNewLayer] = gui::Image("duplicate.svg");
+    icons[icUp] = gui::Image("arrow-up.svg");
+    icons[icDown] = gui::Image("arrow-down.svg");
 
     Show();
 
@@ -368,7 +372,7 @@ dc::WidgetDesc MainWindow::OnBuild() {
         dc::ScrollView(dc::Custom<PaletteSelector, PaletteSelectorProps>({
             .base = dc::ElementProps{
                 .tag = "palette",
-                .bounds = gui::Rectangle::FromHeight(100),
+                .autoSize = true,
             },
             .onSelect = [this](gui::Color color) {
                 if (FindByTag<PaletteSelector>("palette")->selected() < 0) return;
@@ -379,9 +383,101 @@ dc::WidgetDesc MainWindow::OnBuild() {
             el.SetOnSelect(props.onSelect.value_or(nullptr));
         }), {
             .base = dc::ElementProps{
-                .bounds = gui::Rectangle::FromHeight(200),
+                .bounds = gui::Rectangle::FromHeight(150),
             },
             .scrollDirection = gui::utils::Direction::Vertical,
+        }),
+    });
+
+    const auto layersArea = dc::Column({
+        .base = dc::ElementProps{
+            .flexGrow = 1.0f,
+        },
+        .gap = 4,
+        .align = gui::FlexAlign::Stretch,
+    }, {
+        dc::Row({
+            .base = dc::ElementProps{
+                .bounds = gui::Rectangle::FromHeight(32),
+            },
+            .gap = 6,
+            .justify = gui::FlexJustify::End,
+        }, {
+            dc::Text("Layers", textProps.CopyWith({
+                .base = BaseOf(textProps).CopyWith({ .flexGrow = 1.0f }),
+            })),
+            dc::Button("", {
+                .base = dc::ElementProps{
+                    .bounds = gui::Rectangle::FromSize(24, 24),
+                    .tooltip = "New Layer",
+                },
+                .icon = &icons[icNewLayer],
+                .onClick = [this]() {
+                    auto* canvas = FindByTag<Canvas>("canvas");
+                    canvas->NewLayer();
+                },
+            }),
+            dc::Button("", {
+                .base = dc::ElementProps{
+                    .bounds = gui::Rectangle::FromSize(24, 24),
+                    .tooltip = "Delete selected layer",
+                },
+                .icon = &icons[icTrash],
+                .onClick = [this]() {
+                    auto* layers = FindByTag<gui::List<gui::Image*>>("layers");
+                    if (layers->selectedIndex() < 0) return;
+
+                    auto* canvas = FindByTag<Canvas>("canvas");
+                    canvas->DeleteLayer(layers->selectedIndex());
+                },
+            }),
+            dc::Button("", {
+                .base = dc::ElementProps{
+                    .bounds = gui::Rectangle::FromSize(24, 24),
+                    .tooltip = "Move selected up",
+                },
+                .icon = &icons[icUp],
+                .onClick = [this]() {
+                    auto* layers = FindByTag<gui::List<gui::Image*>>("layers");
+                    if (layers->selectedIndex() < 0) return;
+
+                    auto* canvas = FindByTag<Canvas>("canvas");
+                    canvas->MoveLayerUp(layers->selectedIndex());
+                },
+            }),
+            dc::Button("", {
+                .base = dc::ElementProps{
+                    .bounds = gui::Rectangle::FromSize(24, 24),
+                    .tooltip = "Move selected down",
+                },
+                .icon = &icons[icDown],
+                .onClick = [this]() {
+                    auto* layers = FindByTag<gui::List<gui::Image*>>("layers");
+                    if (layers->selectedIndex() < 0) return;
+
+                    auto* canvas = FindByTag<Canvas>("canvas");
+                    canvas->MoveLayerDown(layers->selectedIndex());
+                },
+            }),
+        }),
+        dc::List<gui::Image*>({
+            .base = dc::ElementProps{
+                .tag = "layers",
+                .flexGrow = 1.0f,
+                .style = Json::parse(R"({
+                    "item": {
+                        "height": 48.0,
+                        "iconSize": 999.0
+                    }
+                })"),
+            },
+            .selectedIndex = 0,
+            .labelBuilder = [](uint index, gui::Image* image) {
+                return "Layer " + std::to_string(index + 1);
+            },
+            .iconBuilder = [](uint index, gui::Image* image) {
+                return image;
+            },
         }),
     });
 
@@ -563,6 +659,7 @@ dc::WidgetDesc MainWindow::OnBuild() {
                     }),
                     colorSelectionArea,
                     colorPaletteArea,
+                    layersArea,
                 }),
             }),
         }),
@@ -589,6 +686,12 @@ void MainWindow::OnCreate() {
 
     canvas->colors[0].Bind(colorView0->color);
     canvas->colors[1].Bind(colorView1->color);
+
+    auto* list = FindByTag<gui::List<gui::Image*>>("layers");
+    canvas->layersOrdered.Bind(list->items);
+    canvas->currentLayer.Bind(list->selectedIndex);
+
+    canvas->LoadEmpty();
 }
 
 void MainWindow::RepositionCanvas() {

@@ -154,7 +154,7 @@ namespace gui {
         if (!img->IsValid())
             return;
 
-        if (img->GetType() == Image::Type::SVG) {
+        if (img->GetType() == ImageType::SVG) {
             // get current cairo color
             cairo_pattern_t* pat = cairo_get_source(m_context);
             cairo_pattern_type_t patType = cairo_pattern_get_type(pat);
@@ -184,7 +184,7 @@ namespace gui {
             double(w) / double(img->GetWidth()),
             double(h) / double(img->GetHeight())
         );
-        cairo_set_source_surface(m_context, img->m_surface, 0, 0);
+        cairo_set_source_surface(m_context, img->m_impl->surface, 0, 0);
         switch (filter) {
             case ImageFiltering::Nearest:
                 cairo_pattern_set_filter(cairo_get_source(m_context), CAIRO_FILTER_NEAREST);
@@ -223,6 +223,9 @@ namespace gui {
     }
 
     cairo_pattern_t* Graphics::ApplyPaint(Json paint, int x, int y, int w, int h) {
+        if (!paint.is_object())
+            return nullptr;
+
         cairo_pattern_t* pat = nullptr;
         if (paint["color"].is_array()) {
             Json col = paint["color"];
@@ -363,6 +366,9 @@ namespace gui {
     }
 
     void Graphics::StyledPaint(Json style) {
+        if (!style.is_object())
+            return;
+
         if (style["background"].is_object()) {
             auto pat = ApplyPaint(style["background"]);
             bool shouldPreserve =
@@ -385,6 +391,9 @@ namespace gui {
     }
 
     void Graphics::StyledRect(int x, int y, int w, int h, Json style) {
+        if (!style.is_object())
+            return;
+
         cairo_save(m_context);
 
         if (style["elevation"].is_number()) {
@@ -1031,12 +1040,12 @@ namespace gui {
     }
 
     Graphics Graphics::CreateGraphics(Image& image) {
-        if (!image.m_surface) {
+        if (!image.m_impl->surface) {
             return Graphics{};
         }
         Graphics graphics;
         graphics.m_isImageGraphics = true;
-        graphics.m_surface = image.m_surface;
+        graphics.m_surface = image.m_impl->surface;
         graphics.m_context = cairo_create(graphics.m_surface);
         return graphics;
     }

@@ -12,8 +12,7 @@ namespace gui {
     using OneWayBinding = utils::ValueChanged<const T&>;
 
     template <typename T>
-    concept PropertyValue = std::copyable<T> && std::equality_comparable<T> &&
-                            !std::is_pointer_v<T> && !std::is_reference_v<T>;
+    concept PropertyValue = std::copyable<T> && std::equality_comparable<T>;
 
     template <PropertyValue T>
     class Property {
@@ -106,10 +105,7 @@ namespace gui {
             m_updating = true;
 
             m_value = newValue;
-            for (auto* peer : m_peers)
-                peer->Set(newValue);
-            for (auto& cb : m_oneWayBindings)
-                cb(newValue);
+            NotifyAll();
             m_updating = false;
             if (m_onUpdate)
                 m_onUpdate();
@@ -133,8 +129,62 @@ namespace gui {
             target.m_value = m_value;
         }
 
+        void NotifyAll() {
+            for (auto* peer : m_peers)
+                peer->Set(m_value);
+            for (auto& cb : m_oneWayBindings)
+                cb(m_value);
+        }
+
         void SetOnUpdate(utils::VoidCallback onUpdate) { m_onUpdate = onUpdate; }
         void SetTransformer(Transformer transformer) { m_transformer = transformer; }
+
+        // For when we store containers
+        template <typename U>
+        void PushBack(const U& elem)
+            requires requires(T& c, U v) { c.push_back(v); }
+        {
+            T next = m_value;
+            next.push_back(elem);
+            Set(next);
+        }
+
+        void EraseAt(size_t index)
+            requires requires(T& c) {
+                c.erase(c.begin());
+                c.size();
+            }
+        {
+            if (index >= m_value.size())
+                return;
+            T next = m_value;
+            next.erase(next.begin() + static_cast<typename T::difference_type>(index));
+            Set(next);
+        }
+
+        void Clear()
+            requires requires(T& c) { c.clear(); }
+        {
+            Set(T{});
+        }
+
+        size_t Size() const
+            requires requires(const T& c) { c.size(); }
+        {
+            return m_value.size();
+        }
+
+        auto& operator[](size_t index)
+            requires requires(T& c) { c[index]; }
+        {
+            return m_value[index];
+        }
+
+        const auto& operator[](size_t index) const
+            requires requires(const T& c) { c[index]; }
+        {
+            return m_value[index];
+        }
 
     private:
         T m_value{};
@@ -175,6 +225,24 @@ namespace gui {
         void Bind(Property<T>& target) {
             target.Set(m_value);
             m_oneWayBindings.push_back([&target](const T& v) { target.Set(v); });
+        }
+
+        size_t Size() const
+            requires requires(const T& c) { c.size(); }
+        {
+            return m_value.size();
+        }
+
+        auto& operator[](size_t index)
+            requires requires(T& c) { c[index]; }
+        {
+            return m_value[index];
+        }
+
+        const auto& operator[](size_t index) const
+            requires requires(const T& c) { c[index]; }
+        {
+            return m_value[index];
         }
 
     private:

@@ -3,6 +3,7 @@
 #include "cairo/cairo.h"
 
 #include <cstdint>
+#include <memory>
 #include <string>
 
 struct NSVGimage;
@@ -13,27 +14,46 @@ namespace gui {
     class Graphics;
     struct Size;
 
+    enum class ImageType { Bitmap = 0, SVG };
+
+    struct ImageImpl {
+        ImageType type{ImageType::Bitmap};
+        int width{0}, height{0};
+        cairo_surface_t* surface{nullptr};
+
+        struct {
+            unsigned char* data{nullptr};
+            int stride{0};
+        } lockedData;
+
+        NSVGimage* svgImage{nullptr};
+        NSVGrasterizer* svgRasterizer{nullptr};
+        int rasterizedWidth{0}, rasterizedHeight{0};
+        uint32_t strokeColorOverride{0};
+        uint32_t fillColorOverride{0};
+
+        // The destructor here handles the actual cleanup
+        ~ImageImpl();
+    };
+
     class Image {
         friend class Graphics;
 
     public:
-        enum class Type { Bitmap = 0, SVG };
-
         Image() = default;
-        ~Image();
+        ~Image() = default;
 
-        Image(const Image&) = delete;
-        Image& operator=(const Image&) = delete;
-
-        Image(Image&& other) noexcept;
-        Image& operator=(Image&& other) noexcept;
+        Image(const Image&) = default;
+        Image& operator=(const Image&) = default;
+        Image(Image&&) noexcept = default;
+        Image& operator=(Image&&) noexcept = default;
 
         Image(const std::string& fileName);
         Image(int width, int height);
 
-        int GetWidth() const { return m_width; }
-        int GetHeight() const { return m_height; }
-        Type GetType() const { return m_type; }
+        int GetWidth() const { return m_impl->width; }
+        int GetHeight() const { return m_impl->height; }
+        ImageType GetType() const { return m_impl->type; }
         Size GetSize() const;
 
         void Lock();
@@ -47,22 +67,10 @@ namespace gui {
 
         bool IsValid() const;
 
+        bool operator==(const Image& other) const;
+
     protected:
-        Type m_type{Type::Bitmap};
-        int m_width{0}, m_height{0};
-        cairo_surface_t* m_surface{nullptr};
-
-        struct {
-            unsigned char* data{nullptr};
-            int stride{0};
-        } m_lockedData;
-
-        // SVG-specific
-        NSVGimage* m_svgImage{nullptr};
-        NSVGrasterizer* m_svgRasterizer{nullptr};
-        int m_rasterizedWidth{0}, m_rasterizedHeight{0};
-        uint32_t m_strokeColorOverride{0};
-        uint32_t m_fillColorOverride{0};
+        std::shared_ptr<ImageImpl> m_impl;
 
         // Rasterizes the SVG at the specified size and updates the cairo surface
         void RasterizeSVG(int w, int h, uint32_t strokeOverride = 0, uint32_t fillOverride = 0);

@@ -50,6 +50,10 @@ namespace gui {
         g.ClipPushRect(padded.x, padded.y, padded.w, padded.h);
         Container::OnDraw(g);
         g.ClipPop();
+
+        // g.Color(0.0f, 1.0f, 0.0f, 0.4f);
+        // g.Rect(padded.x, padded.y, padded.w, padded.h);
+        // g.Stroke();
     }
 
     Size Panel::GetPreferredSize() const {

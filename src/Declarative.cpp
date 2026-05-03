@@ -364,10 +364,11 @@ namespace gui::declarative {
             auto& list = window.Create<gui::List<std::string>>();
             ElementSetup(list, base);
             for (const auto& item : items)
-                list.AddItem(item, item);
+                list.AddItem(item);
             list.selectedIndex = selectedIndex;
             if (onSelectionChanged)
                 list.selectedIndex.Bind(onSelectionChanged);
+            list.SetLabelBuilder([](uint index, const std::string& v) { return v; });
             return &list;
         };
     }

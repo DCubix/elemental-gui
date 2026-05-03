@@ -83,11 +83,39 @@ public:
     void LoadFromFile(const std::string& fileName);
     void LoadEmpty();
 
+    void NewLayer();
+    void DeleteLayer(size_t i);
+    void MoveLayerUp(size_t i);
+    void MoveLayerDown(size_t i);
+
     std::vector<gui::Color> ExtractPalette(uint paletteSize = 32, uint iterations = 10);
 
     gui::Color GetCurrentColor() const { return secondaryColor ? colors[1]() : colors[0](); }
 
-    gui::Image image, preview;
+    gui::Size imageSize;
+    gui::Image preview;
+    gui::Property<int> currentLayer{0};
+    gui::Property<std::vector<gui::Image>> layers;
+    gui::Property<std::vector<uint>> layerOrders;
+
+    gui::Computed<std::vector<gui::Image*>> layersOrdered = gui::Computed<std::vector<gui::Image*>>{
+        [this]() {
+            std::vector<gui::Image*> ret;
+            ret.reserve(layers.Size());
+            for (auto index : layerOrders()) {
+                ret.push_back(&layers[index]);
+            }
+            return ret;
+        },
+        layers,
+        layerOrders
+    };
+    gui::Computed<gui::Image*> currentImage = gui::Computed<gui::Image*>{
+        [this]() { return &layers[currentLayer()]; },
+        currentLayer,
+        layers
+    };
+
     ToolType selectedTool{ToolType::Pencil};
     std::array<std::unique_ptr<Tool>, 7> tools;
 
@@ -165,5 +193,6 @@ struct CmdDrawPixels : public ICommand {
     void Execute(Canvas& canvas) override;
     void Undo(Canvas& canvas) override;
 
+    gui::Image* target;
     std::vector<algos::Pixel> data, previousData;
 };

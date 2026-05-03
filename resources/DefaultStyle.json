@@ -553,6 +553,13 @@
             "padding": {
                 "vertical": 6.0,
                 "horizontal": 8.0
+            },
+            "icon": {
+                "border": {
+                    "radius": 4.0,
+                    "color": "$borderDark",
+                    "width": 1.0
+                }
             }
         },
         "itemSelected": {

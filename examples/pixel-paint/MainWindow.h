@@ -28,6 +28,10 @@ public:
         icSwap,
         icAdd,
         icRemove,
+        icTrash,
+        icNewLayer,
+        icUp,
+        icDown,
         icCount
     };
 

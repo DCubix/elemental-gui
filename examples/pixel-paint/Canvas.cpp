@@ -7,8 +7,10 @@ constexpr int GRID_SIZE = 32;
 Canvas::Canvas()
     : gui::Element() {
     SetLocalBounds({0, 0, 64, 64});
-    image = gui::Image(64, 64);
-    preview = gui::Image(64, 64);
+    imageSize = {64, 64};
+    preview = gui::Image(imageSize.w, imageSize.h);
+    layerOrders.PushBack(0);
+    layers.PushBack(gui::Image(imageSize.w, imageSize.h)); // Defaylt layer 0
     undoRedo = UndoRedo(this);
 
     tools[static_cast<size_t>(ToolType::Pencil)] = std::make_unique<PencilTool>();
@@ -33,14 +35,17 @@ void Canvas::OnDraw(gui::Graphics& g) {
 
     g.DrawCheckerboard(0, 0, b.w, b.h, GRID_SIZE);
 
-    g.DrawImage(&image, 0, 0, b.w, b.h, gui::ImageFiltering::Nearest);
+    for (size_t i = layersOrdered.Size(); i-- > 0;) {
+        auto* layer = layersOrdered[i];
+        g.DrawImage(layer, 0, 0, b.w, b.h, gui::ImageFiltering::Nearest);
+    }
 
     if (toolActive) {
         g.DrawImage(&preview, 0, 0, b.w, b.h, gui::ImageFiltering::Nearest);
     }
 
     if (zoom >= 3.0f) {
-        auto sz = image.GetSize();
+        auto sz = imageSize;
         g.Color(0.5f, 0.5f, 0.5f, 0.4f);
         g.LineWidth(1.0f);
         for (int x = 1; x < sz.w; x++)
@@ -107,7 +112,7 @@ void Canvas::OnScroll(gui::ScrollEvent e) {
     zoom += e.scrollY * 0.2f;
     zoom = std::clamp(zoom, 1.0f, 20.0f);
 
-    auto sz = image.GetSize();
+    auto sz = imageSize;
     float imgX = static_cast<float>(e.mouseX) / oldZoom;
     float imgY = static_cast<float>(e.mouseY) / oldZoom;
     float dz = zoom - oldZoom;
@@ -134,7 +139,7 @@ void Canvas::OnKeyUp(gui::KeyEvent e) {
 }
 
 gui::Size Canvas::GetPreferredSize() const {
-    auto sz = image.GetSize();
+    auto sz = imageSize;
     return {
         static_cast<int>(static_cast<float>(sz.w) * zoom),
         static_cast<int>(static_cast<float>(sz.h) * zoom),
@@ -172,6 +177,7 @@ void Canvas::Preview(const std::vector<algos::Pixel>& data) {
 void Canvas::Draw(const std::vector<algos::Pixel>& data) {
     CmdDrawPixels* cmd = new CmdDrawPixels();
     cmd->data = data;
+    cmd->target = &layers[currentLayer()];
     undoRedo.Run(cmd);
     if (onImageChanged)
         onImageChanged();
@@ -190,8 +196,12 @@ void Canvas::Redo() {
 
 void Canvas::LoadFromFile(const std::string& fileName) {
     gui::Image img{fileName};
+    imageSize = {img.GetWidth(), img.GetHeight()};
 
-    image.Resize(img.GetWidth(), img.GetHeight());
+    layerOrders.Clear();
+    layers.Clear();
+    layerOrders.PushBack(0);
+    layers.PushBack(gui::Image(imageSize.w, imageSize.h));
     preview.Resize(img.GetWidth(), img.GetHeight());
     zoom = 1.0f;
     viewPosition = {0, 0};
@@ -200,6 +210,7 @@ void Canvas::LoadFromFile(const std::string& fileName) {
 
     Reposition();
 
+    auto& image = layers[0];
     img.Lock();
     image.Lock();
     for (int y = 0; y < img.GetHeight(); y++)
@@ -213,8 +224,13 @@ void Canvas::LoadFromFile(const std::string& fileName) {
 }
 
 void Canvas::LoadEmpty() {
-    image.Resize(64, 64);
-    preview.Resize(64, 64);
+    imageSize = {64, 64};
+
+    layers.Clear();
+    layerOrders.Clear();
+    layers.PushBack(gui::Image(imageSize.w, imageSize.h));
+    layerOrders.PushBack(0);
+    preview.Resize(imageSize.w, imageSize.h);
     zoom = 1.0f;
     viewPosition = {0, 0};
 
@@ -222,6 +238,7 @@ void Canvas::LoadEmpty() {
 
     Reposition();
 
+    auto& image = layers[0];
     image.Lock();
     for (int y = 0; y < image.GetHeight(); y++)
         for (int x = 0; x < image.GetWidth(); x++) {
@@ -232,7 +249,44 @@ void Canvas::LoadEmpty() {
     Invalidate();
 }
 
+void Canvas::NewLayer() {
+    layers.PushBack(gui::Image(imageSize.w, imageSize.h));
+    layerOrders.PushBack(layers.Size() - 1);
+}
+
+void Canvas::DeleteLayer(size_t i) {
+    if (layers.Size() == 1)
+        return;
+    if (i >= layers.Size())
+        return;
+    layerOrders.EraseAt(i);
+    layers.EraseAt(i);
+    // TODO: layer creation/deletion/move commands
+    undoRedo.Reset();
+}
+
+void Canvas::MoveLayerUp(size_t i) {
+    if (i < 1)
+        return;
+    auto orders = layerOrders();
+    auto tmp = orders[i];
+    orders[i] = orders[i - 1];
+    orders[i - 1] = tmp;
+    layerOrders = orders;
+}
+
+void Canvas::MoveLayerDown(size_t i) {
+    if (i >= layers.Size() - 1)
+        return;
+    auto orders = layerOrders();
+    auto tmp = orders[i];
+    orders[i] = orders[i + 1];
+    orders[i + 1] = tmp;
+    layerOrders = orders;
+}
+
 std::vector<gui::Color> Canvas::ExtractPalette(uint paletteSize, uint iterations) {
+    auto& image = layers[0]; // TODO: all layers? this really is just for the image loading...
     image.Lock();
     std::vector<gui::Color> centers(paletteSize);
     for (int i = 0; i < paletteSize; ++i)
@@ -582,7 +636,7 @@ EllipseTool::BuildEllipse(gui::PointI p1, gui::Color col, bool fromCenter) {
 }
 
 void FillTool::OnMouseDown(Canvas& canvas, int x, int y) {
-    canvas.Draw(algos::GetFloodFill(canvas.image, {x, y}, canvas.GetCurrentColor()));
+    canvas.Draw(algos::GetFloodFill(*canvas.currentImage(), {x, y}, canvas.GetCurrentColor()));
     canvas.toolActive = false;
 }
 
@@ -628,33 +682,34 @@ bool UndoRedo::CanRedo() const {
 
 void CmdDrawPixels::Execute(Canvas& canvas) {
     previousData.reserve(data.size());
-    canvas.image.Lock();
+    target->Lock();
     for (auto px : data) {
-        auto prev = canvas.image.GetPixel(px.position.x, px.position.y);
+        auto prev = target->GetPixel(px.position.x, px.position.y);
         previousData.push_back({px.position, prev});
     }
     for (auto px : data) {
-        canvas.image.SetPixel(px.position.x, px.position.y, px.color);
+        target->SetPixel(px.position.x, px.position.y, px.color);
     }
-    canvas.image.Unlock();
+    target->Unlock();
 }
 
 void CmdDrawPixels::Undo(Canvas& canvas) {
-    canvas.image.Lock();
+    target->Lock();
     for (auto px : previousData) {
-        canvas.image.SetPixel(px.position.x, px.position.y, px.color);
+        target->SetPixel(px.position.x, px.position.y, px.color);
     }
-    canvas.image.Unlock();
+    target->Unlock();
     previousData.clear();
 }
 
 void PickerTool::OnMouseDown(Canvas& canvas, int x, int y) {
-    canvas.image.Lock();
+    auto* img = canvas.currentImage();
+    img->Lock();
     if (!canvas.secondaryColor)
-        canvas.colors[0] = canvas.image.GetPixel(x, y);
+        canvas.colors[0] = img->GetPixel(x, y);
     else
-        canvas.colors[1] = canvas.image.GetPixel(x, y);
-    canvas.image.Unlock();
+        canvas.colors[1] = img->GetPixel(x, y);
+    img->Unlock();
     canvas.toolActive = false;
 }
 
