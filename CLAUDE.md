@@ -85,7 +85,8 @@ Subscriber (event interface)
   └─ Element (base UI node — bounds, style, dirty tracking)
       ├─ Label (text + optional icon display)
       │   ├─ Button (clickable, state machine)
-      │   └─ ToolButton (toggle / radio / normal modes)
+      │   ├─ ToolButton (toggle / radio / normal modes)
+      │   └─ Tooltip (styled popup label with auto-positioning)
       ├─ LineEdit (single-line text editor, no background)
       │   └─ Edit (LineEdit + styled background)
       │       └─ TextArea (multiline, per-char formatting)
@@ -194,6 +195,26 @@ int main() {
 - `flexGrow` distributes extra space among siblings
 - Layout happens before draw, after any size change
 
+**7. Property System & Data Binding**
+
+Widget properties are wrapped in `Property<T>`, which supports reactive callbacks via `.Bind()`. The declarative layer uses this internally to connect `onChanged`/`onValueChange` callbacks:
+
+```cpp
+// Inside a declarative builder (Declarative.cpp pattern):
+edit.text.Bind(onChanged);          // fires callback when text changes
+slider.value.Bind(onValueChange);   // fires callback when value changes
+cb.checked.Bind(onChanged);         // fires callback when checked changes
+
+// Direct widget usage:
+myWidget.someProperty.Bind([](const T& val) { /* react to change */ });
+```
+
+Elements can also expose tooltips as metadata. Set via `ElementProps::tooltip` in the declarative API, or directly on the element:
+
+```cpp
+element.SetTooltip("Helpful hint");  // shown after 500ms hover delay
+```
+
 ### Core Classes Reference
 
 | Class         | Responsibility                                  | Key Methods                                      |
@@ -209,6 +230,7 @@ int main() {
 | `Backend`     | Platform abstraction interface                  | window create/destroy, event pump, present frame |
 | `Image`       | Raster/SVG image loading                        | `IsValid()`, used by `ImageView`, `ToolButton`   |
 | `Label`       | Text + optional icon display                    | `SetText()`, `SetIcon()`, base for Button        |
+| `Tooltip`     | Styled popup label shown on hover               | subclass of `Label`; managed by `Window`         |
 | `Panel`       | Flex container with pluggable layout            | `SetLayout()`, `GetLayout<L>()`                  |
 | `Scrollbar`   | Interactive scrollbar (internal)                | lazy-created by `List<T>` and `ScrollView`       |
 
@@ -280,11 +302,23 @@ class Window {
     void ShowPopup(Element* popup);
     void DismissPopup(Element* popup);
 
+    // Tooltip (called by Element hover tracking; rarely needed directly)
+    void StartTooltip(const std::string& text, Element* anchor); // show after 500ms
+    void CancelTooltip();
+
+    // Element lifecycle
+    void ScheduleDestroy(Element* el);   // deferred removal + unsubscribe
+
     // Properties
     std::string GetTitle(); void SetTitle(const std::string&);
+    bool IsResizable() const; void SetResizable(bool resizable);
+    WindowStyle GetWindowStyle() const; void SetWindowStyle(WindowStyle style);
+    Window* GetParent() const; void SetParent(Window* parent);
     Size GetSize();
+    void Resize(uint32_t width, uint32_t height);
     Application* GetApp();
     WindowId GetId();
+    Graphics& GetGraphics();
 };
 ```
 
@@ -334,12 +368,17 @@ EventStatus MyWidget::OnEvent(Event* e) {
 
 **Step 3: Add Declarative Builder**
 
+All Props fields must be `opt<T>`. Provide a `CopyWith()` method and an
+`opt<ElementProps> base` member to satisfy the `HasBaseProps` concept (required
+by `Custom<>`).
+
 ```cpp
 // In Declarative.h
 struct MyWidgetProps {
-    ElementProps base{};
-    int initialValue{0};
-    ValueChanged<int> onValueChanged;
+    opt<ElementProps> base;
+    opt<int> initialValue;
+    opt<ValueChanged<int>> onValueChanged;
+    MyWidgetProps CopyWith(const MyWidgetProps& b) const;
 };
 WidgetDesc MyWidget(const MyWidgetProps& props);
 
@@ -347,8 +386,9 @@ WidgetDesc MyWidget(const MyWidgetProps& props);
 WidgetDesc MyWidget(const MyWidgetProps& props) {
     return [props](Window& window) -> Element* {
         auto& w = window.Create<gui::MyWidget>();
-        ElementSetup(w, props.base);
-        w.SetValue(props.initialValue);
+        if (props.base) ElementSetup(w, *props.base);
+        w.SetValue(props.initialValue.value_or(0));
+        if (props.onValueChanged) w.value.Bind(*props.onValueChanged);
         return &w;
     };
 }
@@ -541,6 +581,7 @@ Color::FromStyle(jsonValue); // accepts array or hex string
 enum class FlexDirection { Row, Column };
 enum class FlexJustify  { Start, Center, End, SpaceBetween, SpaceEvenly };
 enum class FlexAlign    { Start, Center, End, Stretch };
+enum class FlexWrap     { NoWrap, Wrap };
 
 // FlexLayout applies inside Panel/Column/Row containers
 layout.SetDirection(FlexDirection::Column);
@@ -578,14 +619,23 @@ using ValueChanged        = std::function<void(const T&)>;
 
 **ElementProps** (first member of every Props struct):
 
+All fields are `opt<T>` (`std::optional<T>`). Unset fields leave the widget
+default intact. Every Props struct also provides `CopyWith(other)` for
+immutable-style updates — unset fields in `other` do not override `this`.
+
 ```cpp
+template<typename T> using opt = std::optional<T>;
+
 struct ElementProps {
-    std::string tag{""};      // for FindByTag<T>()
-    bool enabled{true};
-    bool autoSize{false};
-    float flexGrow{0.0f};
-    Rectangle bounds{0,0,0,0};
-    Json style;               // per-element style override
+    opt<std::string> tag;       // for FindByTag<T>()
+    opt<bool> enabled;
+    opt<bool> autoSize;
+    opt<float> flexGrow;
+    opt<Rectangle> bounds;
+    opt<Json> style;            // per-element style override
+    opt<std::string> tooltip;   // shown after 500ms hover
+
+    ElementProps CopyWith(const ElementProps& b) const;
 };
 ```
 
@@ -593,10 +643,10 @@ struct ElementProps {
 
 ```
 Layout:
-  Column(ColumnProps, children)   — gap, padding, align, justify, showBackground
-  Row(RowProps, children)         — gap, padding, align, justify, showBackground
+  Column(ColumnProps, children)   — gap, padding, align, justify, wrap, showBackground
+  Row(RowProps, children)         — gap, padding, align, justify, wrap, showBackground
   ScrollView(child, ScrollViewProps) — scrollDirection: Direction
-  SplitView(SplitViewProps)       — direction, splitPosition (px), first, second
+  SplitView(SplitViewProps)       — direction, splitPosition (px), align (SplitViewAlign), first, second
   Spacer()                        — flexible empty space
 
 Input:
@@ -640,6 +690,7 @@ enum class Direction       { Horizontal, Vertical };
 enum class Alignment       { TopLeft, TopCenter, TopRight, MiddleLeft, MiddleCenter,
                              MiddleRight, BottomLeft, BottomCenter, BottomRight };
 enum class ImageScalingMode { Stretch, Contain, Cover };
+enum class FlexWrap        { NoWrap, Wrap };   // for Column/Row props
 ```
 
 ### Text Editing Widgets
@@ -734,6 +785,7 @@ elemental-gui/
 │   ├── ImageView.h/cpp       — image display
 │   ├── Image.h/cpp           — image loading (raster + SVG)
 │   ├── ToolButton.h/cpp      — icon button (normal/toggle/radio)
+│   ├── Tooltip.h/cpp         — styled popup label, managed by Window
 │   ├── WindowConfig.h        — WindowConfig struct and WindowStyle enum
 │   ├── backends/sdl3/        — SDL3 backend implementation
 │   └── generated/            — embedded resource headers (auto-generated)

@@ -269,7 +269,7 @@ dc::WidgetDesc MainWindow::OnBuild() {
             .group = "tools",
         })),
         dc::ToolRadioButton("", toolProps.CopyWith({
-            .base = BaseOf(toolProps).CopyWith({ .tag = "tool_square", .tooltip = "Rectangle/Square" }),
+            .base = BaseOf(toolProps).CopyWith({ .tag = "tool_square", .tooltip = "Rectangle. (*Shift* = Square)" }),
             .icon = &icons[icSquare],
             .onClick = [this]() {
                 if (auto* c = FindByTag<Canvas>("canvas"))
@@ -278,7 +278,7 @@ dc::WidgetDesc MainWindow::OnBuild() {
             .group = "tools",
         })),
         dc::ToolRadioButton("", toolProps.CopyWith({
-            .base = BaseOf(toolProps).CopyWith({ .tag = "tool_circle", .tooltip = "Ellipse/Circle" }),
+            .base = BaseOf(toolProps).CopyWith({ .tag = "tool_circle", .tooltip = "Ellipse. (*Shift* = Circle)" }),
             .icon = &icons[icCircle],
             .onClick = [this]() {
                 if (auto* c = FindByTag<Canvas>("canvas"))
@@ -365,7 +365,7 @@ dc::WidgetDesc MainWindow::OnBuild() {
                 },
             }),
         }),
-        dc::Custom<PaletteSelector, PaletteSelectorProps>({
+        dc::ScrollView(dc::Custom<PaletteSelector, PaletteSelectorProps>({
             .base = dc::ElementProps{
                 .tag = "palette",
                 .bounds = gui::Rectangle::FromHeight(100),
@@ -377,6 +377,11 @@ dc::WidgetDesc MainWindow::OnBuild() {
             },
         }, [](PaletteSelector& el, const PaletteSelectorProps& props) {
             el.SetOnSelect(props.onSelect.value_or(nullptr));
+        }), {
+            .base = dc::ElementProps{
+                .bounds = gui::Rectangle::FromHeight(200),
+            },
+            .scrollDirection = gui::utils::Direction::Vertical,
         }),
     });
 

@@ -3,6 +3,15 @@
 #include "Element.h"
 
 namespace gui {
+    namespace utils {
+        struct MarkdownToken {
+            bool bold{false}, italic{false};
+            std::string text;
+        };
+
+        std::vector<MarkdownToken> ParseBasicMarkdown(const std::string& text);
+        std::string CleanMarkdown(const std::string& text);
+    } // namespace utils
 
     class Label : public Element {
     public:
