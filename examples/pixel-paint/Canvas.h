@@ -57,6 +57,12 @@ struct Tool {
     virtual void OnMouseUp(Canvas& canvas, int x, int y) {}
 };
 
+struct Layer {
+    uint id;
+    gui::Image image;
+    bool operator==(const Layer& o) const { return id == o.id && image == o.image; }
+};
+
 class Canvas : public gui::Element {
 public:
     enum class ToolType { Pencil = 0, Eraser, Eyedrop, Curve, Square, Circle, Fill };
@@ -89,13 +95,15 @@ public:
     void MoveLayerDown(size_t i);
 
     std::vector<gui::Color> ExtractPalette(uint paletteSize = 32, uint iterations = 10);
-
     gui::Color GetCurrentColor() const { return secondaryColor ? colors[1]() : colors[0](); }
+
+    gui::Image* GetLayerImage(uint id);
+    void RemoveLayerById(uint id);
 
     gui::Size imageSize;
     gui::Image preview;
     gui::Property<int> currentLayer{0};
-    gui::Property<std::vector<gui::Image>> layers;
+    gui::Property<std::vector<Layer>> layers;
     gui::Property<std::vector<uint>> layerOrders;
 
     gui::Computed<std::vector<gui::Image*>> layersOrdered = gui::Computed<std::vector<gui::Image*>>{
@@ -103,7 +111,7 @@ public:
             std::vector<gui::Image*> ret;
             ret.reserve(layers.Size());
             for (auto index : layerOrders()) {
-                ret.push_back(&layers[index]);
+                ret.push_back(&layers[index].image);
             }
             return ret;
         },
@@ -111,9 +119,26 @@ public:
         layerOrders
     };
     gui::Computed<gui::Image*> currentImage = gui::Computed<gui::Image*>{
-        [this]() { return &layers[currentLayer()]; },
+        [this]() -> gui::Image* {
+            int idx = currentLayer();
+            if (idx < 0 || static_cast<size_t>(idx) >= layersOrdered.Size())
+                return nullptr;
+            return layersOrdered[idx];
+        },
         currentLayer,
-        layers
+        layers,
+        layerOrders
+    };
+    gui::Computed<uint> currentLayerId = gui::Computed<uint>{
+        [this]() -> uint {
+            int idx = currentLayer();
+            if (layers.Size() == 0 || idx < 0 || static_cast<size_t>(idx) >= layerOrders.Size())
+                return 0;
+            return layers[layerOrders[idx]].id;
+        },
+        currentLayer,
+        layers,
+        layerOrders
     };
 
     ToolType selectedTool{ToolType::Pencil};
@@ -129,6 +154,8 @@ public:
 
     UndoRedo undoRedo;
     VoidCallback onImageChanged;
+
+    uint globalIdCounter{0};
 };
 
 struct CanvasProps {
@@ -193,6 +220,30 @@ struct CmdDrawPixels : public ICommand {
     void Execute(Canvas& canvas) override;
     void Undo(Canvas& canvas) override;
 
-    gui::Image* target;
+    uint targetId;
     std::vector<algos::Pixel> data, previousData;
+};
+
+struct CmdMoveLayer : public ICommand {
+    void Execute(Canvas& canvas) override;
+    void Undo(Canvas& canvas) override;
+
+    uint toLayer, fromLayer;
+};
+
+struct CmdDeleteLayer : public ICommand {
+    void Execute(Canvas& canvas) override;
+    void Undo(Canvas& canvas) override;
+
+    uint id, index;
+    uint savedCurrentLayer;
+    std::vector<gui::Color> data;
+};
+
+struct CmdNewLayer : public ICommand {
+    void Execute(Canvas& canvas) override;
+    void Undo(Canvas& canvas) override;
+
+    uint id;
+    uint index;
 };

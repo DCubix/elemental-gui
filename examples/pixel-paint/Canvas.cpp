@@ -10,7 +10,9 @@ Canvas::Canvas()
     imageSize = {64, 64};
     preview = gui::Image(imageSize.w, imageSize.h);
     layerOrders.PushBack(0);
-    layers.PushBack(gui::Image(imageSize.w, imageSize.h)); // Defaylt layer 0
+    layers.PushBack(
+        Layer{globalIdCounter++, gui::Image(imageSize.w, imageSize.h)}
+    ); // Defaylt layer 0
     undoRedo = UndoRedo(this);
 
     tools[static_cast<size_t>(ToolType::Pencil)] = std::make_unique<PencilTool>();
@@ -177,7 +179,7 @@ void Canvas::Preview(const std::vector<algos::Pixel>& data) {
 void Canvas::Draw(const std::vector<algos::Pixel>& data) {
     CmdDrawPixels* cmd = new CmdDrawPixels();
     cmd->data = data;
-    cmd->target = &layers[currentLayer()];
+    cmd->targetId = currentLayerId();
     undoRedo.Run(cmd);
     if (onImageChanged)
         onImageChanged();
@@ -198,10 +200,11 @@ void Canvas::LoadFromFile(const std::string& fileName) {
     gui::Image img{fileName};
     imageSize = {img.GetWidth(), img.GetHeight()};
 
+    globalIdCounter = 0;
     layerOrders.Clear();
     layers.Clear();
     layerOrders.PushBack(0);
-    layers.PushBack(gui::Image(imageSize.w, imageSize.h));
+    layers.PushBack(Layer{globalIdCounter++, gui::Image(imageSize.w, imageSize.h)});
     preview.Resize(img.GetWidth(), img.GetHeight());
     zoom = 1.0f;
     viewPosition = {0, 0};
@@ -210,7 +213,7 @@ void Canvas::LoadFromFile(const std::string& fileName) {
 
     Reposition();
 
-    auto& image = layers[0];
+    auto& image = layers[0].image;
     img.Lock();
     image.Lock();
     for (int y = 0; y < img.GetHeight(); y++)
@@ -226,9 +229,10 @@ void Canvas::LoadFromFile(const std::string& fileName) {
 void Canvas::LoadEmpty() {
     imageSize = {64, 64};
 
+    globalIdCounter = 0;
     layers.Clear();
     layerOrders.Clear();
-    layers.PushBack(gui::Image(imageSize.w, imageSize.h));
+    layers.PushBack(Layer{globalIdCounter++, gui::Image(imageSize.w, imageSize.h)});
     layerOrders.PushBack(0);
     preview.Resize(imageSize.w, imageSize.h);
     zoom = 1.0f;
@@ -238,7 +242,7 @@ void Canvas::LoadEmpty() {
 
     Reposition();
 
-    auto& image = layers[0];
+    auto& image = layers[0].image;
     image.Lock();
     for (int y = 0; y < image.GetHeight(); y++)
         for (int x = 0; x < image.GetWidth(); x++) {
@@ -250,8 +254,9 @@ void Canvas::LoadEmpty() {
 }
 
 void Canvas::NewLayer() {
-    layers.PushBack(gui::Image(imageSize.w, imageSize.h));
-    layerOrders.PushBack(layers.Size() - 1);
+    CmdNewLayer* cmd = new CmdNewLayer();
+    cmd->id = globalIdCounter++;
+    undoRedo.Run(cmd);
 }
 
 void Canvas::DeleteLayer(size_t i) {
@@ -259,34 +264,34 @@ void Canvas::DeleteLayer(size_t i) {
         return;
     if (i >= layers.Size())
         return;
-    layerOrders.EraseAt(i);
-    layers.EraseAt(i);
-    // TODO: layer creation/deletion/move commands
-    undoRedo.Reset();
+
+    CmdDeleteLayer* cmd = new CmdDeleteLayer();
+    cmd->index = i;
+    cmd->id = layers[layerOrders[i]].id;
+    undoRedo.Run(cmd);
+    Invalidate();
 }
 
 void Canvas::MoveLayerUp(size_t i) {
     if (i < 1)
         return;
-    auto orders = layerOrders();
-    auto tmp = orders[i];
-    orders[i] = orders[i - 1];
-    orders[i - 1] = tmp;
-    layerOrders = orders;
+    CmdMoveLayer* cmd = new CmdMoveLayer();
+    cmd->fromLayer = i;
+    cmd->toLayer = i - 1;
+    undoRedo.Run(cmd);
 }
 
 void Canvas::MoveLayerDown(size_t i) {
     if (i >= layers.Size() - 1)
         return;
-    auto orders = layerOrders();
-    auto tmp = orders[i];
-    orders[i] = orders[i + 1];
-    orders[i + 1] = tmp;
-    layerOrders = orders;
+    CmdMoveLayer* cmd = new CmdMoveLayer();
+    cmd->fromLayer = i;
+    cmd->toLayer = i + 1;
+    undoRedo.Run(cmd);
 }
 
 std::vector<gui::Color> Canvas::ExtractPalette(uint paletteSize, uint iterations) {
-    auto& image = layers[0]; // TODO: all layers? this really is just for the image loading...
+    auto& image = layers[0].image; // TODO: all layers? this really is just for the image loading...
     image.Lock();
     std::vector<gui::Color> centers(paletteSize);
     for (int i = 0; i < paletteSize; ++i)
@@ -344,6 +349,39 @@ std::vector<gui::Color> Canvas::ExtractPalette(uint paletteSize, uint iterations
     image.Unlock();
 
     return centers;
+}
+
+gui::Image* Canvas::GetLayerImage(uint id) {
+    for (auto& layer : layers.Get()) {
+        if (layer.id == id)
+            return &layer.image;
+    }
+    return nullptr;
+}
+
+void Canvas::RemoveLayerById(uint id) {
+    auto& tmpLayers = layers.Get();
+    auto it = std::find_if(tmpLayers.begin(), tmpLayers.end(), [&id](const Layer& layer) {
+        return layer.id == id;
+    });
+    if (it == tmpLayers.end())
+        return;
+
+    auto layerIndex = static_cast<uint>(std::distance(tmpLayers.begin(), it));
+
+    // Find the render-order slot that references this layer and remove it
+    auto orders = layerOrders();
+    auto orderIt = std::find(orders.begin(), orders.end(), layerIndex);
+    if (orderIt != orders.end())
+        orders.erase(orderIt);
+
+    // Shift down all remaining indices that were above layerIndex
+    for (auto& ord : orders)
+        if (ord > layerIndex)
+            ord--;
+
+    layerOrders = orders;
+    layers.EraseAt(layerIndex);
 }
 
 void PencilTool::OnMouseDown(Canvas& canvas, int x, int y) {
@@ -682,6 +720,8 @@ bool UndoRedo::CanRedo() const {
 
 void CmdDrawPixels::Execute(Canvas& canvas) {
     previousData.reserve(data.size());
+
+    auto* target = canvas.GetLayerImage(targetId);
     target->Lock();
     for (auto px : data) {
         auto prev = target->GetPixel(px.position.x, px.position.y);
@@ -694,6 +734,7 @@ void CmdDrawPixels::Execute(Canvas& canvas) {
 }
 
 void CmdDrawPixels::Undo(Canvas& canvas) {
+    auto* target = canvas.GetLayerImage(targetId);
     target->Lock();
     for (auto px : previousData) {
         target->SetPixel(px.position.x, px.position.y, px.color);
@@ -753,4 +794,77 @@ std::vector<algos::Pixel> RectTool::BuildRect(gui::PointI p1, gui::Color col, bo
     ret.insert(ret.end(), l4.begin(), l4.end());
 
     return ret;
+}
+
+void CmdMoveLayer::Execute(Canvas& canvas) {
+    auto orders = canvas.layerOrders();
+    auto tmp = orders[toLayer];
+    orders[toLayer] = orders[fromLayer];
+    orders[fromLayer] = tmp;
+    canvas.layerOrders = orders;
+}
+
+void CmdMoveLayer::Undo(Canvas& canvas) {
+    auto orders = canvas.layerOrders();
+    auto tmp = orders[fromLayer];
+    orders[fromLayer] = orders[toLayer];
+    orders[toLayer] = tmp;
+    canvas.layerOrders = orders;
+}
+
+void CmdDeleteLayer::Execute(Canvas& canvas) {
+    auto* layer = canvas.GetLayerImage(id);
+
+    data.clear();
+    data.reserve(layer->GetWidth() * layer->GetHeight());
+
+    // Save old image
+    layer->Lock();
+    for (uint y = 0; y < layer->GetHeight(); y++) {
+        for (uint x = 0; x < layer->GetWidth(); x++) {
+            data.push_back(layer->GetPixel(x, y));
+        }
+    }
+    layer->Unlock();
+
+    savedCurrentLayer = canvas.currentLayer();
+
+    canvas.RemoveLayerById(id);
+    canvas.currentLayer = canvas.currentLayer() >= canvas.layers.Size() ? canvas.layers.Size() - 1
+                          : canvas.currentLayer() > 0                   ? canvas.currentLayer() - 1
+                                                                        : 0;
+}
+
+void CmdDeleteLayer::Undo(Canvas& canvas) {
+    canvas.layers.PushBack(Layer{id, gui::Image(canvas.imageSize.w, canvas.imageSize.h)});
+    canvas.layerOrders.Insert(index, canvas.layers.Size() - 1);
+
+    auto* layer = canvas.GetLayerImage(id);
+    layer->Lock();
+    for (uint y = 0; y < layer->GetHeight(); y++) {
+        for (uint x = 0; x < layer->GetWidth(); x++) {
+            auto pixel = data[x + y * layer->GetWidth()];
+            layer->SetPixel(x, y, pixel);
+        }
+    }
+    layer->Unlock();
+
+    canvas.currentLayer = savedCurrentLayer;
+}
+
+void CmdNewLayer::Execute(Canvas& canvas) {
+    Layer layer{};
+    layer.id = id;
+    layer.image = gui::Image(canvas.imageSize.w, canvas.imageSize.h);
+
+    canvas.layers.PushBack(layer);
+    canvas.layerOrders.PushBack(canvas.layers.Size() - 1);
+    index = canvas.layers.Size() - 1;
+}
+
+void CmdNewLayer::Undo(Canvas& canvas) {
+    canvas.RemoveLayerById(id);
+    canvas.currentLayer = canvas.currentLayer() >= canvas.layers.Size() ? canvas.layers.Size() - 1
+                          : canvas.currentLayer() > 0                   ? canvas.currentLayer() - 1
+                                                                        : 0;
 }

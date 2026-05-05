@@ -35,6 +35,7 @@ namespace gui {
             return *this;
         }
         const T& operator()() const { return m_value; }
+        T& operator()() { return m_value; }
 
         // Math operators
         Property& operator++()
@@ -96,6 +97,7 @@ namespace gui {
         }
 
         const T& Get() const { return m_value; }
+        T& Get() { return m_value; }
 
         void Set(const T& value) {
             T newValue = m_transformer ? m_transformer(value) : value;
@@ -146,6 +148,15 @@ namespace gui {
         {
             T next = m_value;
             next.push_back(elem);
+            Set(next);
+        }
+
+        template <typename U>
+        void Insert(size_t index, const U& elem)
+            requires requires(T& c, U v) { c.insert(c.begin(), v); }
+        {
+            T next = m_value;
+            next.insert(next.begin() + index, elem);
             Set(next);
         }
 
