@@ -119,6 +119,10 @@ namespace gui {
         m_impl->surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, w, h);
     }
 
+    void Image::WriteToPNG(const std::string& fileName) {
+        cairo_surface_write_to_png(m_impl->surface, fileName.c_str());
+    }
+
     bool Image::IsValid() const {
         if (m_impl->width <= 0 || m_impl->height <= 0)
             return false;

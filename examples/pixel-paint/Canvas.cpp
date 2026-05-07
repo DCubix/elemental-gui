@@ -1,5 +1,7 @@
 #include "Canvas.h"
 
+#include <fstream>
+#include <set>
 #include <stack>
 
 constexpr int GRID_SIZE = 32;
@@ -196,7 +198,88 @@ void Canvas::Redo() {
     Invalidate();
 }
 
-void Canvas::LoadFromFile(const std::string& fileName) {
+void Canvas::LoadArtFile(const std::string& fileName) {
+    std::ifstream fs(fileName, std::ios::binary);
+    if (!fs.is_open())
+        return;
+
+    auto fnRead = [&]<typename T>(T& target) -> decltype(auto) {
+        return fs.read(reinterpret_cast<char*>(&target), sizeof(T));
+    };
+
+#define fnReadV(T, v)                                                                              \
+    T v;                                                                                           \
+    fnRead(v)
+
+    layers.Clear();
+    layerOrders.Clear();
+    undoRedo.Reset();
+
+    // Image size
+    fnRead(imageSize.w);
+    fnRead(imageSize.h);
+
+    // Color palette
+    palette.Clear();
+    fnReadV(uint, paletteSize);
+
+    for (uint i = 0; i < paletteSize; i++) {
+        gui::Color color{};
+        fnRead(color.r);
+        fnRead(color.g);
+        fnRead(color.b);
+        fnRead(color.a);
+        palette.PushBack(color);
+    }
+
+    // Canvas specific
+    fnRead(globalIdCounter);
+    fnRead(zoom);
+    fnRead(viewPosition.x);
+    fnRead(viewPosition.y);
+
+    fnRead(colors[0]().r);
+    fnRead(colors[0]().g);
+    fnRead(colors[0]().b);
+    fnRead(colors[0]().a);
+    fnRead(colors[1]().r);
+    fnRead(colors[1]().g);
+    fnRead(colors[1]().b);
+    fnRead(colors[1]().a);
+
+    // Layer ordering
+    fnReadV(uint, layerCount);
+    for (uint i = 0; i < layerCount; i++) {
+        fnReadV(uint, order);
+        layerOrders.PushBack(order);
+    }
+
+    // Layers
+    for (uint i = 0; i < layerCount; i++) {
+        fnReadV(uint, id);
+
+        layers.PushBack(Layer{id, gui::Image(imageSize.w, imageSize.h)});
+
+        gui::Image& img = layers[layers.Size() - 1].image;
+        img.Lock();
+        for (int y = 0; y < imageSize.h; y++) {
+            for (int x = 0; x < imageSize.w; x++) {
+                gui::Color color{};
+                fnRead(color.r);
+                fnRead(color.g);
+                fnRead(color.b);
+                fnRead(color.a);
+                img.SetPixel(x, y, color);
+            }
+        }
+        img.Unlock();
+    }
+#undef fnReadV
+
+    fs.close();
+}
+
+void Canvas::LoadFromPNG(const std::string& fileName) {
     gui::Image img{fileName};
     imageSize = {img.GetWidth(), img.GetHeight()};
 
@@ -222,6 +305,11 @@ void Canvas::LoadFromFile(const std::string& fileName) {
         }
     image.Unlock();
     img.Unlock();
+
+    palette.Clear();
+    for (auto col : ExtractPalette()) {
+        palette.PushBack(col);
+    }
 
     Invalidate();
 }
@@ -251,6 +339,81 @@ void Canvas::LoadEmpty() {
     image.Unlock();
 
     Invalidate();
+}
+
+void Canvas::SaveToPNG(const std::string& fileName) {
+    gui::Image img = gui::Image(imageSize.w, imageSize.h);
+    gui::Graphics g = gui::Graphics::CreateGraphics(img);
+    for (size_t i = layersOrdered.Size(); i-- > 0;) {
+        auto* layer = layersOrdered[i];
+        g.DrawImage(layer, 0, 0, imageSize.w, imageSize.h, gui::ImageFiltering::Nearest);
+    }
+    img.WriteToPNG(fileName);
+}
+
+void Canvas::SaveArtFile(const std::string& fileName) {
+    std::ofstream fs(fileName, std::ios::binary);
+    if (!fs.is_open())
+        return;
+
+    auto fnWrite = [&]<typename T>(const T& value) -> decltype(auto) {
+        return fs.write(reinterpret_cast<const char*>(&value), sizeof(T));
+    };
+
+    // Image size
+    fnWrite(imageSize.w);
+    fnWrite(imageSize.h);
+
+    // Color palette
+    fnWrite(static_cast<uint>(palette.Size()));
+    for (const auto& color : palette()) {
+        fnWrite(color.r);
+        fnWrite(color.g);
+        fnWrite(color.b);
+        fnWrite(color.a);
+    }
+
+    // Canvas specific
+    fnWrite(globalIdCounter);
+    fnWrite(zoom);
+    fnWrite(viewPosition.x);
+    fnWrite(viewPosition.y);
+
+    fnWrite(colors[0]().r);
+    fnWrite(colors[0]().g);
+    fnWrite(colors[0]().b);
+    fnWrite(colors[0]().a);
+    fnWrite(colors[1]().r);
+    fnWrite(colors[1]().g);
+    fnWrite(colors[1]().b);
+    fnWrite(colors[1]().a);
+
+    // Layer ordering
+    fnWrite(static_cast<uint>(layerOrders.Size()));
+    for (const auto& order : layerOrders()) {
+        fnWrite(order);
+    }
+
+    // Layers
+    for (auto& layer : layers()) {
+        // layer ID
+        fnWrite(layer.id);
+
+        // Pixels
+        layer.image.Lock();
+        for (int y = 0; y < imageSize.h; y++) {
+            for (int x = 0; x < imageSize.w; x++) {
+                auto color = layer.image.GetPixel(x, y);
+                fnWrite(color.r);
+                fnWrite(color.g);
+                fnWrite(color.b);
+                fnWrite(color.a);
+            }
+        }
+        layer.image.Unlock();
+    }
+
+    fs.close();
 }
 
 void Canvas::NewLayer() {
@@ -291,7 +454,7 @@ void Canvas::MoveLayerDown(size_t i) {
 }
 
 std::vector<gui::Color> Canvas::ExtractPalette(uint paletteSize, uint iterations) {
-    auto& image = layers[0].image; // TODO: all layers? this really is just for the image loading...
+    auto& image = layers[0].image;
     image.Lock();
     std::vector<gui::Color> centers(paletteSize);
     for (int i = 0; i < paletteSize; ++i)
@@ -346,9 +509,37 @@ std::vector<gui::Color> Canvas::ExtractPalette(uint paletteSize, uint iterations
             };
         }
     }
+
+    std::set<gui::Color> uniqueColors;
+    for (int i = 0; i < paletteSize; ++i)
+        uniqueColors.insert(centers[i]);
+
+    auto fnClosestColor = [&uniqueColors](const gui::Color& col) -> gui::Color {
+        float dist = 9999.0f;
+        gui::Color selected{0, 0, 0, 0};
+        for (const auto& palCol : uniqueColors) {
+            float dr = col.r - palCol.r;
+            float dg = col.g - palCol.g;
+            float db = col.b - palCol.b;
+            float da = col.a - palCol.a;
+            float d = dr * dr + dg * dg + db * db + da * da;
+            if (d < dist) {
+                dist = d;
+                selected = palCol;
+            }
+        }
+        return selected;
+    };
+
+    for (int i = 0; i < int(pixelCount); i++) {
+        int x = i % image.GetWidth();
+        int y = i / image.GetWidth();
+        auto col = fnClosestColor(image.GetPixel(x, y));
+        image.SetPixel(x, y, col);
+    }
     image.Unlock();
 
-    return centers;
+    return std::vector<gui::Color>(uniqueColors.begin(), uniqueColors.end());
 }
 
 gui::Image* Canvas::GetLayerImage(uint id) {

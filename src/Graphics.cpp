@@ -1223,6 +1223,12 @@ namespace gui {
         return ra == rb && ga == gb && ba == bb && aa == ab;
     }
 
+    bool Color::operator<(const Color& o) const {
+        float ma = r * r + g * g + b * b + a * a;
+        float mo = o.r * o.r + o.g * o.g + o.b * o.b + o.a * o.a;
+        return ma < mo;
+    }
+
     Color Color::FromHex(const std::string& hex) {
         std::string cleanHex = hex;
         if (cleanHex[0] == '#') {

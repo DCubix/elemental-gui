@@ -65,6 +65,8 @@ namespace gui {
         void SetPixels(const unsigned char* data, int stride);
         void Resize(int w, int h);
 
+        void WriteToPNG(const std::string& fileName);
+
         bool IsValid() const;
 
         bool operator==(const Image& other) const;

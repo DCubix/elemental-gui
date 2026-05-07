@@ -86,8 +86,12 @@ public:
     void Undo();
     void Redo();
 
-    void LoadFromFile(const std::string& fileName);
+    void LoadArtFile(const std::string& fileName);
+    void LoadFromPNG(const std::string& fileName);
     void LoadEmpty();
+
+    void SaveToPNG(const std::string& fileName);
+    void SaveArtFile(const std::string& fileName);
 
     void NewLayer();
     void DeleteLayer(size_t i);
@@ -105,6 +109,7 @@ public:
     gui::Property<int> currentLayer{0};
     gui::Property<std::vector<Layer>> layers;
     gui::Property<std::vector<uint>> layerOrders;
+    gui::Property<std::vector<gui::Color>> palette;
 
     gui::Computed<std::vector<gui::Image*>> layersOrdered = gui::Computed<std::vector<gui::Image*>>{
         [this]() {

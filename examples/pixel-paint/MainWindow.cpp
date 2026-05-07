@@ -85,7 +85,7 @@ public:
 
         int x = 0, y = 0;
         int index = 0;
-        for (const auto& col : m_palette) {
+        for (const auto& col : palette()) {
             if (x + cellSize > sz.w) {
                 x = 0;
                 y += cellSize;
@@ -103,7 +103,7 @@ public:
         const int cellsPerRow = sz.w / cellSize;
         int x = 0, y = 0;
         int index = 0;
-        for (const auto& col : m_palette) {
+        for (const auto& col : palette()) {
             if (x + cellSize > sz.w) {
                 x = 0;
                 y += cellSize;
@@ -118,20 +118,20 @@ public:
     }
 
     void Add(const gui::Color& color) {
-        m_palette.push_back(color);
+        palette.PushBack(color);
         Invalidate();
     }
 
     void Remove(size_t index) {
         if (index == (size_t)-1)
             return;
-        m_palette.erase(m_palette.begin() + index);
+        palette.EraseAt(index);
         selected = index == selected() ? -1 : selected();
         Invalidate();
     }
 
     void Clear() {
-        m_palette.clear();
+        palette.Clear();
         selected = -1;
         Invalidate();
     }
@@ -139,7 +139,7 @@ public:
     gui::Size GetPreferredSize() const override {
         const gui::Size sz = GetSize();
         const int cellsPerRow = sz.w / cellSize;
-        int rowCount = (int(m_palette.size()) / cellsPerRow) + 1;
+        int rowCount = palette.Size() / cellsPerRow + 1;
         return {cellSize * cellsPerRow, cellSize * rowCount};
     }
 
@@ -150,14 +150,16 @@ public:
         [this]() {
             if (selected() < 0)
                 return gui::Color{0, 0, 0, 1};
-            return m_palette[selected()];
+            return palette[selected()];
         },
-        selected
+        selected,
+        palette
     )};
 
+    gui::Property<std::vector<gui::Color>> palette;
+
 private:
-    const int cellSize = 32;
-    std::vector<gui::Color> m_palette;
+    const int cellSize = 24;
     ValueChanged<gui::Color> m_onSelect;
 };
 
@@ -505,26 +507,21 @@ dc::WidgetDesc MainWindow::OnBuild() {
         dc::MenuItem({ .text = "Open", .onClick = [this]() {
             auto fnOpen = [this]() {
                 auto res = pfd::open_file(
-                    "Open Image", ".",
-                    { "Portable Network Graphics", "*.png" },
+                    "Open Art File", ".",
+                    { "Pixel Art File", "*.art" },
                     pfd::opt::none
                 ).result();
                 if (!res.empty()) {
                     auto* canvas = FindByTag<Canvas>("canvas");
-                    auto* palette = FindByTag<PaletteSelector>("palette");
-                    canvas->LoadFromFile(res.front());
-                    palette->Clear();
-                    for (auto col : canvas->ExtractPalette()) {
-                        palette->Add(col);
-                    }
+                    canvas->LoadArtFile(res.front());
                     saved = true;
                     fileName = res.front();
                 }
             };
             if (!saved) {
                 auto res = pfd::message(
-                    "Open Image",
-                    "Your current image is going to be lost. Continue?",
+                    "Open Art File",
+                    "Your current art is going to be lost. Continue?",
                     pfd::choice::yes_no,
                     pfd::icon::warning
                 ).result();
@@ -535,11 +532,75 @@ dc::WidgetDesc MainWindow::OnBuild() {
                 fnOpen();
             }
         } }),
-        dc::MenuItem({ .text = "Save", .onClick = []() {
-            // TODO: saving...
+        dc::MenuItem({ .text = "Save", .onClick = [this]() {
+            auto fnSave = [this]() {
+                auto* canvas = FindByTag<Canvas>("canvas");
+                canvas->SaveArtFile(fileName);
+                saved = true;
+            };
+            if (!saved) {
+                auto res = pfd::save_file(
+                    "Save Art File", ".",
+                    { "Pixel Art File", "*.art" }
+                ).result();
+                if (!res.empty()) {
+                    fileName = res;
+                    fnSave();
+                }
+            } else {
+                fnSave();
+            }
         } }),
-        dc::MenuItem({ .text = "Save As...", .onClick = []() {
-            // TODO: saving...
+        dc::MenuItem({ .text = "Save As...", .onClick = [this]() {
+            auto res = pfd::save_file(
+                "Save Art File As...", ".",
+                { "Pixel Art File", "*.art" }
+            ).result();
+            if (!res.empty()) {
+                fileName = res;
+                auto* canvas = FindByTag<Canvas>("canvas");
+                canvas->SaveArtFile(fileName);
+                saved = true;
+            }
+        } }),
+        dc::MenuSeparator(),
+        dc::MenuItem({ .text = "Import PNG...", .onClick = [this]() {
+            auto fnOpen = [this]() {
+                auto res = pfd::open_file(
+                    "Import PNG Image", ".",
+                    { "Portable Network Graphics", "*.png" },
+                    pfd::opt::none
+                ).result();
+                if (!res.empty()) {
+                    auto* canvas = FindByTag<Canvas>("canvas");
+                    canvas->LoadFromPNG(res.front());
+                    saved = false;
+                    fileName = "";
+                }
+            };
+            if (!saved) {
+                auto res = pfd::message(
+                    "Import PNG Image",
+                    "Your current art is going to be lost. Continue?",
+                    pfd::choice::yes_no,
+                    pfd::icon::warning
+                ).result();
+                if (res == pfd::button::yes) {
+                    fnOpen();
+                }
+            } else {
+                fnOpen();
+            }
+        } }),
+        dc::MenuItem({ .text = "Export PNG...", .onClick = [this]() {
+            auto res = pfd::save_file(
+                "Export PNG Image", ".",
+                { "Portable Network Graphics", "*.png" }
+            ).result();
+            if (!res.empty()) {
+                auto* canvas = FindByTag<Canvas>("canvas");
+                canvas->SaveToPNG(res);
+            }
         } }),
         dc::MenuSeparator(),
         dc::MenuItem({ .text = "Exit", .onClick = [this]() {
@@ -690,6 +751,8 @@ void MainWindow::OnCreate() {
     auto* list = FindByTag<gui::List<gui::Image*>>("layers");
     canvas->layersOrdered.Bind(list->items);
     canvas->currentLayer.Bind(list->selectedIndex);
+
+    canvas->palette.Bind(palette->palette);
 
     canvas->LoadEmpty();
 }

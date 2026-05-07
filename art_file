@@ -1,0 +1,53 @@
+// Enter your pattern code here and click on the Play button
+// below to execute your code. The results will then be visible
+// in the Pattern Data view.
+// 
+// More information can be found in the documentation.
+// 
+// 
+// Simple example:
+// 
+// import std.io;
+// 
+// struct Pattern {
+//     u32 int;
+//     float floating_point;
+// };
+// 
+// Pattern my_pattern @ 0x00;
+// std::print("0x{:08X}", my_pattern.int);
+struct Color {
+    float r, g, b, a;
+};
+
+struct Size {
+    s32 w, h;
+};
+
+struct Point {
+    s32 x, y;
+};
+
+struct Layer<auto N> {
+    u32 id;
+    Color data[N];
+};
+
+struct Art {
+    Size imageSize;
+    
+    u32 paletteSize;
+    Color palette[paletteSize];
+    
+    u32 globalId;
+    float zoom;
+    Point viewPosition;
+    Color editorColors[2];
+    
+    u32 layerCount;
+    u32 layerOrders[layerCount];
+    
+    Layer<imageSize.w * imageSize.h> layers[layerCount];
+};
+
+Art art @ 0x00;
