@@ -37,18 +37,6 @@ private:
     std::stack<std::unique_ptr<ICommand>> m_undoStack, m_redoStack;
 };
 
-namespace algos {
-    struct Pixel {
-        gui::PointI position{0, 0};
-        gui::Color color{0, 0, 0, 0};
-    };
-
-    std::vector<Pixel> GetLine(gui::PointI a, gui::PointI b, gui::Color color);
-    std::vector<Pixel> GetQuadBezier(gui::PointI a, gui::PointI b, gui::PointI c, gui::Color color);
-    std::vector<Pixel> GetFloodFill(gui::Image& image, gui::PointI p, gui::Color color);
-    std::vector<Pixel> GetEllipse(gui::PointI center, int rx, int ry, gui::Color color);
-} // namespace algos
-
 class Canvas;
 struct Tool {
     virtual void OnMouseDown(Canvas& canvas, int x, int y) = 0;
@@ -59,9 +47,37 @@ struct Tool {
 
 struct Layer {
     uint id;
-    gui::Image image;
+
+    Layer(uint id, int width, int height);
+
+    void Present(const std::vector<gui::Color>& palette);
+    uint8_t GetPixel(int x, int y);
+    void SetPixel(int x, int y, uint8_t value);
+
+    gui::Image& GetImage() { return image; }
+    std::vector<uint8_t>& GetIndexed() { return imageIndexed; }
+
+    int GetWidth() const { return image.GetWidth(); }
+    int GetHeight() const { return image.GetHeight(); }
+
     bool operator==(const Layer& o) const { return id == o.id && image == o.image; }
+
+private:
+    gui::Image image;
+    std::vector<uint8_t> imageIndexed;
 };
+
+namespace algos {
+    struct Pixel {
+        gui::PointI position{0, 0};
+        uint8_t color{0};
+    };
+
+    std::vector<Pixel> GetLine(gui::PointI a, gui::PointI b, uint8_t color);
+    std::vector<Pixel> GetQuadBezier(gui::PointI a, gui::PointI b, gui::PointI c, uint8_t color);
+    std::vector<Pixel> GetFloodFill(Layer& layer, gui::PointI p, uint8_t color);
+    std::vector<Pixel> GetEllipse(gui::PointI center, int rx, int ry, uint8_t color);
+} // namespace algos
 
 class Canvas : public gui::Element {
 public:
@@ -98,50 +114,56 @@ public:
     void MoveLayerUp(size_t i);
     void MoveLayerDown(size_t i);
 
-    std::vector<gui::Color> ExtractPalette(uint paletteSize = 32, uint iterations = 10);
-    gui::Color GetCurrentColor() const { return secondaryColor ? colors[1]() : colors[0](); }
+    std::vector<gui::Color> ExtractPalette(
+        gui::Image& image,
+        std::vector<uint8_t>& outIndexed,
+        uint paletteSize = 32,
+        uint iterations = 10
+    );
+    uint8_t GetCurrentColor() const { return secondaryColor ? colors[1]() : colors[0](); }
+    gui::Color GetCurrentActualColor() const { return palette()[GetCurrentColor()]; }
 
-    gui::Image* GetLayerImage(uint id);
+    Layer* GetLayer(uint id);
     void RemoveLayerById(uint id);
 
     gui::Size imageSize;
     gui::Image preview;
-    gui::Property<int> currentLayer{0};
+    gui::Property<int> currentLayerIndex{0};
     gui::Property<std::vector<Layer>> layers;
     gui::Property<std::vector<uint>> layerOrders;
     gui::Property<std::vector<gui::Color>> palette;
 
-    gui::Computed<std::vector<gui::Image*>> layersOrdered = gui::Computed<std::vector<gui::Image*>>{
+    gui::Computed<std::vector<Layer*>> layersOrdered = gui::Computed<std::vector<Layer*>>{
         [this]() {
-            std::vector<gui::Image*> ret;
+            std::vector<Layer*> ret;
             ret.reserve(layers.Size());
             for (auto index : layerOrders()) {
-                ret.push_back(&layers[index].image);
+                ret.push_back(&layers[index]);
             }
             return ret;
         },
         layers,
         layerOrders
     };
-    gui::Computed<gui::Image*> currentImage = gui::Computed<gui::Image*>{
-        [this]() -> gui::Image* {
-            int idx = currentLayer();
+    gui::Computed<Layer*> currentLayer = gui::Computed<Layer*>{
+        [this]() -> Layer* {
+            int idx = currentLayerIndex();
             if (idx < 0 || static_cast<size_t>(idx) >= layersOrdered.Size())
                 return nullptr;
             return layersOrdered[idx];
         },
-        currentLayer,
+        currentLayerIndex,
         layers,
         layerOrders
     };
     gui::Computed<uint> currentLayerId = gui::Computed<uint>{
         [this]() -> uint {
-            int idx = currentLayer();
+            int idx = currentLayerIndex();
             if (layers.Size() == 0 || idx < 0 || static_cast<size_t>(idx) >= layerOrders.Size())
                 return 0;
             return layers[layerOrders[idx]].id;
         },
-        currentLayer,
+        currentLayerIndex,
         layers,
         layerOrders
     };
@@ -150,12 +172,9 @@ public:
     std::array<std::unique_ptr<Tool>, 7> tools;
 
     bool dragging{false}, toolActive{false}, shiftPressed{false}, secondaryColor{false};
-    float zoom{1.0f};
+    gui::Property<float> zoom{1.0f};
     gui::PointI viewPosition{0, 0}, prevMouse{0, 0};
-    gui::Property<gui::Color> colors[2] = {
-        gui::Color::FromHex("#000"),
-        gui::Color::FromHex("#FFF")
-    };
+    gui::Property<uint8_t> colors[2] = {0, 1};
 
     UndoRedo undoRedo;
     VoidCallback onImageChanged;
@@ -170,7 +189,7 @@ struct CanvasProps {
 
 struct PencilTool : public Tool {
     PencilTool() = default;
-    PencilTool(const gui::Color& colorOverride)
+    PencilTool(uint8_t colorOverride)
         : colorOverride(colorOverride) {}
 
     void OnMouseDown(Canvas& canvas, int x, int y) override;
@@ -179,7 +198,7 @@ struct PencilTool : public Tool {
 
     gui::PointI prev{0, 0};
     std::vector<algos::Pixel> buffer;
-    std::optional<gui::Color> colorOverride{std::nullopt};
+    std::optional<uint8_t> colorOverride{std::nullopt};
 };
 
 struct CurveTool : public Tool {
@@ -205,7 +224,7 @@ struct RectTool : public Tool {
     void OnMouseDrag(Canvas& canvas, int x, int y) override;
     void OnMouseUp(Canvas& canvas, int x, int y) override;
 
-    std::vector<algos::Pixel> BuildRect(gui::PointI p1, gui::Color col, bool fromCenter = false);
+    std::vector<algos::Pixel> BuildRect(gui::PointI p1, uint8_t col, bool fromCenter = false);
 
     gui::PointI p0{0, 0}, p1{0, 0};
 };
@@ -215,7 +234,7 @@ struct EllipseTool : public Tool {
     void OnMouseDrag(Canvas& canvas, int x, int y) override;
     void OnMouseUp(Canvas& canvas, int x, int y) override;
 
-    std::vector<algos::Pixel> BuildEllipse(gui::PointI p1, gui::Color col, bool fromCenter);
+    std::vector<algos::Pixel> BuildEllipse(gui::PointI p1, uint8_t col, bool fromCenter);
 
     gui::PointI p0{0, 0};
 };
@@ -242,7 +261,7 @@ struct CmdDeleteLayer : public ICommand {
 
     uint id, index;
     uint savedCurrentLayer;
-    std::vector<gui::Color> data;
+    std::vector<uint8_t> data;
 };
 
 struct CmdNewLayer : public ICommand {

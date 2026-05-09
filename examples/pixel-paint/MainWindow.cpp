@@ -41,7 +41,9 @@ public:
 class PaletteSelector : public gui::Element {
 public:
     PaletteSelector()
-        : gui::Element() {}
+        : gui::Element() {
+        palette.PushBack(gui::Color{0, 0, 0, 0});
+    }
 
     void OnDraw(gui::Graphics& g) override {
         auto fnDrawBlock = [&g](int x, int y, int size, bool selected, const gui::Color& col) {
@@ -110,6 +112,8 @@ public:
             }
             if (gui::Rectangle{x, y, cellSize, cellSize}.HasPoint(e.x, e.y)) {
                 selected = index;
+                if (m_onSelect)
+                    m_onSelect(selected());
                 break;
             }
             x += cellSize;
@@ -126,13 +130,14 @@ public:
         if (index == (size_t)-1)
             return;
         palette.EraseAt(index);
-        selected = index == selected() ? -1 : selected();
+        selected = index == selected() ? 0 : selected();
         Invalidate();
     }
 
     void Clear() {
         palette.Clear();
-        selected = -1;
+        palette.PushBack(gui::Color{0, 0, 0, 0});
+        selected = 0;
         Invalidate();
     }
 
@@ -143,29 +148,19 @@ public:
         return {cellSize * cellsPerRow, cellSize * rowCount};
     }
 
-    void SetOnSelect(ValueChanged<gui::Color> onSelect) { m_onSelect = onSelect; }
+    void SetOnSelect(ValueChanged<uint8_t> onSelect) { m_onSelect = onSelect; }
 
-    gui::Property<int> selected{-1};
-    gui::Computed<gui::Color> selectedColor{gui::Computed<gui::Color>(
-        [this]() {
-            if (selected() < 0)
-                return gui::Color{0, 0, 0, 1};
-            return palette[selected()];
-        },
-        selected,
-        palette
-    )};
-
+    gui::Property<uint8_t> selected{0};
     gui::Property<std::vector<gui::Color>> palette;
 
 private:
     const int cellSize = 24;
-    ValueChanged<gui::Color> m_onSelect;
+    ValueChanged<uint8_t> m_onSelect;
 };
 
 struct PaletteSelectorProps {
     dc::opt<dc::ElementProps> base{std::nullopt};
-    dc::opt<ValueChanged<gui::Color>> onSelect{std::nullopt};
+    dc::opt<ValueChanged<uint8_t>> onSelect{std::nullopt};
 };
 
 MainWindow::MainWindow()
@@ -356,6 +351,7 @@ dc::WidgetDesc MainWindow::OnBuild() {
                 .onClick = [this]() {
                     auto* picker = FindByTag<gui::ColorPicker>("picker");
                     auto* palette = FindByTag<PaletteSelector>("palette");
+                    if (palette->palette.Size() >= 256) return;
                     palette->Add(picker->selected());
                 },
             }),
@@ -367,6 +363,7 @@ dc::WidgetDesc MainWindow::OnBuild() {
                 .icon = &icons[icRemove],
                 .onClick = [this]() {
                     auto* palette = FindByTag<PaletteSelector>("palette");
+                    if (palette->selected() == 0) return;
                     palette->Remove(palette->selected());
                 },
             }),
@@ -376,7 +373,7 @@ dc::WidgetDesc MainWindow::OnBuild() {
                 .tag = "palette",
                 .autoSize = true,
             },
-            .onSelect = [this](gui::Color color) {
+            .onSelect = [this](uint8_t color) {
                 if (FindByTag<PaletteSelector>("palette")->selected() < 0) return;
                 auto* canvas = FindByTag<Canvas>("canvas");
                 canvas->colors[0] = color;
@@ -426,7 +423,7 @@ dc::WidgetDesc MainWindow::OnBuild() {
                 },
                 .icon = &icons[icTrash],
                 .onClick = [this]() {
-                    auto* layers = FindByTag<gui::List<gui::Image*>>("layers");
+                    auto* layers = FindByTag<gui::List<Layer*>>("layers");
                     if (layers->selectedIndex() < 0) return;
 
                     auto* canvas = FindByTag<Canvas>("canvas");
@@ -440,7 +437,7 @@ dc::WidgetDesc MainWindow::OnBuild() {
                 },
                 .icon = &icons[icUp],
                 .onClick = [this]() {
-                    auto* layers = FindByTag<gui::List<gui::Image*>>("layers");
+                    auto* layers = FindByTag<gui::List<Layer*>>("layers");
                     if (layers->selectedIndex() < 0) return;
 
                     auto* canvas = FindByTag<Canvas>("canvas");
@@ -454,7 +451,7 @@ dc::WidgetDesc MainWindow::OnBuild() {
                 },
                 .icon = &icons[icDown],
                 .onClick = [this]() {
-                    auto* layers = FindByTag<gui::List<gui::Image*>>("layers");
+                    auto* layers = FindByTag<gui::List<Layer*>>("layers");
                     if (layers->selectedIndex() < 0) return;
 
                     auto* canvas = FindByTag<Canvas>("canvas");
@@ -462,7 +459,7 @@ dc::WidgetDesc MainWindow::OnBuild() {
                 },
             }),
         }),
-        dc::List<gui::Image*>({
+        dc::List<Layer*>({
             .base = dc::ElementProps{
                 .tag = "layers",
                 .flexGrow = 1.0f,
@@ -474,11 +471,11 @@ dc::WidgetDesc MainWindow::OnBuild() {
                 })"),
             },
             .selectedIndex = 0,
-            .labelBuilder = [](uint index, gui::Image* image) {
+            .labelBuilder = [](uint index, Layer* layer) {
                 return "Layer " + std::to_string(index + 1);
             },
-            .iconBuilder = [](uint index, gui::Image* image) {
-                return image;
+            .iconBuilder = [](uint index, Layer* layer) {
+                return &layer->GetImage();
             },
         }),
     });
@@ -713,10 +710,6 @@ dc::WidgetDesc MainWindow::OnBuild() {
                             .tag = "picker",
                             .bounds = gui::Rectangle::FromSize(150, 200),
                         },
-                        .onChange = [this](gui::Color color) {
-                            auto* canvas = FindByTag<Canvas>("canvas");
-                            canvas->colors[0] = color;
-                        },
                     }),
                     colorSelectionArea,
                     colorPaletteArea,
@@ -742,17 +735,19 @@ void MainWindow::OnCreate() {
     auto* picker = FindByTag<gui::ColorPicker>("picker");
     auto* palette = FindByTag<PaletteSelector>("palette");
 
-    picker->selected.Bind(canvas->colors[0]);
-    palette->selectedColor.Bind(canvas->colors[0]);
+    palette->selected.Bind(canvas->colors[0]);
+    palette->palette.Bind(canvas->palette);
 
-    canvas->colors[0].Bind(colorView0->color);
-    canvas->colors[1].Bind(colorView1->color);
+    canvas->colors[0].Bind([canvas, colorView0](const uint8_t& v) {
+        colorView0->color = canvas->palette[v];
+    });
+    canvas->colors[1].Bind([canvas, colorView1](const uint8_t& v) {
+        colorView1->color = canvas->palette[v];
+    });
 
-    auto* list = FindByTag<gui::List<gui::Image*>>("layers");
+    auto* list = FindByTag<gui::List<Layer*>>("layers");
     canvas->layersOrdered.Bind(list->items);
-    canvas->currentLayer.Bind(list->selectedIndex);
-
-    canvas->palette.Bind(palette->palette);
+    canvas->currentLayerIndex.Bind(list->selectedIndex);
 
     canvas->LoadEmpty();
 }

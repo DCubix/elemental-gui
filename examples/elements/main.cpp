@@ -100,7 +100,7 @@ public:
                 dec::Text("List", sectionTextProps),
                 dec::BasicList(dec::BasicListProps{
                     .base = dec::ElementProps{ .flexGrow = 1.0f },
-                    .items = {
+                    .items = std::vector<std::string>{
                         "Item 1",
                         "Item 2",
                         "Item 3",
@@ -233,7 +233,7 @@ public:
                     dec::Text("Sliders", sectionTextProps),
                     dec::Slider(dec::SliderProps{
                         .direction = Direction::Horizontal,
-                        .range = {0, 100},
+                        .range = utils::Range{0, 100},
                         .value = 50,
                         .onValueChange = [](float value) {
                             printf("Slider value: %.2f\n", value);
@@ -249,10 +249,10 @@ public:
                         dec::Slider(dec::SliderProps{
                             .base = dec::ElementProps{
                                 .autoSize = true,
-                                .bounds = {0, 0, 30, 100},
+                                .bounds = Rectangle{0, 0, 30, 100},
                             },
                             .direction = Direction::Vertical,
-                            .range = {0, 100},
+                            .range = utils::Range{0, 100},
                             .value = 25,
                             .onValueChange = [](float value) {
                                 printf("Vertical slider value: %.2f\n", value);
@@ -261,10 +261,10 @@ public:
                         dec::Slider(dec::SliderProps{
                             .base = dec::ElementProps{
                                 .autoSize = true,
-                                .bounds = {0, 0, 30, 100},
+                                .bounds = Rectangle{0, 0, 30, 100},
                             },
                             .direction = Direction::Vertical,
-                            .range = {0, 100},
+                            .range = utils::Range{0, 100},
                             .value = 50,
                             .onValueChange = [](float value) {
                                 printf("Vertical slider value: %.2f\n", value);
@@ -273,10 +273,10 @@ public:
                         dec::Slider(dec::SliderProps{
                             .base = dec::ElementProps{
                                 .autoSize = true,
-                                .bounds = {0, 0, 30, 100},
+                                .bounds = Rectangle{0, 0, 30, 100},
                             },
                             .direction = Direction::Vertical,
-                            .range = {0, 100},
+                            .range = utils::Range{0, 100},
                             .value = 75,
                             .onValueChange = [](float value) {
                                 printf("Vertical slider value: %.2f\n", value);

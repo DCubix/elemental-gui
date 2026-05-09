@@ -8,3 +8,5 @@
 *.png
 src/generated/
 .cache/
+callgrind.out
+*.hexproj*

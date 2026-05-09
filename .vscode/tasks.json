@@ -1,0 +1,26 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Profile",
+            "type": "shell",
+            "command": "valgrind",
+            "args": [
+                "--tool=callgrind",
+                "--callgrind-out-file=${workspaceFolder}/callgrind.out",
+                "--cache-sim=yes",
+                "--branch-sim=yes",
+                "${command:cmake.launchTargetPath}"
+            ],
+            "group": "test",
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}/examples/assets"
+            },
+            "problemMatcher": []
+        }
+    ]
+}

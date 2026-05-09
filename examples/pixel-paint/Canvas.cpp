@@ -12,19 +12,18 @@ Canvas::Canvas()
     imageSize = {64, 64};
     preview = gui::Image(imageSize.w, imageSize.h);
     layerOrders.PushBack(0);
-    layers.PushBack(
-        Layer{globalIdCounter++, gui::Image(imageSize.w, imageSize.h)}
-    ); // Defaylt layer 0
+    layers.PushBack(Layer(globalIdCounter++, imageSize.w, imageSize.h)); // Defaylt layer 0
     undoRedo = UndoRedo(this);
 
     tools[static_cast<size_t>(ToolType::Pencil)] = std::make_unique<PencilTool>();
     tools[static_cast<size_t>(ToolType::Curve)] = std::make_unique<CurveTool>();
     tools[static_cast<size_t>(ToolType::Fill)] = std::make_unique<FillTool>();
-    tools[static_cast<size_t>(ToolType::Eraser)] =
-        std::make_unique<PencilTool>(gui::Color{0, 0, 0, 0});
+    tools[static_cast<size_t>(ToolType::Eraser)] = std::make_unique<PencilTool>(0);
     tools[static_cast<size_t>(ToolType::Eyedrop)] = std::make_unique<PickerTool>();
     tools[static_cast<size_t>(ToolType::Square)] = std::make_unique<RectTool>();
     tools[static_cast<size_t>(ToolType::Circle)] = std::make_unique<EllipseTool>();
+
+    zoom.SetOnUpdate([this]() { Reposition(); });
 }
 
 void Canvas::OnDraw(gui::Graphics& g) {
@@ -41,21 +40,21 @@ void Canvas::OnDraw(gui::Graphics& g) {
 
     for (size_t i = layersOrdered.Size(); i-- > 0;) {
         auto* layer = layersOrdered[i];
-        g.DrawImage(layer, 0, 0, b.w, b.h, gui::ImageFiltering::Nearest);
+        g.DrawImage(&layer->GetImage(), 0, 0, b.w, b.h, gui::ImageFiltering::Nearest);
     }
 
     if (toolActive) {
         g.DrawImage(&preview, 0, 0, b.w, b.h, gui::ImageFiltering::Nearest);
     }
 
-    if (zoom >= 3.0f) {
+    if (zoom() >= 3.0f) {
         auto sz = imageSize;
         g.Color(0.5f, 0.5f, 0.5f, 0.4f);
         g.LineWidth(1.0f);
         for (int x = 1; x < sz.w; x++)
-            g.Line(x * zoom, 0, x * zoom, b.h);
+            g.Line(x * zoom(), 0, x * zoom(), b.h);
         for (int y = 1; y < sz.h; y++)
-            g.Line(0, y * zoom, b.w, y * zoom);
+            g.Line(0, y * zoom(), b.w, y * zoom());
         g.Stroke();
     }
 
@@ -76,7 +75,7 @@ void Canvas::OnMouseDown(gui::MouseEvent e) {
     toolActive = true;
     if (e.button != gui::MouseButton::Middle) {
         auto& tool = tools[static_cast<size_t>(selectedTool)];
-        tool->OnMouseDown(*this, ZoomCoord(e.x, zoom), ZoomCoord(e.y, zoom));
+        tool->OnMouseDown(*this, ZoomCoord(e.x, zoom()), ZoomCoord(e.y, zoom()));
         Invalidate();
     }
 }
@@ -86,7 +85,7 @@ void Canvas::OnMouseMove(gui::MotionEvent e) {
 
     if (dragging) {
         if (e.button != gui::MouseButton::Middle) {
-            tool->OnMouseDrag(*this, ZoomCoord(e.x, zoom), ZoomCoord(e.y, zoom));
+            tool->OnMouseDrag(*this, ZoomCoord(e.x, zoom()), ZoomCoord(e.y, zoom()));
             Invalidate();
         } else {
             auto b = GetBounds();
@@ -99,27 +98,27 @@ void Canvas::OnMouseMove(gui::MotionEvent e) {
             Reposition();
         }
     } else {
-        tool->OnMouseMove(*this, ZoomCoord(e.x, zoom), ZoomCoord(e.y, zoom));
+        tool->OnMouseMove(*this, ZoomCoord(e.x, zoom()), ZoomCoord(e.y, zoom()));
         Invalidate();
     }
 }
 
 void Canvas::OnMouseUp(gui::MouseEvent e) {
     auto& tool = tools[static_cast<size_t>(selectedTool)];
-    tool->OnMouseUp(*this, ZoomCoord(e.x, zoom), ZoomCoord(e.y, zoom));
+    tool->OnMouseUp(*this, ZoomCoord(e.x, zoom()), ZoomCoord(e.y, zoom()));
     dragging = false;
     Invalidate();
 }
 
 void Canvas::OnScroll(gui::ScrollEvent e) {
-    float oldZoom = zoom;
+    float oldZoom = zoom();
     zoom += e.scrollY * 0.2f;
-    zoom = std::clamp(zoom, 1.0f, 20.0f);
+    zoom = std::clamp(zoom(), 1.0f, 20.0f);
 
     auto sz = imageSize;
     float imgX = static_cast<float>(e.mouseX) / oldZoom;
     float imgY = static_cast<float>(e.mouseY) / oldZoom;
-    float dz = zoom - oldZoom;
+    float dz = zoom() - oldZoom;
     viewPosition.x += static_cast<int>(dz * (static_cast<float>(sz.w) / 2.0f - imgX));
     viewPosition.y += static_cast<int>(dz * (static_cast<float>(sz.h) / 2.0f - imgY));
 
@@ -145,8 +144,8 @@ void Canvas::OnKeyUp(gui::KeyEvent e) {
 gui::Size Canvas::GetPreferredSize() const {
     auto sz = imageSize;
     return {
-        static_cast<int>(static_cast<float>(sz.w) * zoom),
-        static_cast<int>(static_cast<float>(sz.h) * zoom),
+        static_cast<int>(static_cast<float>(sz.w) * zoom()),
+        static_cast<int>(static_cast<float>(sz.h) * zoom()),
     };
 }
 
@@ -172,7 +171,7 @@ void Canvas::Preview(const std::vector<algos::Pixel>& data) {
     }
 
     for (auto px : data) {
-        preview.SetPixel(px.position.x, px.position.y, px.color);
+        preview.SetPixel(px.position.x, px.position.y, palette[px.color]);
     }
     preview.Unlock();
     Invalidate();
@@ -185,6 +184,7 @@ void Canvas::Draw(const std::vector<algos::Pixel>& data) {
     undoRedo.Run(cmd);
     if (onImageChanged)
         onImageChanged();
+    currentLayer()->Present(palette());
     Invalidate();
 }
 
@@ -234,18 +234,15 @@ void Canvas::LoadArtFile(const std::string& fileName) {
 
     // Canvas specific
     fnRead(globalIdCounter);
-    fnRead(zoom);
+
+    fnReadV(float, zoomTmp);
+    zoom = zoomTmp;
+
     fnRead(viewPosition.x);
     fnRead(viewPosition.y);
 
-    fnRead(colors[0]().r);
-    fnRead(colors[0]().g);
-    fnRead(colors[0]().b);
-    fnRead(colors[0]().a);
-    fnRead(colors[1]().r);
-    fnRead(colors[1]().g);
-    fnRead(colors[1]().b);
-    fnRead(colors[1]().a);
+    fnRead(colors[0]());
+    fnRead(colors[1]());
 
     // Layer ordering
     fnReadV(uint, layerCount);
@@ -258,21 +255,17 @@ void Canvas::LoadArtFile(const std::string& fileName) {
     for (uint i = 0; i < layerCount; i++) {
         fnReadV(uint, id);
 
-        layers.PushBack(Layer{id, gui::Image(imageSize.w, imageSize.h)});
+        layers.PushBack(Layer(id, imageSize.w, imageSize.h));
 
-        gui::Image& img = layers[layers.Size() - 1].image;
-        img.Lock();
+        auto& layer = layers[layers.Size() - 1];
+        auto& indexed = layer.GetIndexed();
         for (int y = 0; y < imageSize.h; y++) {
             for (int x = 0; x < imageSize.w; x++) {
-                gui::Color color{};
-                fnRead(color.r);
-                fnRead(color.g);
-                fnRead(color.b);
-                fnRead(color.a);
-                img.SetPixel(x, y, color);
+                fnReadV(uint8_t, v);
+                indexed[x + y * imageSize.w] = v;
             }
         }
-        img.Unlock();
+        layer.Present(palette());
     }
 #undef fnReadV
 
@@ -286,9 +279,17 @@ void Canvas::LoadFromPNG(const std::string& fileName) {
     globalIdCounter = 0;
     layerOrders.Clear();
     layers.Clear();
+    palette.Clear();
+    palette.PushBack(gui::Color{0, 0, 0, 0});
     layerOrders.PushBack(0);
-    layers.PushBack(Layer{globalIdCounter++, gui::Image(imageSize.w, imageSize.h)});
+    layers.PushBack(Layer(globalIdCounter++, imageSize.w, imageSize.h));
     preview.Resize(img.GetWidth(), img.GetHeight());
+
+    auto newPalette = ExtractPalette(img, layers[0].GetIndexed());
+    for (auto col : newPalette) {
+        palette.PushBack(col);
+    }
+
     zoom = 1.0f;
     viewPosition = {0, 0};
 
@@ -296,20 +297,7 @@ void Canvas::LoadFromPNG(const std::string& fileName) {
 
     Reposition();
 
-    auto& image = layers[0].image;
-    img.Lock();
-    image.Lock();
-    for (int y = 0; y < img.GetHeight(); y++)
-        for (int x = 0; x < img.GetWidth(); x++) {
-            image.SetPixel(x, y, img.GetPixel(x, y));
-        }
-    image.Unlock();
-    img.Unlock();
-
-    palette.Clear();
-    for (auto col : ExtractPalette()) {
-        palette.PushBack(col);
-    }
+    layers[0].Present(palette());
 
     Invalidate();
 }
@@ -320,7 +308,11 @@ void Canvas::LoadEmpty() {
     globalIdCounter = 0;
     layers.Clear();
     layerOrders.Clear();
-    layers.PushBack(Layer{globalIdCounter++, gui::Image(imageSize.w, imageSize.h)});
+    palette.Clear();
+    palette.PushBack(gui::Color{0, 0, 0, 0});
+    palette.PushBack(gui::Color{0, 0, 0, 1});
+    palette.PushBack(gui::Color{1, 1, 1, 1});
+    layers.PushBack(Layer(globalIdCounter++, imageSize.w, imageSize.h));
     layerOrders.PushBack(0);
     preview.Resize(imageSize.w, imageSize.h);
     zoom = 1.0f;
@@ -330,13 +322,7 @@ void Canvas::LoadEmpty() {
 
     Reposition();
 
-    auto& image = layers[0].image;
-    image.Lock();
-    for (int y = 0; y < image.GetHeight(); y++)
-        for (int x = 0; x < image.GetWidth(); x++) {
-            image.SetPixel(x, y, gui::Color{0, 0, 0, 0});
-        }
-    image.Unlock();
+    layers[0].Present(palette());
 
     Invalidate();
 }
@@ -346,7 +332,15 @@ void Canvas::SaveToPNG(const std::string& fileName) {
     gui::Graphics g = gui::Graphics::CreateGraphics(img);
     for (size_t i = layersOrdered.Size(); i-- > 0;) {
         auto* layer = layersOrdered[i];
-        g.DrawImage(layer, 0, 0, imageSize.w, imageSize.h, gui::ImageFiltering::Nearest);
+        layer->Present(palette());
+        g.DrawImage(
+            &layer->GetImage(),
+            0,
+            0,
+            imageSize.w,
+            imageSize.h,
+            gui::ImageFiltering::Nearest
+        );
     }
     img.WriteToPNG(fileName);
 }
@@ -375,18 +369,12 @@ void Canvas::SaveArtFile(const std::string& fileName) {
 
     // Canvas specific
     fnWrite(globalIdCounter);
-    fnWrite(zoom);
+    fnWrite(zoom());
     fnWrite(viewPosition.x);
     fnWrite(viewPosition.y);
 
-    fnWrite(colors[0]().r);
-    fnWrite(colors[0]().g);
-    fnWrite(colors[0]().b);
-    fnWrite(colors[0]().a);
-    fnWrite(colors[1]().r);
-    fnWrite(colors[1]().g);
-    fnWrite(colors[1]().b);
-    fnWrite(colors[1]().a);
+    fnWrite(colors[0]());
+    fnWrite(colors[1]());
 
     // Layer ordering
     fnWrite(static_cast<uint>(layerOrders.Size()));
@@ -400,17 +388,11 @@ void Canvas::SaveArtFile(const std::string& fileName) {
         fnWrite(layer.id);
 
         // Pixels
-        layer.image.Lock();
         for (int y = 0; y < imageSize.h; y++) {
             for (int x = 0; x < imageSize.w; x++) {
-                auto color = layer.image.GetPixel(x, y);
-                fnWrite(color.r);
-                fnWrite(color.g);
-                fnWrite(color.b);
-                fnWrite(color.a);
+                fnWrite(layer.GetIndexed()[x + y * imageSize.w]);
             }
         }
-        layer.image.Unlock();
     }
 
     fs.close();
@@ -453,8 +435,12 @@ void Canvas::MoveLayerDown(size_t i) {
     undoRedo.Run(cmd);
 }
 
-std::vector<gui::Color> Canvas::ExtractPalette(uint paletteSize, uint iterations) {
-    auto& image = layers[0].image;
+std::vector<gui::Color> Canvas::ExtractPalette(
+    gui::Image& image,
+    std::vector<uint8_t>& outIndexed,
+    uint paletteSize,
+    uint iterations
+) {
     image.Lock();
     std::vector<gui::Color> centers(paletteSize);
     for (int i = 0; i < paletteSize; ++i)
@@ -514,10 +500,14 @@ std::vector<gui::Color> Canvas::ExtractPalette(uint paletteSize, uint iterations
     for (int i = 0; i < paletteSize; ++i)
         uniqueColors.insert(centers[i]);
 
-    auto fnClosestColor = [&uniqueColors](const gui::Color& col) -> gui::Color {
+    std::vector<gui::Color> pal = std::vector<gui::Color>(uniqueColors.begin(), uniqueColors.end());
+
+    auto fnClosestColor = [&pal](const gui::Color& col, uint8_t& index) -> gui::Color {
         float dist = 9999.0f;
         gui::Color selected{0, 0, 0, 0};
-        for (const auto& palCol : uniqueColors) {
+        uint8_t bestIndex = 0;
+        for (size_t i = 0; i < pal.size(); i++) {
+            const auto& palCol = pal[i];
             float dr = col.r - palCol.r;
             float dg = col.g - palCol.g;
             float db = col.b - palCol.b;
@@ -526,26 +516,30 @@ std::vector<gui::Color> Canvas::ExtractPalette(uint paletteSize, uint iterations
             if (d < dist) {
                 dist = d;
                 selected = palCol;
+                bestIndex = (uint8_t)i;
             }
         }
+        index = bestIndex;
         return selected;
     };
 
     for (int i = 0; i < int(pixelCount); i++) {
         int x = i % image.GetWidth();
         int y = i / image.GetWidth();
-        auto col = fnClosestColor(image.GetPixel(x, y));
+        uint8_t index = 0;
+        auto col = fnClosestColor(image.GetPixel(x, y), index);
         image.SetPixel(x, y, col);
+        outIndexed[i] = index + 1; // palette[0] is always present and = transparent.
     }
     image.Unlock();
 
-    return std::vector<gui::Color>(uniqueColors.begin(), uniqueColors.end());
+    return pal;
 }
 
-gui::Image* Canvas::GetLayerImage(uint id) {
+Layer* Canvas::GetLayer(uint id) {
     for (auto& layer : layers.Get()) {
         if (layer.id == id)
-            return &layer.image;
+            return &layer;
     }
     return nullptr;
 }
@@ -587,13 +581,9 @@ void PencilTool::OnMouseDown(Canvas& canvas, int x, int y) {
 
 void PencilTool::OnMouseDrag(Canvas& canvas, int x, int y) {
     if (canvas.shiftPressed) {
-        gui::Color color{};
+        uint8_t color{};
         if (colorOverride.has_value()) {
-            if (colorOverride.value().a > 0.001f) {
-                color = colorOverride.value();
-            } else {
-                color = gui::Color::FromHex("#F00");
-            }
+            color = colorOverride.value();
         } else {
             color = canvas.GetCurrentColor();
         }
@@ -652,7 +642,7 @@ void CurveTool::OnMouseUp(Canvas& canvas, int x, int y) {
 }
 
 namespace algos {
-    std::vector<Pixel> GetLine(gui::PointI a, gui::PointI b, gui::Color color) {
+    std::vector<Pixel> GetLine(gui::PointI a, gui::PointI b, uint8_t color) {
         std::vector<Pixel> ret;
 
         gui::PointI diff = (b - a).Abs();
@@ -678,8 +668,7 @@ namespace algos {
         return ret;
     }
 
-    std::vector<Pixel>
-    GetQuadBezier(gui::PointI a, gui::PointI b, gui::PointI c, gui::Color color) {
+    std::vector<Pixel> GetQuadBezier(gui::PointI a, gui::PointI b, gui::PointI c, uint8_t color) {
         std::vector<Pixel> ret;
         int steps = std::max(5, (gui::PointI(c - a).GetLength() / 2));
 
@@ -706,10 +695,10 @@ namespace algos {
         return ret;
     }
 
-    std::vector<Pixel> GetFloodFill(gui::Image& image, gui::PointI p, gui::Color color) {
-        int w = image.GetWidth(), h = image.GetHeight();
+    std::vector<Pixel> GetFloodFill(Layer& layer, gui::PointI p, uint8_t color) {
+        int w = layer.GetWidth(), h = layer.GetHeight();
 
-        std::unordered_map<int, gui::Color> grid;
+        std::unordered_map<int, uint8_t> grid;
         grid.reserve(w * h);
 
         std::vector<algos::Pixel> ret;
@@ -725,13 +714,12 @@ namespace algos {
             {-1, 0},
         };
 
-        image.Lock();
-        const auto target = image.GetPixel(p.x, p.y);
+        const auto target = layer.GetPixel(p.x, p.y);
 
         // copy image pixels
         for (int y = 0; y < h; y++) {
             for (int x = 0; x < w; x++) {
-                grid[x + y * w] = image.GetPixel(x, y);
+                grid[x + y * w] = layer.GetPixel(x, y);
             }
         }
 
@@ -752,12 +740,11 @@ namespace algos {
             for (size_t i = 0; i < 4; i++)
                 stk.push(cp + dirs[i]);
         }
-        image.Unlock();
 
         return ret;
     }
 
-    std::vector<Pixel> GetEllipse(gui::PointI center, int rx, int ry, gui::Color color) {
+    std::vector<Pixel> GetEllipse(gui::PointI center, int rx, int ry, uint8_t color) {
         std::vector<Pixel> ret;
 
         auto plot4 = [&](int x, int y) {
@@ -848,8 +835,7 @@ void EllipseTool::OnMouseUp(Canvas& canvas, int x, int y) {
     canvas.toolActive = false;
 }
 
-std::vector<algos::Pixel>
-EllipseTool::BuildEllipse(gui::PointI p1, gui::Color col, bool fromCenter) {
+std::vector<algos::Pixel> EllipseTool::BuildEllipse(gui::PointI p1, uint8_t col, bool fromCenter) {
     gui::PointI center;
     int rx, ry;
     if (fromCenter) {
@@ -865,7 +851,7 @@ EllipseTool::BuildEllipse(gui::PointI p1, gui::Color col, bool fromCenter) {
 }
 
 void FillTool::OnMouseDown(Canvas& canvas, int x, int y) {
-    canvas.Draw(algos::GetFloodFill(*canvas.currentImage(), {x, y}, canvas.GetCurrentColor()));
+    canvas.Draw(algos::GetFloodFill(*canvas.currentLayer(), {x, y}, canvas.GetCurrentColor()));
     canvas.toolActive = false;
 }
 
@@ -912,8 +898,7 @@ bool UndoRedo::CanRedo() const {
 void CmdDrawPixels::Execute(Canvas& canvas) {
     previousData.reserve(data.size());
 
-    auto* target = canvas.GetLayerImage(targetId);
-    target->Lock();
+    auto* target = canvas.GetLayer(targetId);
     for (auto px : data) {
         auto prev = target->GetPixel(px.position.x, px.position.y);
         previousData.push_back({px.position, prev});
@@ -921,27 +906,24 @@ void CmdDrawPixels::Execute(Canvas& canvas) {
     for (auto px : data) {
         target->SetPixel(px.position.x, px.position.y, px.color);
     }
-    target->Unlock();
+    target->Present(canvas.palette());
 }
 
 void CmdDrawPixels::Undo(Canvas& canvas) {
-    auto* target = canvas.GetLayerImage(targetId);
-    target->Lock();
+    auto* target = canvas.GetLayer(targetId);
     for (auto px : previousData) {
         target->SetPixel(px.position.x, px.position.y, px.color);
     }
-    target->Unlock();
     previousData.clear();
+    target->Present(canvas.palette());
 }
 
 void PickerTool::OnMouseDown(Canvas& canvas, int x, int y) {
-    auto* img = canvas.currentImage();
-    img->Lock();
+    auto* layer = canvas.currentLayer();
     if (!canvas.secondaryColor)
-        canvas.colors[0] = img->GetPixel(x, y);
+        canvas.colors[0] = layer->GetPixel(x, y);
     else
-        canvas.colors[1] = img->GetPixel(x, y);
-    img->Unlock();
+        canvas.colors[1] = layer->GetPixel(x, y);
     canvas.toolActive = false;
 }
 
@@ -962,7 +944,7 @@ void RectTool::OnMouseUp(Canvas& canvas, int x, int y) {
     canvas.toolActive = false;
 }
 
-std::vector<algos::Pixel> RectTool::BuildRect(gui::PointI p1, gui::Color col, bool fromCenter) {
+std::vector<algos::Pixel> RectTool::BuildRect(gui::PointI p1, uint8_t col, bool fromCenter) {
     std::vector<algos::Pixel> ret;
 
     gui::PointI tl, br;
@@ -1004,58 +986,80 @@ void CmdMoveLayer::Undo(Canvas& canvas) {
 }
 
 void CmdDeleteLayer::Execute(Canvas& canvas) {
-    auto* layer = canvas.GetLayerImage(id);
+    auto* layer = canvas.GetLayer(id);
 
     data.clear();
     data.reserve(layer->GetWidth() * layer->GetHeight());
 
     // Save old image
-    layer->Lock();
     for (uint y = 0; y < layer->GetHeight(); y++) {
         for (uint x = 0; x < layer->GetWidth(); x++) {
             data.push_back(layer->GetPixel(x, y));
         }
     }
-    layer->Unlock();
 
-    savedCurrentLayer = canvas.currentLayer();
+    savedCurrentLayer = canvas.currentLayerIndex();
 
     canvas.RemoveLayerById(id);
-    canvas.currentLayer = canvas.currentLayer() >= canvas.layers.Size() ? canvas.layers.Size() - 1
-                          : canvas.currentLayer() > 0                   ? canvas.currentLayer() - 1
-                                                                        : 0;
+    canvas.currentLayerIndex = canvas.currentLayerIndex() >= canvas.layers.Size()
+                                   ? canvas.layers.Size() - 1
+                               : canvas.currentLayerIndex() > 0 ? canvas.currentLayerIndex() - 1
+                                                                : 0;
 }
 
 void CmdDeleteLayer::Undo(Canvas& canvas) {
-    canvas.layers.PushBack(Layer{id, gui::Image(canvas.imageSize.w, canvas.imageSize.h)});
+    canvas.layers.PushBack(Layer(id, canvas.imageSize.w, canvas.imageSize.h));
     canvas.layerOrders.Insert(index, canvas.layers.Size() - 1);
 
-    auto* layer = canvas.GetLayerImage(id);
-    layer->Lock();
+    auto* layer = canvas.GetLayer(id);
     for (uint y = 0; y < layer->GetHeight(); y++) {
         for (uint x = 0; x < layer->GetWidth(); x++) {
             auto pixel = data[x + y * layer->GetWidth()];
             layer->SetPixel(x, y, pixel);
         }
     }
-    layer->Unlock();
 
-    canvas.currentLayer = savedCurrentLayer;
+    canvas.currentLayerIndex = savedCurrentLayer;
 }
 
 void CmdNewLayer::Execute(Canvas& canvas) {
-    Layer layer{};
-    layer.id = id;
-    layer.image = gui::Image(canvas.imageSize.w, canvas.imageSize.h);
-
-    canvas.layers.PushBack(layer);
+    canvas.layers.PushBack(Layer(id, canvas.imageSize.w, canvas.imageSize.h));
     canvas.layerOrders.PushBack(canvas.layers.Size() - 1);
     index = canvas.layers.Size() - 1;
 }
 
 void CmdNewLayer::Undo(Canvas& canvas) {
     canvas.RemoveLayerById(id);
-    canvas.currentLayer = canvas.currentLayer() >= canvas.layers.Size() ? canvas.layers.Size() - 1
-                          : canvas.currentLayer() > 0                   ? canvas.currentLayer() - 1
-                                                                        : 0;
+    canvas.currentLayerIndex = canvas.currentLayerIndex() >= canvas.layers.Size()
+                                   ? canvas.layers.Size() - 1
+                               : canvas.currentLayerIndex() > 0 ? canvas.currentLayerIndex() - 1
+                                                                : 0;
+}
+
+Layer::Layer(uint id, int width, int height)
+    : id(id) {
+    image = gui::Image(width, height);
+    imageIndexed.resize(width * height, 0);
+}
+
+void Layer::Present(const std::vector<gui::Color>& palette) {
+    image.Lock();
+    for (int y = 0; y < image.GetHeight(); y++) {
+        for (int x = 0; x < image.GetWidth(); x++) {
+            image.SetPixel(x, y, palette[imageIndexed[x + y * image.GetHeight()]]);
+        }
+    }
+    image.Unlock();
+}
+
+uint8_t Layer::GetPixel(int x, int y) {
+    if (x < 0 || y < 0 || x >= image.GetWidth() || y >= image.GetHeight())
+        return 0;
+    return imageIndexed[x + y * image.GetWidth()];
+}
+
+void Layer::SetPixel(int x, int y, uint8_t value) {
+    if (x < 0 || y < 0 || x >= image.GetWidth() || y >= image.GetHeight())
+        return;
+    imageIndexed[x + y * image.GetWidth()] = value;
 }

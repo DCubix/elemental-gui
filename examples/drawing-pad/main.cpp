@@ -307,7 +307,7 @@ private:
 };
 
 struct InfiniteCanvasProps {
-    decl::ElementProps base;
+    decl::opt<decl::ElementProps> base;
 };
 
 class App : public Window {
@@ -327,7 +327,7 @@ public:
         // clang-format off
         auto toolSize = decl::ElementProps{ .bounds = Rectangle::FromHeight(34) };
         auto toolBox = decl::Column({
-            .base = {.bounds = Rectangle::FromWidth(45)},
+            .base = decl::ElementProps{.bounds = Rectangle::FromWidth(45)},
             .gap = 4,
             .padding = EdgeInsets::All(4),
             .align = FlexAlign::Stretch,
@@ -371,7 +371,7 @@ public:
         }, {
             toolBox,
             decl::Custom<InfiniteCanvas, InfiniteCanvasProps>(
-                { .base = { .tag = "canvas", .flexGrow = 1.0f } },
+                { .base = decl::ElementProps{ .tag = "canvas", .flexGrow = 1.0f } },
                 [](InfiniteCanvas&, const InfiniteCanvasProps&) {}
             )}
         );
