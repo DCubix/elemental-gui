@@ -120,7 +120,7 @@ namespace gui {
         virtual std::string StyleKey() const { return ""; }
         virtual bool NeedsTextInput() const { return false; }
 
-        Property<std::string>& GetTag() { return m_tag; }
+        std::string GetTag() { return m_tag; }
         void SetTag(const std::string& tag) { m_tag = tag; }
 
         Window* GetWindow() const { return m_window; }
@@ -140,7 +140,7 @@ namespace gui {
 
         Json m_style{};
 
-        Property<std::string> m_tag{""};
+        std::string m_tag{};
         std::string m_tooltip{};
 
         std::vector<VoidCallback> m_changeListeners;

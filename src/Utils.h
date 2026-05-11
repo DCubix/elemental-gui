@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <cstdint>
 #include <functional>
 #include <regex>
@@ -38,7 +39,9 @@ namespace gui::utils {
         Range() = default;
         Range(float minv, float maxv)
             : minimum(minv),
-              maximum(maxv) {}
+              maximum(maxv) {
+            assert(minimum <= maximum && "Range: minimum must be <= maximum");
+        }
 
         float Normalized(float value);
         float Remap(Range other, float value);

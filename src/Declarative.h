@@ -19,8 +19,6 @@
         return std::tie(__VA_ARGS__);                                                              \
     }
 
-#define BaseOf(x) x.base.value()
-
 namespace gui::declarative {
 
     template <typename T>
@@ -78,6 +76,11 @@ namespace gui::declarative {
     concept HasBaseProps = requires(T t) {
         { t.base } -> std::convertible_to<opt<ElementProps>>;
     };
+
+    template <HasBaseProps P>
+    ElementProps BaseOf(const P& props) {
+        return props.base.value_or(ElementProps{});
+    }
 
     void ElementSetup(Element& element, const ElementProps& props);
 
