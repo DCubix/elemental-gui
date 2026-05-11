@@ -23,18 +23,12 @@ namespace gui {
 
         std::string StyleKey() const override { return "DefaultText"; }
 
-        Image* GetIcon() { return m_icon; }
-        void SetIcon(Image* image) {
-            m_icon = image;
-            Invalidate();
-        }
-
         Property<std::string> text;
         Property<Alignment> alignment{Alignment::TopLeft};
         Property<uint> iconSize{16u};
+        Property<Image*> icon{nullptr};
 
     protected:
-        Image* m_icon{nullptr};
         Json m_textStyle;
     };
 } // namespace gui

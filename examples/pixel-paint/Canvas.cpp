@@ -23,7 +23,7 @@ Canvas::Canvas()
     tools[static_cast<size_t>(ToolType::Square)] = std::make_unique<RectTool>();
     tools[static_cast<size_t>(ToolType::Circle)] = std::make_unique<EllipseTool>();
 
-    zoom.SetOnUpdate([this]() { Reposition(); });
+    zoom.Bind([this](const auto&) { Reposition(); });
 }
 
 void Canvas::OnDraw(gui::Graphics& g) {

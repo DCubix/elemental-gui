@@ -7,8 +7,7 @@ namespace gui {
         m_range.maximum = 100.0f;
         m_indeterminate = false;
         SetLocalBounds({0, 0, 100, 20});
-        value.SetOnUpdate([this]{ Invalidate(); });
-        direction.SetOnUpdate([this]{ Invalidate(); });
+        TrackAll(value, direction);
     }
 
     void ProgressBar::OnDraw(Graphics& g) {

@@ -14,9 +14,7 @@ namespace gui {
             float constrained = m_range.Constrain(v);
             return std::floor(constrained / step()) * step();
         });
-        direction.SetOnUpdate([this] { Invalidate(); });
-        value.SetOnUpdate([this] { Invalidate(); });
-        step.SetOnUpdate([this] { Invalidate(); });
+        TrackAll(direction, value, step);
     }
 
     void Scrollbar::OnDraw(Graphics& g) {

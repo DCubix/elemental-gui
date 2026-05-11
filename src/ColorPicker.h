@@ -12,8 +12,6 @@ namespace gui {
         void OnMouseMove(MotionEvent e) override;
         void OnMouseUp(MouseEvent e) override;
 
-        void SetOnChange(ValueChanged<Color> onChange) { m_onChange = onChange; }
-
         Property<Color> selected{Color::FromHex("#000")};
         Property<float> hue{0.0f}, saturation{0.0f}, value{0.0f};
 
@@ -22,10 +20,6 @@ namespace gui {
         Region m_clicked{Unknown};
 
         bool m_dragging{false};
-
-        ValueChanged<Color> m_onChange;
-        // Image m_hueCircle;
-        // void RecomputeHueCircle();
 
         Size GetSatValSize() const;
         void Pointer(Graphics& g, const PointI& p, int width, int height, float rotation);

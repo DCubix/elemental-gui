@@ -19,20 +19,6 @@
 
 namespace gui::declarative {
 
-#define MergeField(name) .name = b.name.has_value() ? b.name : name
-
-    ElementProps ElementProps::CopyWith(const ElementProps& b) const {
-        return ElementProps{
-            MergeField(tag),
-            MergeField(enabled),
-            MergeField(autoSize),
-            MergeField(flexGrow),
-            MergeField(bounds),
-            MergeField(style),
-            MergeField(tooltip),
-        };
-    }
-
     void ElementSetup(Element& element, const ElementProps& props) {
         auto tag = props.tag.value_or("");
         auto enabled = props.enabled.value_or(true);
@@ -124,12 +110,14 @@ namespace gui::declarative {
             auto base = props.base.value_or(ElementProps{});
             auto align = props.align.value_or(Alignment::TopLeft);
             auto icon = props.icon.value_or(nullptr);
+            auto iconSize = props.iconSize.value_or(20);
 
             auto& label = window.Create<Label>();
             ElementSetup(label, base);
             label.text = text;
             label.alignment = align;
-            label.SetIcon(icon);
+            label.icon = icon;
+            label.iconSize = iconSize;
             return &label;
         };
     }
@@ -144,9 +132,10 @@ namespace gui::declarative {
             auto& button = window.Create<gui::Button>();
             ElementSetup(button, base);
             button.text = text;
-            button.SetIcon(icon);
+            button.icon = icon;
             button.iconSize = iconSize;
-            button.SetOnClick(onClick);
+            if (onClick)
+                button.AddListener(onClick);
             return &button;
         };
     }
@@ -186,7 +175,7 @@ namespace gui::declarative {
 
             auto& imageView = window.Create<ImageView>();
             ElementSetup(imageView, base);
-            imageView.SetImage(image);
+            imageView.image = image;
             imageView.scalingMode = scaling;
             return &imageView;
         };
@@ -288,9 +277,10 @@ namespace gui::declarative {
             auto& item = window.Create<gui::MenuItem>();
             ElementSetup(item, base);
             item.text = text;
-            item.SetIcon(icon);
+            item.icon = icon;
             item.checked = checked;
-            item.SetOnClick(onClick);
+            if (onClick)
+                item.AddListener(onClick);
             if (subMenu) {
                 gui::Menu* sm = subMenu(window);
                 item.SetSubMenu(sm);
@@ -316,7 +306,8 @@ namespace gui::declarative {
             auto& menu = window.Create<gui::Menu>();
             ElementSetup(menu, base);
             menu.SetAutoSize(true);
-            menu.SetOnDismiss(onDismiss);
+            if (onDismiss)
+                menu.AddListener(onDismiss);
 
             for (auto&& itemDesc : items) {
                 Element* el = itemDesc(window);
@@ -384,11 +375,12 @@ namespace gui::declarative {
             auto& button = window.Create<gui::ToolButton>();
             ElementSetup(button, base);
             button.text = text;
-            button.SetIcon(icon);
+            button.icon = icon;
             button.iconSize = iconSize;
             button.SetMode(gui::ToolButton::Mode::Normal);
             button.SetGroup(group);
-            button.SetOnClick(onClick);
+            if (onClick)
+                button.AddListener(onClick);
             return &button;
         };
     }
@@ -405,12 +397,13 @@ namespace gui::declarative {
             auto& button = window.Create<gui::ToolButton>();
             ElementSetup(button, base);
             button.text = text;
-            button.SetIcon(icon);
+            button.icon = icon;
             button.iconSize = iconSize;
             button.SetMode(gui::ToolButton::Mode::Radio);
             button.SetGroup(group);
             button.toggled = toggled;
-            button.SetOnClick(onClick);
+            if (onClick)
+                button.AddListener(onClick);
             return &button;
         };
     }
@@ -426,11 +419,12 @@ namespace gui::declarative {
             auto& button = window.Create<gui::ToolButton>();
             ElementSetup(button, base);
             button.text = text;
-            button.SetIcon(icon);
+            button.icon = icon;
             button.iconSize = iconSize;
             button.SetMode(gui::ToolButton::Mode::Toggle);
             button.toggled = toggled;
-            button.SetOnClick(onClick);
+            if (onClick)
+                button.AddListener(onClick);
             return &button;
         };
     }
@@ -514,196 +508,10 @@ namespace gui::declarative {
 
             if (props.selectedColor.has_value())
                 picker.selected = props.selectedColor.value();
-            picker.SetOnChange(onChange);
+            if (onChange)
+                picker.selected.Bind(onChange);
 
             return &picker;
-        };
-    }
-
-    ColumnProps ColumnProps::CopyWith(const ColumnProps& b) const {
-        return ColumnProps{
-            MergeField(base),
-            MergeField(gap),
-            MergeField(padding),
-            MergeField(align),
-            MergeField(justify),
-            MergeField(wrap),
-            MergeField(showBackground),
-        };
-    }
-
-    RowProps RowProps::CopyWith(const RowProps& b) const {
-        return RowProps{
-            MergeField(base),
-            MergeField(gap),
-            MergeField(padding),
-            MergeField(align),
-            MergeField(justify),
-            MergeField(wrap),
-            MergeField(showBackground),
-        };
-    }
-
-    TextProps TextProps::CopyWith(const TextProps& b) const {
-        return TextProps{
-            MergeField(base),
-            MergeField(align),
-            MergeField(icon),
-        };
-    }
-
-    ButtonProps ButtonProps::CopyWith(const ButtonProps& b) const {
-        return ButtonProps{
-            MergeField(base),
-            MergeField(icon),
-            MergeField(onClick),
-        };
-    }
-
-    TextEditProps TextEditProps::CopyWith(const TextEditProps& b) const {
-        return TextEditProps{
-            MergeField(base),
-            MergeField(text),
-            MergeField(onChanged),
-            MergeField(multiLine),
-            MergeField(masked),
-        };
-    }
-
-    ImageProps ImageProps::CopyWith(const ImageProps& b) const {
-        return ImageProps{
-            MergeField(base),
-            MergeField(image),
-            MergeField(scaling),
-        };
-    }
-
-    ScrollViewProps ScrollViewProps::CopyWith(const ScrollViewProps& b) const {
-        return ScrollViewProps{
-            MergeField(base),
-            MergeField(scrollDirection),
-        };
-    }
-
-    CheckBoxProps CheckBoxProps::CopyWith(const CheckBoxProps& b) const {
-        return CheckBoxProps{
-            MergeField(base),
-            MergeField(checked),
-            MergeField(onChanged),
-        };
-    }
-
-    RadioButtonProps RadioButtonProps::CopyWith(const RadioButtonProps& b) const {
-        return RadioButtonProps{
-            MergeField(base),
-            MergeField(group),
-            MergeField(checked),
-            MergeField(onChanged),
-        };
-    }
-
-    SwitchProps SwitchProps::CopyWith(const SwitchProps& b) const {
-        return SwitchProps{
-            MergeField(base),
-            MergeField(checked),
-            MergeField(onChanged),
-        };
-    }
-
-    SliderProps SliderProps::CopyWith(const SliderProps& b) const {
-        return SliderProps{
-            MergeField(base),
-            MergeField(direction),
-            MergeField(range),
-            MergeField(value),
-            MergeField(step),
-            MergeField(onValueChange),
-        };
-    }
-
-    MenuItemProps MenuItemProps::CopyWith(const MenuItemProps& b) const {
-        return MenuItemProps{
-            MergeField(base),
-            MergeField(text),
-            MergeField(icon),
-            MergeField(checked),
-            MergeField(onClick),
-            MergeField(subMenu),
-        };
-    }
-
-    MenuProps MenuProps::CopyWith(const MenuProps& b) const {
-        return MenuProps{
-            MergeField(base),
-            MergeField(onDismiss),
-        };
-    }
-
-    SplitViewProps SplitViewProps::CopyWith(const SplitViewProps& b) const {
-        return SplitViewProps{
-            MergeField(base),
-            MergeField(direction),
-            MergeField(splitPosition),
-            MergeField(align),
-            MergeField(first),
-            MergeField(second),
-        };
-    }
-
-    BasicListProps BasicListProps::CopyWith(const BasicListProps& b) const {
-        return BasicListProps{
-            MergeField(base),
-            MergeField(items),
-            MergeField(selectedIndex),
-            MergeField(onSelectionChanged),
-        };
-    }
-
-    ToolButtonProps ToolButtonProps::CopyWith(const ToolButtonProps& b) const {
-        return ToolButtonProps{
-            MergeField(base),
-            MergeField(icon),
-            MergeField(iconSize),
-            MergeField(toggled),
-            MergeField(onClick),
-            MergeField(group),
-        };
-    }
-
-    ProgressBarProps ProgressBarProps::CopyWith(const ProgressBarProps& b) const {
-        return ProgressBarProps{
-            MergeField(base),
-            MergeField(range),
-            MergeField(value),
-            MergeField(indeterminate),
-            MergeField(direction),
-        };
-    }
-
-    SpinnerProps SpinnerProps::CopyWith(const SpinnerProps& b) const {
-        return SpinnerProps{
-            MergeField(base),
-            MergeField(range),
-            MergeField(value),
-            MergeField(step),
-            MergeField(decimals),
-            MergeField(onValueChange),
-        };
-    }
-
-    PanelProps PanelProps::CopyWith(const PanelProps& b) const {
-        return PanelProps{
-            MergeField(base),
-            MergeField(padding),
-            MergeField(showBackground),
-        };
-    }
-
-    ColorPickerProps ColorPickerProps::CopyWith(const ColorPickerProps& b) const {
-        return ColorPickerProps{
-            MergeField(base),
-            MergeField(selectedColor),
-            MergeField(onChange),
         };
     }
 

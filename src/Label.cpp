@@ -8,9 +8,7 @@ namespace gui {
 
     Label::Label()
         : Element() {
-        text.SetOnUpdate([this] { Invalidate(); });
-        alignment.SetOnUpdate([this] { Invalidate(); });
-        iconSize.SetOnUpdate([this] { Invalidate(); });
+        TrackAll(text, alignment, iconSize, icon);
     }
 
     void Label::OnDraw(Graphics& g) {
@@ -25,12 +23,12 @@ namespace gui {
         g.StyledTextBegin(style);
         g.ClipPushRect(clip.x, clip.y, clip.w, clip.h);
 
-        int iconSz = m_icon ? (int)iconSize() : 0;
+        int iconSz = icon() ? (int)iconSize() : 0;
         bool hasText = !text().empty();
 
         // Icon-only: always center+middle
-        if (m_icon && !hasText) {
-            g.DrawImage(m_icon, sz.w / 2 - iconSz / 2, sz.h / 2 - iconSz / 2, iconSz, iconSz);
+        if (icon() && !hasText) {
+            g.DrawImage(icon(), sz.w / 2 - iconSz / 2, sz.h / 2 - iconSz / 2, iconSz, iconSz);
             g.ClipPop();
             g.Restore();
             return;
@@ -55,9 +53,12 @@ namespace gui {
             int lineW = 0;
             for (const auto& md : utils::ParseBasicMarkdown(line)) {
                 FontStyle fStyle = FontStyle::Normal;
-                if (md.bold && md.italic) fStyle = FontStyle::BoldItalic;
-                else if (md.bold) fStyle = FontStyle::Bold;
-                else if (md.italic) fStyle = FontStyle::Italic;
+                if (md.bold && md.italic)
+                    fStyle = FontStyle::BoldItalic;
+                else if (md.bold)
+                    fStyle = FontStyle::Bold;
+                else if (md.italic)
+                    fStyle = FontStyle::Italic;
                 g.Font(fStyle, font, fontSize);
                 lineW += static_cast<int>(g.MeasureText(md.text).xAdvance);
             }
@@ -66,7 +67,7 @@ namespace gui {
         }
 
         int textBlockH = lineH * (int)lines.size();
-        int gap = m_icon ? 4 : 0;
+        int gap = icon() ? 4 : 0;
         int totalW = iconSz + gap + maxW;
         int totalH = std::max(iconSz, textBlockH);
 
@@ -101,8 +102,8 @@ namespace gui {
                 break;
         }
 
-        if (m_icon) {
-            g.DrawImage(m_icon, cx, cy + totalH / 2 - iconSz / 2, iconSz, iconSz);
+        if (icon()) {
+            g.DrawImage(icon(), cx, cy + totalH / 2 - iconSz / 2, iconSz, iconSz);
         }
 
         int textX = cx + iconSz + gap;
@@ -150,7 +151,7 @@ namespace gui {
 
     Size Label::GetPreferredSize() const {
         if (IsAutoSize()) {
-            int iconSz = m_icon ? (int)iconSize() : 0;
+            int iconSz = icon() ? (int)iconSize() : 0;
 
             if (text().empty()) {
                 return {iconSz, iconSz};
@@ -177,9 +178,12 @@ namespace gui {
                 int lineW = 0;
                 for (const auto& md : utils::ParseBasicMarkdown(line)) {
                     FontStyle fStyle = FontStyle::Normal;
-                    if (md.bold && md.italic) fStyle = FontStyle::BoldItalic;
-                    else if (md.bold) fStyle = FontStyle::Bold;
-                    else if (md.italic) fStyle = FontStyle::Italic;
+                    if (md.bold && md.italic)
+                        fStyle = FontStyle::BoldItalic;
+                    else if (md.bold)
+                        fStyle = FontStyle::Bold;
+                    else if (md.italic)
+                        fStyle = FontStyle::Italic;
                     g.Font(fStyle, font, fontSize);
                     lineW += static_cast<int>(g.MeasureText(md.text).xAdvance);
                 }
@@ -189,7 +193,7 @@ namespace gui {
 
             g.Restore();
 
-            int gap = m_icon ? 4 : 0;
+            int gap = icon() ? 4 : 0;
             return {iconSz + gap + maxW, std::max(iconSz, textH)};
         }
         return Element::GetPreferredSize();

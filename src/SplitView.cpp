@@ -9,8 +9,7 @@ namespace gui {
     SplitView::SplitView()
         : Container() {
         SetLocalBounds(Rectangle(0, 0, 300, 300));
-        direction.SetOnUpdate([this]{ Invalidate(); });
-        splitPosition.SetOnUpdate([this]{ Invalidate(); });
+        TrackAll(direction, splitPosition);
     }
 
     void SplitView::Add(Element* element) {

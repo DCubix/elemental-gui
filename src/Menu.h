@@ -26,8 +26,6 @@ namespace gui {
         bool HitTest(int x, int y) const;
         bool HasOpenSubMenu() const;
 
-        void SetOnDismiss(VoidCallback callback) { m_onDismiss = callback; }
-
         void OpenSubMenu(MenuItem* item);
         void CloseSubMenu();
 
@@ -39,7 +37,6 @@ namespace gui {
     protected:
         std::vector<Element*> m_items;
         bool m_open{false};
-        VoidCallback m_onDismiss;
         MenuItem* m_activeSubMenuItem{nullptr};
         Menu* m_parentMenu{nullptr};
 

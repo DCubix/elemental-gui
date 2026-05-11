@@ -195,6 +195,16 @@ namespace gui {
         return mergedStyle;
     }
 
+    void Element::NotifyListeners() const {
+        for (auto& cb : m_changeListeners) {
+            cb();
+        }
+    }
+
+    void Element::AddListener(VoidCallback cb) {
+        m_changeListeners.push_back(std::move(cb));
+    }
+
     Rectangle Element::GetBounds() const {
         Rectangle b = m_bounds;
         if (m_parent != nullptr) {

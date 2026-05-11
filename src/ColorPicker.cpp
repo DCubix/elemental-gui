@@ -30,9 +30,7 @@ namespace gui {
             if (hue() < 0.0f)
                 hue += 360.0f;
 
-            if (m_onChange)
-                m_onChange(selected());
-
+            NotifyListeners();
             Invalidate();
         });
 

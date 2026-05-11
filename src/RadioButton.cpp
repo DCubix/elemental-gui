@@ -6,8 +6,8 @@ namespace gui {
     RadioButton::RadioButton()
         : Element() {
         SetLocalBounds(Rectangle(0, 0, 100, 22));
-        checked.SetOnUpdate([this]{ Invalidate(); });
-        text.SetOnUpdate([this]{ Invalidate(); });
+        TrackAll(checked, text);
+        checked.Bind([this](const auto&) { NotifyListeners(); });
     }
 
     void RadioButton::OnMouseDown(MouseEvent e) {

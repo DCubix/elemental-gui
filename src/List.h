@@ -17,8 +17,7 @@ namespace gui {
             : Element(),
               m_scrollbar(nullptr) {
             SetLocalBounds({0, 0, 200, 200});
-            selectedIndex.SetOnUpdate([this] { Invalidate(); });
-            items.SetOnUpdate([this] { Invalidate(); });
+            TrackAll(selectedIndex, items);
         }
 
         std::string StyleKey() const override { return "List"; }
@@ -177,6 +176,7 @@ namespace gui {
                 auto rect = GetItemRect(static_cast<int>(i), scrollOffset, contentWidth);
                 if (rect.HasPoint(e.x, e.y) && rect.Intersects(b)) {
                     selectedIndex = static_cast<int>(i);
+                    NotifyListeners();
                     break;
                 }
             }

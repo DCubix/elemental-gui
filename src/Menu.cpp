@@ -146,8 +146,7 @@ namespace gui {
         m_open = false;
         SetVisible(false);
         m_window->DismissPopup(this);
-        if (m_onDismiss)
-            m_onDismiss();
+        NotifyListeners();
         std::vector<Element*> toDestroy;
         CollectAll(toDestroy);
         for (auto* el : toDestroy)

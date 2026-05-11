@@ -8,7 +8,8 @@ namespace gui {
                 continue;
             if (e == this)
                 continue;
-            if (!e->IsDirty()) continue;
+            if (!e->IsDirty())
+                continue;
             if (e->GetBounds().Intersects(b)) {
                 const auto& lb = e->GetLocalBounds();
                 g.Save();
@@ -56,16 +57,4 @@ namespace gui {
             Invalidate();
         }
     }
-
-    // bool Container::IsDirty() {
-    //     bool d = Element::IsDirty();
-    //     for (auto&& e : m_children) {
-    //         if (e == nullptr)
-    //             continue;
-    //         if (e == this)
-    //             continue;
-    //         d = d || e->IsDirty();
-    //     }
-    //     return d;
-    // }
 } // namespace gui

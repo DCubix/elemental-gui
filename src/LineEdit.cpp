@@ -10,7 +10,7 @@ namespace gui {
         : Element() {
         SetLocalBounds(Rectangle(0, 0, 120, 28));
 
-        text.SetOnUpdate([this]{
+        text.Bind([this](const auto&) {
             if (!m_internalEdit) {
                 m_caretIndex = (int)text().size();
                 m_selectionStart = -1;
@@ -92,7 +92,8 @@ namespace gui {
             int caretX =
                 m_textLine.chars.empty()
                     ? 0
-                    : m_textLine.chars[std::min(m_caretIndex, (int)m_textLine.chars.size() - 1)].bounds.x;
+                    : m_textLine.chars[std::min(m_caretIndex, (int)m_textLine.chars.size() - 1)]
+                          .bounds.x;
             Color caretColor = Color::FromStyle(style["color"]);
             g.Color(caretColor.r, caretColor.g, caretColor.b, 1.0f);
             g.LineWidth(1.0f);
@@ -177,12 +178,15 @@ namespace gui {
             else if (m_caretIndex > 0) {
                 m_caretIndex--;
                 RemoveChar(m_caretIndex);
+                NotifyListeners();
             }
         } else if (e.key == Key::Delete) {
-            if (IsSelected())
+            if (IsSelected()) {
                 DeleteSelected();
-            else if (m_caretIndex < (int)text().size()) {
+                NotifyListeners();
+            } else if (m_caretIndex < (int)text().size()) {
                 RemoveChar(m_caretIndex);
+                NotifyListeners();
             }
         } else if (e.key == Key::Left) {
             beginSel();
@@ -205,11 +209,13 @@ namespace gui {
                 std::swap(a, b);
             m_window->GetApp()->SetClipboard(text().substr(a, b - a));
             DeleteSelected();
+            NotifyListeners();
         } else if (e.key == Key::V && e.mod.control) {
             if (IsSelected())
                 DeleteSelected();
             for (char c : m_window->GetApp()->GetClipboard())
                 InsertChar(c);
+            NotifyListeners();
         } else if (e.key == Key::A && e.mod.control) {
             Select(0);
         }
@@ -222,6 +228,7 @@ namespace gui {
         if (IsSelected())
             DeleteSelected();
         InsertChar(e.inputChar);
+        NotifyListeners();
         Invalidate();
     }
 

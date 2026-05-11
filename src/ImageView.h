@@ -9,18 +9,10 @@ namespace gui {
     public:
         ImageView();
 
-        Image* GetImage() { return m_image; }
-        void SetImage(const Image* img) {
-            m_image = const_cast<Image*>(img);
-            Invalidate();
-        }
-
         void OnDraw(Graphics& g) override;
         Size GetPreferredSize() const override;
 
         Property<ImageScalingMode> scalingMode{ImageScalingMode::Stretch};
-
-    private:
-        Image* m_image;
+        Property<Image*> image{nullptr};
     };
 } // namespace gui

@@ -55,6 +55,8 @@ namespace gui {
         virtual void OnBlur(BlurEvent e) {}
         virtual void OnResize() {}
 
+        void AddListener(VoidCallback cb);
+
         // Used for Auto-Size
         virtual Size GetPreferredSize() const { return {m_bounds.w, m_bounds.h}; }
 
@@ -140,6 +142,21 @@ namespace gui {
 
         Property<std::string> m_tag{""};
         std::string m_tooltip{};
+
+        std::vector<VoidCallback> m_changeListeners;
+
+        template <Trackable P>
+        void Track(P& prop) {
+            using T = std::decay_t<decltype(prop.Get())>;
+            prop.Bind([this](const T&) { Invalidate(); });
+        }
+
+        template <typename... Args>
+        void TrackAll(Args&... args) {
+            (Track(args), ...);
+        }
+
+        void NotifyListeners() const;
 
         virtual bool IsDirty() { return m_dirty; }
     };

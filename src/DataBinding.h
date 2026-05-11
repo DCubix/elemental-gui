@@ -109,8 +109,6 @@ namespace gui {
             m_value = newValue;
             NotifyAll();
             m_updating = false;
-            if (m_onUpdate)
-                m_onUpdate();
         }
 
         void Bind(T& target) {
@@ -138,7 +136,6 @@ namespace gui {
                 cb(m_value);
         }
 
-        void SetOnUpdate(utils::VoidCallback onUpdate) { m_onUpdate = onUpdate; }
         void SetTransformer(Transformer transformer) { m_transformer = transformer; }
 
         // For when we store containers
@@ -202,7 +199,6 @@ namespace gui {
         bool m_updating{false};
         std::vector<Property<T>*> m_peers;
         std::vector<OneWayBinding<T>> m_oneWayBindings;
-        utils::VoidCallback m_onUpdate;
         Transformer m_transformer;
     };
 
@@ -272,4 +268,8 @@ namespace gui {
                 cb(m_value);
         }
     };
+
+    template <typename P>
+    concept Trackable =
+        requires(P& p) { p.Bind(OneWayBinding<std::decay_t<decltype(p.Get())>>{}); };
 } // namespace gui

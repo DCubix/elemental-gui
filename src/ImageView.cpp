@@ -3,12 +3,12 @@
 namespace gui {
 
     ImageView::ImageView()
-        : m_image(nullptr) {
-        scalingMode.SetOnUpdate([this]{ Invalidate(); });
+        : Element() {
+        TrackAll(image, scalingMode);
     }
 
     void ImageView::OnDraw(Graphics& g) {
-        if (!m_image)
+        if (!image())
             return;
 
         Size size = GetSize();
@@ -20,8 +20,8 @@ namespace gui {
             case ImageScalingMode::Stretch:
                 break;
             case ImageScalingMode::Contain: {
-                float imgAspect = static_cast<float>(m_image->GetWidth()) /
-                                  static_cast<float>(m_image->GetHeight());
+                float imgAspect = static_cast<float>(image()->GetWidth()) /
+                                  static_cast<float>(image()->GetHeight());
                 float boxAspect = static_cast<float>(size.w) / static_cast<float>(size.h);
                 if (imgAspect > boxAspect) {
                     imgRect.w = size.w;
@@ -35,8 +35,8 @@ namespace gui {
                 break;
             }
             case ImageScalingMode::Cover: {
-                float imgAspect = static_cast<float>(m_image->GetWidth()) /
-                                  static_cast<float>(m_image->GetHeight());
+                float imgAspect = static_cast<float>(image()->GetWidth()) /
+                                  static_cast<float>(image()->GetHeight());
                 float boxAspect = static_cast<float>(size.w) / static_cast<float>(size.h);
                 if (imgAspect < boxAspect) {
                     imgRect.w = size.w;
@@ -52,13 +52,13 @@ namespace gui {
         }
 
         g.ClipPushRect(clip.x, clip.y, clip.w, clip.h);
-        g.DrawImage(m_image, imgRect.x, imgRect.y, imgRect.w, imgRect.h);
+        g.DrawImage(image(), imgRect.x, imgRect.y, imgRect.w, imgRect.h);
         g.ClipPop();
     }
 
     Size ImageView::GetPreferredSize() const {
-        if (m_image && IsAutoSize()) {
-            return {m_image->GetWidth(), m_image->GetHeight()};
+        if (image() && IsAutoSize()) {
+            return {image()->GetWidth(), image()->GetHeight()};
         }
         return {GetLocalBounds().w, GetLocalBounds().h};
     }

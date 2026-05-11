@@ -26,12 +26,9 @@ namespace gui {
         std::string GetGroup() const { return m_group; }
         void SetGroup(const std::string& group) { m_group = group; }
 
-        void SetOnClick(const VoidCallback& cb) { m_onClick = cb; }
-
         Property<bool> toggled{false};
 
     private:
-        VoidCallback m_onClick;
         ButtonState m_state;
         Mode m_mode;
         std::string m_group{""};

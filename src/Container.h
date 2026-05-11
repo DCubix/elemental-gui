@@ -20,7 +20,5 @@ namespace gui {
 
     protected:
         std::vector<Element*> m_children;
-
-        // virtual bool IsDirty() override;
     };
 } // namespace gui

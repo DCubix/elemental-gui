@@ -10,7 +10,7 @@ namespace gui {
         alignment = Alignment::MiddleCenter;
         text = "Button";
         m_state = ButtonState::Normal;
-        toggled.SetOnUpdate([this]{ Invalidate(); });
+        Track(toggled);
     }
 
     void ToolButton::OnDraw(Graphics& g) {
@@ -57,8 +57,7 @@ namespace gui {
         if (e.button != MouseButton::Left)
             return;
         if (m_state == ButtonState::Click) {
-            if (m_onClick)
-                m_onClick();
+            NotifyListeners();
             if (m_mode == Mode::Radio) {
                 auto* prev = m_window->Find<ToolButton>([this](ToolButton* tb) {
                     return tb != this && tb->GetGroup() == GetGroup() &&

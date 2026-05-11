@@ -15,8 +15,7 @@ namespace gui {
         : Element() {
         SetLocalBounds({0, 0, 100, 20});
         SetAutoSize(true);
-        text.SetOnUpdate([this]{ Invalidate(); });
-        checked.SetOnUpdate([this]{ Invalidate(); });
+        TrackAll(text, checked, icon);
         text = t;
     }
 
@@ -55,8 +54,8 @@ namespace gui {
         cx += CHECK_AREA;
 
         // Icon
-        if (m_icon) {
-            g.DrawImage(m_icon, cx, cy + (contentH - ICON_SIZE) / 2, ICON_SIZE, ICON_SIZE);
+        if (icon()) {
+            g.DrawImage(icon(), cx, cy + (contentH - ICON_SIZE) / 2, ICON_SIZE, ICON_SIZE);
             cx += ICON_SIZE + ICON_GAP;
         }
 
@@ -98,8 +97,7 @@ namespace gui {
             // e.x/y are element-local (Element::OnEvent subtracts GetBounds() origin)
             Size sz = GetSize();
             if (Rectangle{0, 0, sz.w, sz.h}.HasPoint(e.x, e.y)) {
-                if (m_onClick)
-                    m_onClick();
+                NotifyListeners();
                 m_state = ButtonState::Normal;
                 Invalidate();
                 if (auto* menu = GetParentMenu())
@@ -169,7 +167,7 @@ namespace gui {
             int w = (int)padding.GetHorizontal() + CHECK_AREA + (int)sz.xAdvance;
             int h = (int)padding.GetVertical() + (int)sz.size.h;
 
-            if (m_icon) {
+            if (icon()) {
                 w += ICON_SIZE + ICON_GAP;
                 h = std::max(h, (int)padding.GetVertical() + ICON_SIZE);
             }

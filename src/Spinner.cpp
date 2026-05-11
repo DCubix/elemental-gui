@@ -11,9 +11,7 @@ namespace gui {
     Spinner::Spinner()
         : Element() {
         SetLocalBounds(Rectangle(0, 0, 90, 24));
-        value.SetOnUpdate([this]{ Invalidate(); });
-        step.SetOnUpdate([this]{ Invalidate(); });
-        decimals.SetOnUpdate([this]{ Invalidate(); });
+        TrackAll(value, step, decimals);
     }
 
     Rectangle Spinner::GetUpButtonRect() const {
@@ -37,6 +35,7 @@ namespace gui {
         float snapped = std::round(value() / step()) * step();
         float clamped = m_range.Constrain(snapped + dir * step());
         value = clamped;
+        NotifyListeners();
     }
 
     void Spinner::OnDraw(Graphics& g) {

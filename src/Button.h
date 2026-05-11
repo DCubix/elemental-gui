@@ -18,10 +18,7 @@ namespace gui {
 
         Size GetPreferredSize() const override;
 
-        void SetOnClick(const VoidCallback& cb) { m_onClick = cb; }
-
     private:
-        VoidCallback m_onClick;
         ButtonState m_state;
     };
 } // namespace gui

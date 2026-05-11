@@ -50,9 +50,8 @@ namespace gui {
         if (e.button != MouseButton::Left)
             return;
         if (m_state == ButtonState::Click) {
-            if (m_onClick)
-                m_onClick();
             m_state = ButtonState::Hover;
+            NotifyListeners();
             Invalidate();
         }
     }

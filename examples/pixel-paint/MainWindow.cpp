@@ -15,7 +15,7 @@ class ColorView : public gui::Element {
 public:
     ColorView()
         : gui::Element() {
-        color.SetOnUpdate([this]() { Invalidate(); });
+        color.Bind([this](const auto&) { Invalidate(); });
     }
 
     void OnDraw(gui::Graphics& g) override {

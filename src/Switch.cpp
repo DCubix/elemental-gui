@@ -6,11 +6,12 @@ namespace gui {
     Switch::Switch()
         : Element() {
         SetLocalBounds(Rectangle(0, 0, 40, 22));
-        checked.SetOnUpdate([this]{
+        checked.Bind([this](const auto&) {
             m_state = checked() ? State::Checked : State::Unchecked;
             Invalidate();
+            NotifyListeners();
         });
-        indeterminate.SetOnUpdate([this]{
+        indeterminate.Bind([this](const auto&) {
             m_state = indeterminate() ? State::Indeterminate : State::Unchecked;
             Invalidate();
         });

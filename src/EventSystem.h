@@ -327,11 +327,10 @@ namespace gui {
 
         template <DerivedFromEvent E, typename... Args>
         void Broadcast(Args&&... args) {
-            E* e = new E(std::forward<Args>(args)...);
+            E event(std::forward<Args>(args)...);
 
-            auto evt = m_subscribers.find(e->Type());
+            auto evt = m_subscribers.find(event.Type());
             if (evt == m_subscribers.end()) {
-                delete e;
                 return;
             }
 
@@ -345,17 +344,15 @@ namespace gui {
 
                 // Motion events must reach all subscribers so elements
                 // can clear their hover state when the mouse leaves.
-                if (consumed && e->Type() != EventType::MouseMotion) {
+                if (consumed && event.Type() != EventType::MouseMotion) {
                     break;
                 }
 
-                EventStatus status = sub->OnEvent(e);
+                EventStatus status = sub->OnEvent(&event);
                 if (status == EventStatus::Consumed) {
                     consumed = true;
                 }
             }
-
-            delete e;
         }
 
     private:
