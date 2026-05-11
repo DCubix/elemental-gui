@@ -2,9 +2,12 @@
 
 #include "Backend.h"
 
+#include <memory>
 #include <unordered_map>
 
-#include <SDL3/SDL.h>
+struct SDL_Window;
+struct SDL_Renderer;
+struct SDL_Texture;
 
 namespace gui {
 
@@ -16,6 +19,8 @@ namespace gui {
 
     class SDL3Backend : public Backend {
     public:
+        ~SDL3Backend();
+
         bool Init() override;
         void Shutdown() override;
 
@@ -54,7 +59,7 @@ namespace gui {
         std::string GetClipboardText() const override;
 
     private:
-        std::unordered_map<SDL_Window*, SDL3WindowData> m_windows;
+        std::unordered_map<SDL_Window*, std::unique_ptr<SDL3WindowData>> m_windows;
 
         SDL3WindowData& GetData(WindowHandle handle);
         const SDL3WindowData& GetData(WindowHandle handle) const;

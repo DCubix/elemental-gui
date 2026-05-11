@@ -102,8 +102,17 @@ if (ELEMENTAL_BACKEND_SDL3)
 endif()
 
 add_library(${PROJECT_NAME} ${TUI_SRC})
-target_include_directories(${PROJECT_NAME} PUBLIC ${CAIRO_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_include_directories(${PROJECT_NAME} PRIVATE ${CAIRO_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${CAIRO_LIBRARIES} nlohmann_json nanosvg)
+
+target_include_directories(${PROJECT_NAME} PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+    $<INSTALL_INTERFACE:include/elemental>)
+
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    VERSION   ${PROJECT_VERSION}       # 0.5.1
+    SOVERSION ${PROJECT_VERSION_MAJOR} # 0
+)
 
 # Backends linking (headers only)
 if (ELEMENTAL_BACKEND_SDL3)
@@ -111,7 +120,7 @@ if (ELEMENTAL_BACKEND_SDL3)
   add_definitions(-DELEMENTAL_BACKEND_SDL3)
   CPMFindPackage(NAME SDL3)
   if (TARGET SDL3::SDL3)
-    target_link_libraries(${PROJECT_NAME} PUBLIC SDL3::SDL3)
+    target_link_libraries(${PROJECT_NAME} PRIVATE SDL3::SDL3)
   endif()
 endif()
 
@@ -128,3 +137,31 @@ add_dependencies(${PROJECT_NAME} embed_resources)
 if (ELEMENTAL_BUILD_EXAMPLES)
   add_subdirectory(examples)
 endif()
+
+install(TARGETS ${PROJECT_NAME}
+    EXPORT elementalTargets
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION bin
+)
+
+install(DIRECTORY src/
+    DESTINATION include/elemental
+    FILES_MATCHING PATTERN "*.h"
+    PATTERN "backends" EXCLUDE      # backends installed separately
+    PATTERN "generated" EXCLUDE)    # generated headers not public
+
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/elementalConfigVersion.cmake"
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMajorVersion)
+
+install(EXPORT elementalTargets
+    FILE elementalTargets.cmake
+    NAMESPACE elemental::
+    DESTINATION lib/cmake/elemental)
+
+set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
+set(CPACK_GENERATOR "TGZ;ZIP")
+include(CPack)

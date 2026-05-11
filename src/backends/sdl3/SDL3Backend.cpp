@@ -2,9 +2,10 @@
 
 #include <unordered_map>
 
-#include <SDL3/SDL_keycode.h>
+#include <SDL3/SDL.h>
 
 namespace gui {
+    SDL3Backend::~SDL3Backend() = default;
 
     static const std::unordered_map<SDL_Keycode, Key> SDLtoKey = {
         // Letters
@@ -191,11 +192,11 @@ namespace gui {
     }
 
     SDL3WindowData& SDL3Backend::GetData(WindowHandle handle) {
-        return m_windows.at(static_cast<SDL_Window*>(handle));
+        return *m_windows.at(static_cast<SDL_Window*>(handle));
     }
 
     const SDL3WindowData& SDL3Backend::GetData(WindowHandle handle) const {
-        return m_windows.at(static_cast<SDL_Window*>(handle));
+        return *m_windows.at(static_cast<SDL_Window*>(handle));
     }
 
     bool SDL3Backend::Init() {
@@ -313,8 +314,11 @@ namespace gui {
 
         SDL_Renderer* renderer = SDL_CreateRenderer(sdlWindow, nullptr);
 
-        SDL3WindowData data{sdlWindow, renderer, nullptr};
-        m_windows[sdlWindow] = data;
+        std::unique_ptr<SDL3WindowData> data = std::make_unique<SDL3WindowData>();
+        data->window = sdlWindow;
+        data->renderer = renderer;
+        data->buffer = nullptr;
+        m_windows[sdlWindow] = std::move(data);
 
         CreateRenderBuffer(sdlWindow, config.width, config.height);
 
@@ -330,10 +334,10 @@ namespace gui {
         auto it = m_windows.find(sdlWindow);
         if (it == m_windows.end())
             return;
-        if (it->second.renderer)
-            SDL_DestroyRenderer(it->second.renderer);
-        if (it->second.window)
-            SDL_DestroyWindow(it->second.window);
+        if (it->second->renderer)
+            SDL_DestroyRenderer(it->second->renderer);
+        if (it->second->window)
+            SDL_DestroyWindow(it->second->window);
         m_windows.erase(it);
     }
 
