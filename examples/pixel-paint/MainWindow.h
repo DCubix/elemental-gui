@@ -1,8 +1,8 @@
 #pragma once
 
-#include <Declarative.h>
-#include <FlexLayout.h>
-#include <Window.h>
+#include <elemental/Declarative.h>
+#include <elemental/FlexLayout.h>
+#include <elemental/Window.h>
 
 namespace dc = gui::declarative;
 

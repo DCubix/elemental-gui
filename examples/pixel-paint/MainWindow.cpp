@@ -3,9 +3,9 @@
 #include "Canvas.h"
 #include "portable-file-dialogs.h"
 
-#include <ColorPicker.h>
-#include <Panel.h>
-#include <ToolButton.h>
+#include <elemental/ColorPicker.h>
+#include <elemental/Panel.h>
+#include <elemental/ToolButton.h>
 
 struct DefaultProps {
     dc::opt<dc::ElementProps> base{};

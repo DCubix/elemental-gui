@@ -1,11 +1,11 @@
 #include <cmath>
 
-#include <Application.h>
-#include <Declarative.h>
-#include <EventSystem.h>
-#include <FlexLayout.h>
-#include <TextArea.h>
-#include <backends/sdl3/SDL3Backend.h>
+#include <elemental/Application.h>
+#include <elemental/Declarative.h>
+#include <elemental/EventSystem.h>
+#include <elemental/FlexLayout.h>
+#include <elemental/TextArea.h>
+#include <elemental/backends/sdl3/SDL3Backend.h>
 
 using namespace gui;
 namespace dec = gui::declarative;

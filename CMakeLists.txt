@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
-project(elemental VERSION 0.5.1 LANGUAGES CXX)
+project(elemental VERSION 0.5.2 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -78,36 +78,40 @@ execute_process(
 )
 
 file(GLOB_RECURSE TUI_SRC
-	"src/*.h"
-	"src/*.cpp"
-	"src/*.hpp"
+    "src/*.cpp"
+    "src/*.hpp"
+    "include/elemental/*.h"
 )
 
 file(GLOB_RECURSE EXCLUDE_FILES
-  "src/backends/*.h"
-  "src/backends/*.cpp"
+    "src/backends/*.cpp"
+    "include/elemental/backends/*.h"
 )
 
-# Exclude backend files from the main library (they will be included in separate targets if enabled)
 foreach(EXCLUDE_FILE ${EXCLUDE_FILES})
-  list(REMOVE_ITEM TUI_SRC ${CMAKE_CURRENT_SOURCE_DIR}/${EXCLUDE_FILE})
+    list(REMOVE_ITEM TUI_SRC ${EXCLUDE_FILE})
 endforeach()
 
 if (ELEMENTAL_BACKEND_SDL3)
-  file(GLOB_RECURSE SDL3_SRC
-    "src/backends/sdl3/*.h"
-    "src/backends/sdl3/*.cpp"
-  )
-  list(APPEND TUI_SRC ${SDL3_SRC})
+    file(GLOB_RECURSE SDL3_SRC
+        "src/backends/sdl3/*.cpp"
+        "include/elemental/backends/sdl3/*.h"
+    )
+    list(APPEND TUI_SRC ${SDL3_SRC})
 endif()
 
 add_library(${PROJECT_NAME} ${TUI_SRC})
 target_include_directories(${PROJECT_NAME} PRIVATE ${CAIRO_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${CAIRO_LIBRARIES} nlohmann_json nanosvg)
 
-target_include_directories(${PROJECT_NAME} PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
-    $<INSTALL_INTERFACE:include/elemental>)
+target_include_directories(${PROJECT_NAME}
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/elemental
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
     VERSION   ${PROJECT_VERSION}       # 0.5.1
@@ -145,11 +149,16 @@ install(TARGETS ${PROJECT_NAME}
     RUNTIME DESTINATION bin
 )
 
-install(DIRECTORY src/
-    DESTINATION include/elemental
+install(DIRECTORY include/elemental
+    DESTINATION include
     FILES_MATCHING PATTERN "*.h"
-    PATTERN "backends" EXCLUDE      # backends installed separately
-    PATTERN "generated" EXCLUDE)    # generated headers not public
+    PATTERN "backends" EXCLUDE)
+
+if (ELEMENTAL_BACKEND_SDL3)
+    install(DIRECTORY include/elemental/backends/sdl3
+        DESTINATION include/elemental/backends
+        FILES_MATCHING PATTERN "*.h")
+endif()
 
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(

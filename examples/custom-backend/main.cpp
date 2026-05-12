@@ -1,6 +1,6 @@
-#include <Application.h>
-#include <Backend.h>
-#include <Declarative.h>
+#include <elemental/Application.h>
+#include <elemental/Backend.h>
+#include <elemental/Declarative.h>
 
 #define SMOL_FRAME_IMPLEMENTATION
 #include "smol_frame.h"

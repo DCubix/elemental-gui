@@ -4,9 +4,9 @@
 #include <memory>
 #include <stack>
 
-#include <Declarative.h>
-#include <Element.h>
-#include <Graphics.h>
+#include <elemental/Declarative.h>
+#include <elemental/Element.h>
+#include <elemental/Graphics.h>
 
 namespace dc = gui::declarative;
 
