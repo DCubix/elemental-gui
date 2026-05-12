@@ -5,7 +5,7 @@ code in this repository.
 
 ## Core Philosophy
 
-**Elemental GUI** (v0.5.1) is a C++20 desktop GUI framework that bridges
+**Elemental GUI** (v0.5.2) is a C++20 desktop GUI framework that bridges
 immediate-mode and retained-mode UI paradigms. It provides:
 
 - **Hierarchical element tree** with parent-child relationships
@@ -97,6 +97,7 @@ Subscriber (event interface)
       ├─ Spinner (numeric +/- buttons with decimal support)
       ├─ ProgressBar (progress indicator, indeterminate mode)
       ├─ Scrollbar (internal — used by ScrollView and List)
+      ├─ ColorPicker (HSV color selector with alpha channel)
       ├─ ImageView (image display with scaling modes)
       ├─ Menu (popup context menu, hierarchical submenus)
       ├─ MenuItem (menu item with icon, checkbox, submenu)
@@ -197,17 +198,31 @@ int main() {
 
 **7. Property System & Data Binding**
 
-Widget properties are wrapped in `Property<T>`, which supports reactive callbacks via `.Bind()`. The declarative layer uses this internally to connect `onChanged`/`onValueChange` callbacks:
+Widget properties are wrapped in `Property<T>` (from `DataBinding.h`), which supports reactive callbacks via `.Bind()`. The system also provides `Computed<T>` for derived values that auto-update when dependencies change.
 
 ```cpp
-// Inside a declarative builder (Declarative.cpp pattern):
-edit.text.Bind(onChanged);          // fires callback when text changes
-slider.value.Bind(onValueChange);   // fires callback when value changes
-cb.checked.Bind(onChanged);         // fires callback when checked changes
+// One-way bind: callback fires when value changes
+edit.text.Bind(onChanged);
+slider.value.Bind(onValueChange);
 
-// Direct widget usage:
-myWidget.someProperty.Bind([](const T& val) { /* react to change */ });
+// One-way bind: target variable is kept in sync
+Property<int> a; int b; a.Bind(b);  // b = a whenever a changes
+
+// Two-way peer bind: both properties stay in sync
+Property<int> a, c; a.Bind(c);
+
+// Computed property: auto-updates when dependencies change
+Computed<int> total([&]{ return a.Get() + b.Get(); }, a, b);
+
+// Container operations directly on Property
+Property<std::vector<T>> items;
+items.PushBack(x); items.EraseAt(i); items.Clear();
+
+// Transformer: intercept and transform values on Set
+prop.SetTransformer([](const T& v) { return clamp(v, 0, 100); });
 ```
+
+The declarative layer calls `.Bind()` internally to connect `onChanged`/`onValueChange` callbacks. In custom widgets, call `Track(prop)` or `TrackAll(p1, p2, ...)` in the constructor to auto-call `Invalidate()` whenever a property changes.
 
 Elements can also expose tooltips as metadata. Set via `ElementProps::tooltip` in the declarative API, or directly on the element:
 
@@ -233,6 +248,8 @@ element.SetTooltip("Helpful hint");  // shown after 500ms hover delay
 | `Tooltip`     | Styled popup label shown on hover               | subclass of `Label`; managed by `Window`         |
 | `Panel`       | Flex container with pluggable layout            | `SetLayout()`, `GetLayout<L>()`                  |
 | `Scrollbar`   | Interactive scrollbar (internal)                | lazy-created by `List<T>` and `ScrollView`       |
+| `Timer`       | Background-thread interval timer                | `Start(intervalMs, cb)`, `Stop()`                |
+| `Computed<T>` | Read-only reactive value from dependencies      | `Get()`, `Bind()`; defined in `DataBinding.h`    |
 
 ## Application API
 
@@ -292,6 +309,7 @@ class Window {
     void Show();
     void Hide();
     void Close();
+    void RequestRedraw();   // force redraw without dirtying the element tree
 
     // Focus & text input
     void Focus(Element* e);
@@ -440,9 +458,12 @@ EdgeInsets pad = EdgeInsets::FromStyle(GetStyle()["padding"]);
 - Array [4]: `[l, t, r, b]` → `Only(l, t, r, b)`
 - Object: `{"horizontal": 10, "vertical": 20}` or `{"left": 10, "top": 20, ...}`
 
-**Alternate theme:** `examples/assets/LightStyle.json` is a full light-mode
-theme. Load at runtime with `app.LoadTheme("path/to/LightStyle.json")` or
-revert with `app.ResetStyle()`.
+**Alternate themes:**
+
+- `examples/assets/LightStyle.json` — full light-mode theme
+- `resources/NeumorphismDark.json` (embedded as `src/generated/NeumorphismDark.h`) — neumorphic dark style
+
+Load at runtime with `app.LoadTheme("path/to/theme.json")` or revert with `app.ResetStyle()`.
 
 ### Style Property Types
 
@@ -511,25 +532,37 @@ g.Clear(r, g, b, a);
 g.Rect(x, y, w, h);
 g.RoundRect(x, y, w, h, radius);
 g.Arc(x, y, radius, startAngle, endAngle);
+g.ArcNegative(x, y, radius, startAngle, endAngle);
 g.Line(x1, y1, x2, y2);
+g.MoveTo(x, y);
+g.LineTo(x, y);
 
 // Rendering
 g.Color(r, g, b, a);
+g.LinearGradient(stops, p1, p2);  // stops: vector<pair<float,Color>>
 g.Fill(preserve=false);
 g.Stroke(preserve=false);
 g.LineWidth(w);
 g.SetLineCap(LineCap::Butt|Round|Square);
 g.SetLineJoin(LineJoin::Miter|Round|Bevel);
 
-// Paths
+// Low-level Cairo path
 g.BeginPath();
+g.ClosePath();
+// ... MoveTo/LineTo/Arc ... then Stroke()/Fill()
+
+// High-level simple path (own path buffer, draws on EndSimplePath)
+g.BeginSimplePath();
 g.AddPathPoint(x, y);
-g.EndPath(close=false);
+g.AddPathRect(x, y, w, h);
+g.EndSimplePath(close=false);
 
 // Images & SVG
-g.DrawImage(img, x, y, w, h);
+g.DrawImage(img, x, y, w, h);              // ImageFiltering::Bilinear by default
+g.DrawImage(img, x, y, w, h, ImageFiltering::Nearest);
 g.DrawSVG(svgStyleJson, x, y, w, h);
 g.DrawShadow(elevation, x, y, w, h, radius);
+g.DrawCheckerboard(x, y, w, h, cellSize);  // useful for alpha preview backgrounds
 
 // Styled rendering (JSON-driven, reads theme style blocks)
 g.StyledRect(x, y, w, h, styleJson);
@@ -562,9 +595,11 @@ cairo_t* ctx = g.GetCairoContext();
 ```cpp
 Color c = Color::FromHex("#FF3859A6");  // #RGB, #RRGGBB, #AARRGGBB
 Color c = Color::FromRGBA(r, g, b, a);
-Color c = Color::FromHSLA(h, s, l, a);
+Color c = Color::FromRGB(r, g, b);
+Color c = Color::FromHSVA(h, s, v, a); // hue 0-360, sat/val/alpha 0-1
+Color c = Color::FromHSV(h, s, v);
 Color c = c.Darken(amount); // or Lighten(amount)
-Color::FromStyle(jsonValue); // accepts array or hex string
+Color::FromStyle(jsonValue); // accepts hex string or [r,g,b,a] array
 ```
 
 **JSON paint formats:**
@@ -665,8 +700,9 @@ Display:
   Text(text, TextProps)           — align (Alignment enum), icon
   Image(ImageProps)               — image (Image*), scaling (Stretch/Contain/Cover)
   ProgressBar(ProgressBarProps)   — range, value, indeterminate, direction
+  ColorPicker(ColorPickerProps)   — selectedColor (Color), onChange(Color)
   BasicList(BasicListProps)       — items(vector<string>), selectedIndex, onSelectionChanged(int)
-  List<T>(ListProps<T>)           — items(vector<ListItem<T>>), selectedIndex, onSelectionChanged(int)
+  List<T>(ListProps<T>)           — items(vector<T>), selectedIndex, labelBuilder, iconBuilder, onSelectionChanged(int)
 
 Menus:
   Menu(MenuProps, items)          — onDismiss
@@ -682,9 +718,6 @@ Custom:
 ```cpp
 struct Range { float minimum, maximum;
     float Normalized(float v); float Remap(Range other, float v); float Constrain(float v); };
-
-template<typename T>
-struct ListItem { T value; std::string label; };
 
 enum class Direction       { Horizontal, Vertical };
 enum class Alignment       { TopLeft, TopCenter, TopRight, MiddleLeft, MiddleCenter,
@@ -764,6 +797,9 @@ elemental-gui/
 │   ├── FlexLayout.h/cpp      — flexbox layout engine
 │   ├── Layout.h/cpp          — EdgeInsets, Layout base class
 │   ├── Utils.h               — VoidCallback, ValueChanged, Range, enums
+│   ├── DataBinding.h         — Property<T>, Computed<T> reactive data binding
+│   ├── Timer.h/cpp           — background-thread interval timer
+│   ├── TextProcessing.h/cpp  — text layout helpers (text::Line, text::Char, ComputeLines)
 │   ├── Button.h/cpp          — clickable button
 │   ├── Label.h               — text + icon display (base for Button)
 │   ├── LineEdit.h/cpp        — single-line text editor
@@ -779,7 +815,8 @@ elemental-gui/
 │   ├── ScrollView.h/cpp      — scrollable single-child container
 │   ├── SplitView.h/cpp       — two-pane resizable container
 │   ├── Panel.h/cpp           — flex layout container
-│   ├── List.h                — typed item list (template)
+│   ├── List.h/cpp            — typed item list (template + scrollbar logic)
+│   ├── ColorPicker.h/cpp     — HSV color picker with alpha channel
 │   ├── Menu.h/cpp            — context menu
 │   ├── MenuItem.h/cpp        — menu item
 │   ├── ImageView.h/cpp       — image display
@@ -789,11 +826,15 @@ elemental-gui/
 │   ├── WindowConfig.h        — WindowConfig struct and WindowStyle enum
 │   ├── backends/sdl3/        — SDL3 backend implementation
 │   └── generated/            — embedded resource headers (auto-generated)
+│       ├── DefaultStyle.h    — embedded default dark theme
+│       └── NeumorphismDark.h — embedded neumorphic dark theme
 ├── resources/
-│   └── DefaultStyle.json     — dark theme (edit this, not generated/)
+│   ├── DefaultStyle.json     — default dark theme (edit this, not generated/)
+│   └── NeumorphismDark.json  — neumorphic dark theme
 ├── examples/
 │   ├── elements/main.cpp     — comprehensive widget showcase
 │   ├── drawing-pad/main.cpp  — custom element (infinite canvas) example
+│   ├── pixel-paint/          — pixel art painting application
 │   ├── custom-backend/main.cpp — third-party backend implementation
 │   └── assets/LightStyle.json — light theme alternative
 ├── cmake/                    — build helpers, CPM.cmake, embed_resources.cmake
