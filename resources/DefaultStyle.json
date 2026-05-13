@@ -91,7 +91,7 @@
             "vertical": 8.0
         },
         "normal": {
-            "elevation": 0.0,
+            "elevation": 2.0,
             "border": {
                 "radius": 6.0,
                 "color": "$primaryDark",
@@ -105,7 +105,7 @@
             }
         },
         "hover": {
-            "elevation": 0.0,
+            "elevation": 2.0,
             "border": {
                 "radius": 6.0,
                 "color": "$primaryHoverDark",
@@ -119,12 +119,34 @@
             }
         },
         "click": {
-            "elevation": 0.0,
+            "elevation": 2.0,
             "border": {
                 "radius": 6.0,
                 "color": "$primaryClickDark",
                 "width": 1.0
             },
+            "background": {
+                "color": "$primaryClickDark"
+            },
+            "text": {
+                "color": "$textPrimary"
+            }
+        }
+    },
+    "FlatButton": {
+        "padding": {
+            "horizontal": 16.0,
+            "vertical": 8.0
+        },
+        "hover": {
+            "background": {
+                "color": "$primaryHoverDark"
+            },
+            "text": {
+                "color": "$textPrimary"
+            }
+        },
+        "click": {
             "background": {
                 "color": "$primaryClickDark"
             },
@@ -650,6 +672,11 @@
         }
     },
     "Spinner": {
+        "buttonSize": 22.0,
+        "padding": {
+            "horizontal": 12.0,
+            "vertical": 6.0
+        },
         "normal": {
             "border": {
                 "radius": 6.0,
@@ -660,26 +687,24 @@
                 "color": "$backgroundDark"
             }
         },
-        "button": {
-            "hover": {
-                "border": {
-                    "radius": 0.0,
-                    "color": "#00000000",
-                    "width": 0.0
-                },
-                "background": {
-                    "color": "$spinnerButtonHover"
-                }
+        "hover": {
+            "border": {
+                "radius": 6.0,
+                "color": "$secondaryHover",
+                "width": 1.0
             },
-            "click": {
-                "border": {
-                    "radius": 0.0,
-                    "color": "#00000000",
-                    "width": 0.0
-                },
-                "background": {
-                    "color": "$spinnerButtonClick"
-                }
+            "background": {
+                "color": "$backgroundDark"
+            }
+        },
+        "focused": {
+            "border": {
+                "radius": 6.0,
+                "color": "$focusBlue",
+                "width": 1.0
+            },
+            "background": {
+                "color": "$backgroundDark"
             }
         }
     },

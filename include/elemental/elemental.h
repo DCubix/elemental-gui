@@ -2,6 +2,8 @@
 
 // Core
 #include "Application.h"
+#include "InputFilter.h"
+#include "TextInputController.h"
 #include "Backend.h"
 #include "Container.h"
 #include "DataBinding.h"

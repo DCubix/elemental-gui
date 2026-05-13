@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <cstdint>
+#include <format>
 #include <functional>
 #include <regex>
 #include <sstream>
@@ -15,6 +16,12 @@ namespace gui::utils {
 
     template <typename T>
     using ValueChanged = std::function<void(const T&)>;
+
+    template <typename T>
+    constexpr bool is_nullable_v =
+        std::is_pointer_v<T> || std::is_same_v<T, std::nullptr_t> || requires(T t) {
+            { t = nullptr } -> std::same_as<T&>;
+        } && !std::is_constructible_v<T, const char*>;
 
     enum class ButtonState { Normal = 0, Hover, Click };
 
@@ -48,29 +55,9 @@ namespace gui::utils {
         float Constrain(float value);
     };
 
-    inline std::string formatHelper(const std::string& string_to_update, const size_t) {
-        return string_to_update;
-    }
-
-    template <typename T, typename... Args>
-    inline std::string formatHelper(
-        const std::string& string_to_update,
-        const size_t index_to_replace,
-        T&& val,
-        Args&&... args
-    ) {
-        std::regex pattern{"{" + std::to_string(index_to_replace) + "}"};
-        std::string replacement_string{(std::ostringstream{} << val).str()};
-        return formatHelper(
-            std::regex_replace(string_to_update, pattern, replacement_string),
-            index_to_replace + 1,
-            std::forward<Args>(args)...
-        );
-    }
-
     template <typename... Args>
-    inline std::string Format(const std::string& fmt, Args&&... args) {
-        return formatHelper(fmt, 1, std::forward<Args>(args)...);
+    std::string Format(std::string_view fmt, Args&&... args) {
+        return std::vformat(fmt, std::make_format_args(args...));
     }
 
     std::vector<std::string> SplitString(const std::string& str, const std::string& delimiter);

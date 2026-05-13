@@ -17,17 +17,20 @@ namespace gui {
     }
 
     void TextArea::InsertChar(char c) {
-        if (m_caretIndex < 0)
-            m_caretIndex = 0;
-        if (m_caretIndex > (int)text().size())
-            m_caretIndex = (int)text().size();
+        // Newlines are always accepted in a multiline editor; other chars go through the filter.
+        if (c != '\n' && !AcceptChar(c))
+            return;
+        if (m_controller.caretIndex < 0)
+            m_controller.caretIndex = 0;
+        if (m_controller.caretIndex > (int)text().size())
+            m_controller.caretIndex = (int)text().size();
 
         std::string s = text();
-        s.insert(m_caretIndex, 1, c);
-        m_caretIndex++;
-        m_internalEdit = true;
+        s.insert(m_controller.caretIndex, 1, c);
+        m_controller.caretIndex++;
+        m_controller.internalEdit = true;
         text = s;
-        m_internalEdit = false;
+        m_controller.internalEdit = false;
     }
 
     void TextArea::RemoveChar(int i) {
@@ -35,26 +38,26 @@ namespace gui {
             return;
         std::string s = text();
         s.erase(i, 1);
-        m_internalEdit = true;
+        m_controller.internalEdit = true;
         text = s;
-        m_internalEdit = false;
+        m_controller.internalEdit = false;
     }
 
     void TextArea::DeleteSelected() {
         if (!IsSelected())
             return;
-        int a = m_selectionStart, b = m_selectionEnd;
+        int a = m_controller.selectionStart, b = m_controller.selectionEnd;
         if (a > b)
             std::swap(a, b);
         a = std::max(0, a);
         b = std::min(b, (int)text().size());
         std::string s = text();
         s.erase(a, b - a);
-        m_caretIndex = a;
+        m_controller.caretIndex = a;
         Deselect();
-        m_internalEdit = true;
+        m_controller.internalEdit = true;
         text = s;
-        m_internalEdit = false;
+        m_controller.internalEdit = false;
     }
 
     void TextArea::Rebuild() {
@@ -79,9 +82,9 @@ namespace gui {
             int maxW = 0;
             for (const auto& line : m_lines)
                 maxW = std::max(maxW, line.bounds.w);
-            m_textSize = {maxW, m_lineHeight * (int)m_lines.size()};
+            m_controller.textSize = {maxW, m_lineHeight * (int)m_lines.size()};
         } else {
-            m_textSize = {0, 0};
+            m_controller.textSize = {0, 0};
         }
     }
 
@@ -123,7 +126,7 @@ namespace gui {
         auto starts = ComputeLineStarts();
         int lineIdx = 0;
         for (int i = (int)starts.size() - 1; i >= 0; --i) {
-            if (m_caretIndex >= starts[i]) {
+            if (m_controller.caretIndex >= starts[i]) {
                 lineIdx = i;
                 break;
             }
@@ -134,21 +137,21 @@ namespace gui {
     }
 
     void TextArea::OnMouseDown(MouseEvent e) {
-        if (!m_editable || e.button != MouseButton::Left)
+        if (!m_controller.editable || e.button != MouseButton::Left)
             return;
-        m_caretIndex = HitTestIndex(e.x, e.y);
-        m_state = text::EditState::Selecting;
-        m_selectionStart = m_caretIndex;
-        m_selectionEnd = -1;
+        m_controller.caretIndex = HitTestIndex(e.x, e.y);
+        m_controller.state = text::EditState::Selecting;
+        m_controller.selectionStart = m_controller.caretIndex;
+        m_controller.selectionEnd = -1;
         Invalidate();
     }
 
     void TextArea::OnMouseMove(MotionEvent e) {
-        if (m_state != text::EditState::Selecting)
+        if (m_controller.state != text::EditState::Selecting)
             return;
         int idx = HitTestIndex(e.x, e.y);
-        m_selectionEnd = idx;
-        m_caretIndex = idx;
+        m_controller.selectionEnd = idx;
+        m_controller.caretIndex = idx;
         Invalidate();
     }
 
@@ -179,7 +182,7 @@ namespace gui {
 
         // --- Selection background (multi-line aware) ---
         if (IsSelected()) {
-            int selA = m_selectionStart, selB = m_selectionEnd;
+            int selA = m_controller.selectionStart, selB = m_controller.selectionEnd;
             if (selA > selB)
                 std::swap(selA, selB);
 
@@ -234,10 +237,10 @@ namespace gui {
         }
 
         // --- Caret ---
-        if (IsFocused() && m_editable && !m_lines.empty() && m_showCaret) {
+        if (IsFocused() && m_controller.editable && !m_lines.empty() && m_controller.showCaret) {
             auto info = GetCaretLineInfo();
             const auto& line = m_lines[info.lineIdx];
-            int localCaretIdx = m_caretIndex - info.lineStart;
+            int localCaretIdx = m_controller.caretIndex - info.lineStart;
             localCaretIdx = std::max(0, std::min(localCaretIdx, (int)line.chars.size() - 1));
             int caretX = line.chars[localCaretIdx].bounds.x;
             int caretY = info.lineIdx * lineHeight;
@@ -253,16 +256,16 @@ namespace gui {
     }
 
     void TextArea::OnKeyDown(KeyEvent e) {
-        if (!m_editable)
+        if (!m_controller.editable)
             return;
 
         auto beginSel = [&]() {
-            if (e.mod.shift && m_selectionStart == -1)
-                m_selectionStart = m_caretIndex;
+            if (e.mod.shift && m_controller.selectionStart == -1)
+                m_controller.selectionStart = m_controller.caretIndex;
         };
         auto endSel = [&]() {
             if (e.mod.shift)
-                m_selectionEnd = m_caretIndex;
+                m_controller.selectionEnd = m_controller.caretIndex;
             else
                 Deselect();
         };
@@ -280,10 +283,10 @@ namespace gui {
             auto info = GetCaretLineInfo();
             if (info.lineIdx > 0) {
                 auto starts = ComputeLineStarts();
-                int localCol = m_caretIndex - info.lineStart;
+                int localCol = m_controller.caretIndex - info.lineStart;
                 int prevLineStart = starts[info.lineIdx - 1];
                 int prevLineLen = (int)m_lines[info.lineIdx - 1].chars.size() - 1;
-                m_caretIndex = prevLineStart + std::min(localCol, prevLineLen);
+                m_controller.caretIndex = prevLineStart + std::min(localCol, prevLineLen);
             }
             endSel();
             Invalidate();
@@ -295,10 +298,10 @@ namespace gui {
             auto info = GetCaretLineInfo();
             if (info.lineIdx < (int)m_lines.size() - 1) {
                 auto starts = ComputeLineStarts();
-                int localCol = m_caretIndex - info.lineStart;
+                int localCol = m_controller.caretIndex - info.lineStart;
                 int nextLineStart = starts[info.lineIdx + 1];
                 int nextLineLen = (int)m_lines[info.lineIdx + 1].chars.size() - 1;
-                m_caretIndex = nextLineStart + std::min(localCol, nextLineLen);
+                m_controller.caretIndex = nextLineStart + std::min(localCol, nextLineLen);
             }
             endSel();
             Invalidate();
@@ -308,7 +311,7 @@ namespace gui {
         if (e.key == Key::Home) {
             beginSel();
             auto info = GetCaretLineInfo();
-            m_caretIndex = info.lineStart;
+            m_controller.caretIndex = info.lineStart;
             endSel();
             Invalidate();
             return;
@@ -317,24 +320,24 @@ namespace gui {
         if (e.key == Key::End) {
             beginSel();
             auto info = GetCaretLineInfo();
-            m_caretIndex = info.lineStart + info.lineLen;
+            m_controller.caretIndex = info.lineStart + info.lineLen;
             endSel();
             Invalidate();
             return;
         }
 
-        LineEdit::OnKeyDown(e);
+        m_controller.HandleKeyDown(e);
     }
 
     Size TextArea::GetPreferredSize() const {
         if (!IsAutoSize())
             return Edit::GetPreferredSize();
         Size sz = GetSize();
-        if (m_textSize.w > 0 || m_textSize.h > 0) {
+        if (m_controller.textSize.w > 0 || m_controller.textSize.h > 0) {
             EdgeInsets pad = EdgeInsets::FromStyle(GetStyle()["padding"]);
             return {
-                m_textSize.w + (int)pad.left + (int)pad.right,
-                m_textSize.h + (int)pad.top + (int)pad.bottom
+                m_controller.textSize.w + (int)pad.left + (int)pad.right,
+                m_controller.textSize.h + (int)pad.top + (int)pad.bottom
             };
         }
         return sz;
@@ -364,7 +367,7 @@ namespace gui {
     void TextArea::Format(FontStyle style, float r, float g, float b) {
         if (!IsSelected())
             return;
-        int selA = m_selectionStart, selB = m_selectionEnd;
+        int selA = m_controller.selectionStart, selB = m_controller.selectionEnd;
         if (selA > selB)
             std::swap(selA, selB);
         Format(selA, selB - selA, style, r, g, b);

@@ -159,6 +159,12 @@ namespace gui {
         }
     }
 
+    void Application::OnMouseDoubleClick(WindowId id, int x, int y, MouseButton button) {
+        if (auto* win = FindWindow(id)) {
+            win->DispatchEvent<MouseDoubleClickEvent>(x, y, button);
+        }
+    }
+
     void Application::OnMouseMotion(WindowId id, int x, int y, MouseButton button) {
         if (auto* win = FindWindow(id)) {
             win->DispatchEvent<MotionEvent>(x, y, button);

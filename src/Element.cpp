@@ -23,11 +23,17 @@ namespace gui {
         Rectangle intersectedBounds = GetIntersectedBounds();
         Rectangle localBounds = GetBounds();
 
-        // Handle focus on mouse click
+        // Handle focus on mouse click or double-click
         if (event->Type() == EventType::MouseButton) {
             MouseEvent* e = dynamic_cast<MouseEvent*>(event);
             if (intersectedBounds.HasPoint(e->x, e->y) && e->pressed &&
                 e->button == MouseButton::Left) {
+                RequestFocus();
+            }
+        }
+        if (event->Type() == EventType::MouseDoubleClick) {
+            MouseDoubleClickEvent* e = dynamic_cast<MouseDoubleClickEvent*>(event);
+            if (intersectedBounds.HasPoint(e->x, e->y) && e->button == MouseButton::Left) {
                 RequestFocus();
             }
         }
@@ -135,6 +141,15 @@ namespace gui {
                 BlurEvent eCopy = *dynamic_cast<BlurEvent*>(event);
                 OnBlur(eCopy);
                 return eCopy.element == this ? EventStatus::Consumed : EventStatus::Active;
+            }
+            case EventType::MouseDoubleClick: {
+                MouseDoubleClickEvent eCopy = *dynamic_cast<MouseDoubleClickEvent*>(event);
+                if (!intersectedBounds.HasPoint(eCopy.x, eCopy.y))
+                    return EventStatus::Active;
+                eCopy.x -= localBounds.x;
+                eCopy.y -= localBounds.y;
+                OnMouseDoubleClick(eCopy);
+                return EventStatus::Consumed;
             }
         }
 

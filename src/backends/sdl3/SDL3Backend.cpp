@@ -232,6 +232,14 @@ namespace gui {
                         (int)evt.button.y,
                         SDLButtonToMouseButton(evt.button.button)
                     );
+                    if (evt.button.clicks >= 2) {
+                        sink.OnMouseDoubleClick(
+                            evt.button.windowID,
+                            (int)evt.button.x,
+                            (int)evt.button.y,
+                            SDLButtonToMouseButton(evt.button.button)
+                        );
+                    }
                     break;
                 case SDL_EVENT_MOUSE_BUTTON_UP:
                     sink.OnMouseButtonUp(

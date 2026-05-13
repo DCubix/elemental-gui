@@ -331,10 +331,10 @@ namespace gui::declarative {
         opt<Range> range{std::nullopt};
         opt<float> value{std::nullopt};
         opt<float> step{std::nullopt};
-        opt<int> decimals{std::nullopt};
+        opt<std::string> formatString{std::nullopt};
         opt<ValueChanged<float>> onValueChange{std::nullopt};
 
-        Fields(base, range, value, step, decimals, onValueChange)
+        Fields(base, range, value, step, formatString, onValueChange)
     };
     WidgetDesc Spinner(const SpinnerProps& props = {});
 

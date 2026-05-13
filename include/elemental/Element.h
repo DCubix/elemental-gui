@@ -43,8 +43,9 @@ namespace gui {
         // Event handlers - override these to handle specific events
         virtual void OnCreate() {}
         virtual void OnMouseDown(MouseEvent e) {}
-        virtual void OnMouseMove(MotionEvent e) {}
         virtual void OnMouseUp(MouseEvent e) {}
+        virtual void OnMouseDoubleClick(MouseDoubleClickEvent e) {}
+        virtual void OnMouseMove(MotionEvent e) {}
         virtual void OnMouseEnter() {}
         virtual void OnMouseLeave() {}
         virtual void OnScroll(ScrollEvent e) {}

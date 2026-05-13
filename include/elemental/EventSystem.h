@@ -9,7 +9,7 @@ namespace gui {
     class Subscriber;
 
     // Default events
-    enum class EventType { MouseButton = 0, MouseMotion, Key, TextInput, Focus, Blur, Scroll };
+    enum class EventType { MouseButton = 0, MouseMotion, Key, TextInput, Focus, Blur, Scroll, MouseDoubleClick };
 
     enum class MouseButton : uint8_t { Unknown = 0, Left, Right, Middle, X1, X2 };
 
@@ -283,6 +283,19 @@ namespace gui {
         Key key;
         ModifierState mod;
         bool pressed;
+    };
+
+    struct MouseDoubleClickEvent : public Event {
+        EventType Type() const override { return EventType::MouseDoubleClick; }
+
+        MouseDoubleClickEvent() = default;
+        MouseDoubleClickEvent(int x, int y, MouseButton button)
+            : x(x),
+              y(y),
+              button(button) {}
+
+        int x, y;
+        MouseButton button;
     };
 
     struct ScrollEvent : public Event {

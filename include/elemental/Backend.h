@@ -24,6 +24,7 @@ namespace gui {
 
         virtual void OnMouseButtonDown(WindowId id, int x, int y, MouseButton button) = 0;
         virtual void OnMouseButtonUp(WindowId id, int x, int y, MouseButton button) = 0;
+        virtual void OnMouseDoubleClick(WindowId id, int x, int y, MouseButton button) = 0;
         virtual void OnMouseMotion(WindowId id, int x, int y, MouseButton button) = 0;
         virtual void OnMouseWheel(WindowId id, float dx, float dy, int mouseX, int mouseY) = 0;
 

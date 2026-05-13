@@ -453,7 +453,6 @@ namespace gui::declarative {
             auto range = props.range.value_or(Range{0.0f, 100.0f});
             auto value = props.value.value_or(0.0f);
             auto step = props.step.value_or(1.0f);
-            auto decimals = props.decimals.value_or(0);
             auto onValueChange = props.onValueChange.value_or(nullptr);
 
             auto& spinner = window.Create<gui::Spinner>();
@@ -461,7 +460,8 @@ namespace gui::declarative {
             spinner.SetRange(range.minimum, range.maximum);
             spinner.value = value;
             spinner.step = step;
-            spinner.decimals = decimals;
+            if (props.formatString)
+                spinner.formatString = *props.formatString;
             if (onValueChange)
                 spinner.value.Bind(onValueChange);
             return &spinner;

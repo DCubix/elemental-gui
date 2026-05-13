@@ -30,7 +30,7 @@ namespace gui {
                 auto& v = items();
                 if (index >= 0 && index < static_cast<int>(v.size()))
                     return v[size_t(index)];
-                if constexpr (std::is_assignable_v<T&, std::nullptr_t>) {
+                if constexpr (utils::is_nullable_v<T>) {
                     return nullptr;
                 }
                 return T{};

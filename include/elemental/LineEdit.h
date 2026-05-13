@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Element.h"
-#include "TextProcessing.h"
-#include "Timer.h"
+#include "InputFilter.h"
+#include "TextInputController.h"
 
 namespace gui {
     class LineEdit : public Element {
@@ -24,36 +24,31 @@ namespace gui {
 
         Size GetPreferredSize() const override;
 
-        bool IsMasked() const { return m_masked; }
+        bool IsMasked() const { return m_controller.masked; }
         void SetMasked(bool m) {
-            m_masked = m;
+            m_controller.masked = m;
             Rebuild();
             Invalidate();
         }
 
-        bool IsEditable() const { return m_editable; }
-        void SetEditable(bool m) { m_editable = m; }
+        bool IsEditable() const { return m_controller.editable; }
+        void SetEditable(bool e) { m_controller.editable = e; }
 
         void Select(int from, int len = -1);
         void Deselect();
         bool IsSelected() const;
 
+        void SetInputFilter(const InputFilter& filter) { m_controller.SetFilter(filter); }
+        const InputFilter& GetInputFilter() const { return m_controller.GetFilter(); }
+
         Property<std::string> text;
 
     protected:
-        text::Line m_textLine;
+        TextInputController m_controller;
 
-        bool m_masked{false}, m_editable{true};
-        bool m_internalEdit{false};
-        int m_caretIndex{0};
-        int m_selectionStart{-1}, m_selectionEnd{-1};
-        int m_offsetX{0};
-        Size m_textSize{0, 0};
-
-        text::EditState m_state{text::EditState::Normal};
-
-        Timer m_blinkTimer;
-        bool m_showCaret{true};
+        // Returns true if c passes the active InputFilter at the current caret position.
+        // Override-friendly: call this in subclass InsertChar implementations.
+        bool AcceptChar(char c) const { return m_controller.AcceptChar(c); }
 
         virtual void InsertChar(char c);
         virtual void RemoveChar(int i);

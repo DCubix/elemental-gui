@@ -61,6 +61,7 @@ namespace gui {
         void OnWindowResized(WindowId id) override;
         void OnMouseButtonDown(WindowId id, int x, int y, MouseButton button) override;
         void OnMouseButtonUp(WindowId id, int x, int y, MouseButton button) override;
+        void OnMouseDoubleClick(WindowId id, int x, int y, MouseButton button) override;
         void OnMouseMotion(WindowId id, int x, int y, MouseButton button) override;
         void OnMouseWheel(WindowId id, float dx, float dy, int mouseX, int mouseY) override;
         void OnKeyDown(WindowId id, Key key, ModifierState mod) override;

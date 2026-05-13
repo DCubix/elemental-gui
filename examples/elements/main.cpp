@@ -341,6 +341,8 @@ public:
                             printf("Check 3 is now %s\n", checked ? "Checked" : "Unchecked");
                         },
                     }),
+
+                    dec::Spinner(),
                 }), dec::ScrollViewProps{
                     .base = dec::ElementProps{
                         .flexGrow = 1.0f,
