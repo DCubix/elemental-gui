@@ -147,6 +147,7 @@ namespace gui {
 
     // --- Node Editor element ------------------------------------------------
 
+    constexpr int gridSize = 8;
     constexpr int textSideSpacing = 40;
     constexpr int inOutVerticalGap = 20;
     constexpr int nodeTitleHeight = 28;
@@ -199,6 +200,21 @@ namespace gui {
         auto sz = GetSize();
 
         g.StyledRect(0, 0, sz.w, sz.h, style);
+
+        // draw grid
+        int startX = (m_pan.x % gridSize);
+        int startY = (m_pan.y % gridSize);
+
+        g.Color(0.5f, 0.5f, 0.5f, 0.2f);
+        for (int sx = startX; sx < sz.w; sx += gridSize) {
+            for (int sy = startY; sy < sz.h; sy += gridSize) {
+                g.Arc(sx, sy, 1.0f, 0.0f, M_PI * 2.0f);
+                g.Fill();
+            }
+        }
+
+        g.Save();
+        g.Translate(m_pan.x, m_pan.y);
 
         if (!graph())
             return;
@@ -334,7 +350,7 @@ namespace gui {
 
         if (m_editorState == EdConnecting) {
             PointI from = m_nodeLayouts[m_pinNode[m_selectedPin]].pins[m_selectedPin];
-            PointI to = m_prevMouse;
+            PointI to = m_prevMouse - m_pan;
 
             if (to.x < from.x)
                 std::swap(from, to);
@@ -360,6 +376,8 @@ namespace gui {
             g.Stroke();
         }
 
+        g.Restore();
+
         g.ClipPop();
     }
 
@@ -369,28 +387,15 @@ namespace gui {
         m_prevMouse = {e.x, e.y};
 
         if (e.button == MouseButton::Left && m_editorState != EdMoving) {
-            // check for pin click
-            PinId hitPin = 0;
-            for (auto& [nid, node] : graph()->GetNodes()) {
-                const auto& layout = m_nodeLayouts[nid];
-                for (auto& [pid, pos] : layout.pins) {
-                    int dist = pos.DistanceTo(PointI{e.x, e.y});
-                    if (dist <= 6) {
-                        const auto& pin = node->GetPins().at(pid);
-                        if (pin.direction == PinDirection::Input) {
-                            auto* wire = graph()->FindWire(pid);
-                            if (wire) {
-                                hitPin = wire->from;
-                                graph()->Disconnect(wire->from, wire->to);
-                                break;
-                            } else {
-                                hitPin = pid;
-                                break;
-                            }
-                        } else {
-                            hitPin = pid;
-                            break;
-                        }
+            PinId hitPin = HitTestPin(e.x, e.y, 6);
+            if (hitPin) {
+                auto* node = graph()->FindNode(m_pinNode[hitPin]);
+                const auto& pin = node->GetPins().at(hitPin);
+                if (pin.direction == PinDirection::Input) {
+                    auto* wire = graph()->FindWire(hitPin);
+                    if (wire) {
+                        hitPin = wire->from;
+                        graph()->Disconnect(wire->from, wire->to);
                     }
                 }
             }
@@ -417,6 +422,8 @@ namespace gui {
                     m_selectedNodes.insert(hitNode);
                 }
             }
+        } else if (e.button == MouseButton::Middle) {
+            m_editorState = EdPanning;
         }
 
         Invalidate();
@@ -424,18 +431,7 @@ namespace gui {
 
     void NodeEditor::OnMouseUp(MouseEvent e) {
         if (m_editorState == EdConnecting) {
-            PinId hitPin = 0;
-            for (auto& [nid, node] : graph()->GetNodes()) {
-                const auto& layout = m_nodeLayouts[nid];
-                for (auto& [pid, pos] : layout.pins) {
-                    int dist = pos.DistanceTo(PointI{e.x, e.y});
-                    if (dist <= 6) {
-                        hitPin = pid;
-                        break;
-                    }
-                }
-            }
-
+            PinId hitPin = HitTestPin(e.x, e.y, 6);
             if (hitPin) {
                 auto nodeFrom = graph()->FindNode(m_pinNode[m_selectedPin]);
                 auto nodeTo = graph()->FindNode(m_pinNode[hitPin]);
@@ -472,15 +468,29 @@ namespace gui {
             Invalidate();
         } else if (m_editorState == EdMoving) {
             for (const auto& nid : m_selectedNodes) {
-                auto& pos = m_nodeAttributes[nid].position;
-                pos.x += e.x - m_prevMouse.x;
-                pos.y += e.y - m_prevMouse.y;
+                auto& attr = m_nodeAttributes[nid];
+                attr.rawPosition.x += e.x - m_prevMouse.x;
+                attr.rawPosition.y += e.y - m_prevMouse.y;
+
+                if (m_snapping) {
+                    attr.position.x = std::floor(float(attr.rawPosition.x) / gridSize) * gridSize;
+                    attr.position.y = std::floor(float(attr.rawPosition.y) / gridSize) * gridSize;
+                } else {
+                    attr.position = attr.rawPosition;
+                }
+
                 m_nodeLayouts[nid] = ComputeNodeLayout(nid, GetWindow()->GetGraphics());
             }
 
             m_prevMouse = {e.x, e.y};
             Invalidate();
         } else if (m_editorState == EdConnecting) {
+            m_prevMouse = {e.x, e.y};
+            Invalidate();
+        } else if (m_editorState == EdPanning) {
+            m_pan.x += e.x - m_prevMouse.x;
+            m_pan.y += e.y - m_prevMouse.y;
+
             m_prevMouse = {e.x, e.y};
             Invalidate();
         }
@@ -499,7 +509,16 @@ namespace gui {
     }
 
     void NodeEditor::SetPosition(NodeId nid, const PointI& position) {
-        m_nodeAttributes[nid].position = position;
+        auto& attr = m_nodeAttributes[nid];
+        attr.rawPosition = position;
+
+        if (m_snapping) {
+            attr.position.x = std::floor(float(attr.rawPosition.x) / gridSize) * gridSize;
+            attr.position.y = std::floor(float(attr.rawPosition.y) / gridSize) * gridSize;
+        } else {
+            attr.position = attr.rawPosition;
+        }
+
         m_layoutDirty = true;
         Invalidate();
     }
@@ -611,6 +630,8 @@ namespace gui {
     }
 
     PinId NodeEditor::HitTestPin(int x, int y, int radius) const {
+        x -= m_pan.x;
+        y -= m_pan.y;
         for (auto& [nid, layout] : m_nodeLayouts) {
             for (auto& [pid, pin] : layout.pins) {
                 int dx = x - pin.x;
@@ -623,9 +644,8 @@ namespace gui {
     }
 
     NodeId NodeEditor::HitTestNode(int x, int y) const {
-        // TODO(v2): account for zoom and pan
         for (auto& [nid, layout] : m_nodeLayouts) {
-            if (layout.rect.HasPoint(x, y))
+            if (layout.rect.HasPoint(x - m_pan.x, y - m_pan.y))
                 return nid;
         }
         return 0;

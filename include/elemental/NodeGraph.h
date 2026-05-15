@@ -192,6 +192,9 @@ namespace gui {
         void SetPosition(NodeId nid, const PointI& position);
         void SetPreviewVisible(NodeId nid, bool visible);
 
+        bool IsSnappingEnabled() const { return m_snapping; }
+        void SetSnappingEnabled(bool snap) { m_snapping = snap; }
+
         Property<NodeGraph*> graph;
 
     private:
@@ -201,7 +204,7 @@ namespace gui {
         };
 
         struct NodeAttributes {
-            PointI position;
+            PointI position, rawPosition;
             bool showPreview{false};
             Image preview;
         };
@@ -211,7 +214,15 @@ namespace gui {
         mutable std::unordered_map<PinId, NodeId> m_pinNode;
         bool m_layoutDirty{true};
 
-        enum { EdIdling = 0, EdSelecting, EdMoving, EdConnecting } m_editorState{EdIdling};
+        bool m_snapping{true};
+
+        enum {
+            EdIdling = 0,
+            EdSelecting,
+            EdMoving,
+            EdConnecting,
+            EdPanning
+        } m_editorState{EdIdling};
 
         bool m_shiftPressed{false};
         std::set<NodeId> m_selectedNodes;
@@ -219,6 +230,8 @@ namespace gui {
 
         PointI m_selectionMin, m_selectionMax;
         PointI m_prevMouse;
+
+        PointI m_pan;
 
         const NodeLayout* GetNodeLayout(NodeId nid) const;
         PinId HitTestPin(int x, int y, int radius = 8) const;
