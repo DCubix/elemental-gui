@@ -213,9 +213,6 @@ namespace gui {
             }
         }
 
-        g.Save();
-        g.Translate(m_pan.x, m_pan.y);
-
         if (!graph())
             return;
 
@@ -223,6 +220,11 @@ namespace gui {
 
         float nodeBorderRadius =
             nodeStyle["border"].is_object() ? nodeStyle["border"].value("radius", 0.0f) : 0.0f;
+
+        g.ClipPushRect(0, 0, sz.w, sz.h);
+
+        g.Save();
+        g.Translate(m_pan.x, m_pan.y);
 
         for (const auto& nid : m_selectedNodes) {
             const auto& layout = m_nodeLayouts[nid];
@@ -237,8 +239,6 @@ namespace gui {
 
             g.Restore();
         }
-
-        g.ClipPushRect(0, 0, sz.w, sz.h);
 
         for (auto& wire : graph()->GetWires()) {
             PointI from = m_nodeLayouts[m_pinNode[wire.from]].pins[wire.from];
@@ -537,6 +537,8 @@ namespace gui {
             std::max(m_selectionMin.x, m_selectionMax.x),
             std::max(m_selectionMin.y, m_selectionMax.y)
         };
+        tl = tl - m_pan;
+        br = br - m_pan;
         return Rectangle{tl.x, tl.y, br.x - tl.x, br.y - tl.y};
     }
 
