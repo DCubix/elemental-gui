@@ -25,7 +25,8 @@ namespace gui {
 
         T Cross(const Point<T>& other) const { return x * other.y - y * other.x; }
 
-        T GetLength() const { return std::sqrt(Dot(*this)); }
+        T GetLengthSqr() const { return Dot(*this); }
+        T GetLength() const { return std::sqrt(GetLengthSqr()); }
 
         T DistanceTo(const Point<T>& other) const { return ((*this) - other).GetLength(); }
 
@@ -145,6 +146,7 @@ namespace gui {
         void Line(int x1, int y1, int x2, int y2);
         void MoveTo(int x, int y);
         void LineTo(int x, int y);
+        void CurveTo(int x1, int y1, int x2, int y2, int x3, int y3);
 
         void BeginPath();
         void ClosePath();

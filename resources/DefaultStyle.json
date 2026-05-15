@@ -722,5 +722,27 @@
         "background": {
             "color": "$backgroundLight"
         }
+    },
+    "NodeEditor": {
+        "connectionColor": "$textPrimaryBright",
+        "background": {
+            "color": "$backgroundDark"
+        },
+        "node": {
+            "font": "Sans",
+            "fontSize": 14.0,
+            "fontSlant": "normal",
+            "fontWeight": "normal",
+            "color": "$textSecondary",
+            "elevation": 4.0,
+            "border": {
+                "radius": 8.0,
+                "color": "$borderDark",
+                "width": 1.0
+            },
+            "background": {
+                "color": "$panelBackground"
+            }
+        }
     }
 }

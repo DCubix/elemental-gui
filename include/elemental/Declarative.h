@@ -5,6 +5,7 @@
 #include "ImageView.h"
 #include "List.h"
 #include "Menu.h"
+#include "NodeGraph.h"
 #include "SplitView.h"
 #include "Utils.h"
 #include "Window.h"
@@ -340,6 +341,7 @@ namespace gui::declarative {
 
     WidgetDesc Spacer();
 
+    // --- Panel widget -------------------------------------
     struct PanelProps : Copiable<PanelProps> {
         opt<ElementProps> base{std::nullopt};
         opt<EdgeInsets> padding{std::nullopt};
@@ -349,6 +351,7 @@ namespace gui::declarative {
     };
     WidgetDesc Panel(const PanelProps& props, const std::vector<WidgetDesc>& children);
 
+    // --- Color Picker widget -------------------------------------
     struct ColorPickerProps : Copiable<ColorPickerProps> {
         opt<ElementProps> base{std::nullopt};
         opt<Color> selectedColor{std::nullopt};
@@ -357,4 +360,18 @@ namespace gui::declarative {
         Fields(base, selectedColor, onChange)
     };
     WidgetDesc ColorPicker(const ColorPickerProps& props);
+
+    // --- Node Editor widget -------------------------------------
+    struct NodeAttrs {
+        opt<PointI> position{std::nullopt};
+        opt<bool> showPreview{std::nullopt};
+    };
+    struct NodeEditorProps : Copiable<NodeEditorProps> {
+        opt<ElementProps> base{std::nullopt};
+        opt<NodeGraph*> graph{std::nullopt};
+        opt<std::unordered_map<NodeId, NodeAttrs>> nodeAttributes{std::nullopt};
+
+        Fields(base, graph, nodeAttributes)
+    };
+    WidgetDesc NodeEditor(const NodeEditorProps& props);
 } // namespace gui::declarative

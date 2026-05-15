@@ -128,6 +128,10 @@ namespace gui {
         cairo_line_to(m_context, x, y);
     }
 
+    void Graphics::CurveTo(int x1, int y1, int x2, int y2, int x3, int y3) {
+        cairo_curve_to(m_context, x1, y1, x2, y2, x3, y3);
+    }
+
     void Graphics::BeginPath() {
         cairo_new_path(m_context);
     }

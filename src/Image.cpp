@@ -124,6 +124,9 @@ namespace gui {
     }
 
     bool Image::IsValid() const {
+        if (!m_impl)
+            return false;
+
         if (m_impl->width <= 0 || m_impl->height <= 0)
             return false;
 

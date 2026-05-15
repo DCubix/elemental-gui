@@ -515,4 +515,27 @@ namespace gui::declarative {
         };
     }
 
+    WidgetDesc NodeEditor(const NodeEditorProps& props) {
+        return [props](Window& window) -> Element* {
+            auto base = props.base.value_or(ElementProps{});
+            auto graph = props.graph.value_or(nullptr);
+
+            auto& editor = window.Create<gui::NodeEditor>();
+            ElementSetup(editor, base);
+
+            if (props.graph)
+                editor.graph = *props.graph;
+
+            if (props.nodeAttributes) {
+                for (auto [nid, attr] : *props.nodeAttributes) {
+                    if (attr.position)
+                        editor.SetPosition(nid, *attr.position);
+                    if (attr.showPreview)
+                        editor.SetPreviewVisible(nid, *attr.showPreview);
+                }
+            }
+            return &editor;
+        };
+    }
+
 } // namespace gui::declarative
